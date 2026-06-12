@@ -1,0 +1,195 @@
+import { Course, Category, LiveSession, Testimonial } from './types';
+
+export const CATEGORIES: Category[] = [
+  {
+    id: 'cat_1',
+    name: 'التاريخ الإسلامي',
+    slug: 'islamic-history',
+    iconName: 'BookOpen',
+    courseCount: 14,
+  },
+  {
+    id: 'cat_2',
+    name: 'اللغة العربية آدابها',
+    slug: 'arabic-language',
+    iconName: 'PenTool',
+    courseCount: 18,
+  },
+  {
+    id: 'cat_3',
+    name: 'الفنون والعمارة التراثية',
+    slug: 'heritage-arts',
+    iconName: 'Palette',
+    courseCount: 12,
+  },
+  {
+    id: 'cat_4',
+    name: 'علم الآثار والتحقيق',
+    slug: 'archaeology',
+    iconName: 'Compass',
+    courseCount: 8,
+  },
+];
+
+export const COURSES: Course[] = [
+  {
+    id: 'course_1',
+    title: 'فلسفة العمارة الإسلامية والتصميم التراثي وتطوره عبر العصور',
+    category: 'الفنون والعمارة التراثية',
+    categorySlug: 'heritage-arts',
+    instructorName: 'م. عبد الرحمن البغدادي',
+    instructorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    rating: 4.9,
+    studentsCount: 1240,
+    price: 180,
+    originalPrice: 280,
+    duration: '٢٤ ساعة مادة مسجلة',
+    lessonsCount: 16,
+    thumbnail: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600', // Beautiful mosque/dome pattern
+    progress: 75,
+    nextLesson: 'الدرس الرابع: العقود والأقواس في المسجد الأموي بدمشق',
+    featured: true,
+  },
+  {
+    id: 'course_2',
+    title: 'تاريخ الدول المستقلة في المشرق العربي وحضاراتها المتعاقبة',
+    category: 'التاريخ الإسلامي',
+    categorySlug: 'islamic-history',
+    instructorName: 'د. ليلى الأنصاري',
+    instructorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    rating: 4.8,
+    studentsCount: 850,
+    price: 120,
+    originalPrice: 200,
+    duration: '١٨ ساعة مادة مسجلة',
+    lessonsCount: 12,
+    thumbnail: 'https://images.unsplash.com/photo-1590073844006-33379778ae09?w=600', // Heritage architecture background
+    progress: 45,
+    nextLesson: 'الدرس السادس: نهضة العلوم والرياضيات في العصر العباسي الأول',
+    featured: true,
+  },
+  {
+    id: 'course_3',
+    title: 'روائع البلاغة العربية ونظم النثر الأدبي الكلاسيكي',
+    category: 'اللغة العربية آدابها',
+    categorySlug: 'arabic-language',
+    instructorName: 'أ. طارق الهاشمي',
+    instructorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    rating: 4.9,
+    studentsCount: 3100,
+    price: 0, // مجاناً
+    duration: '١٤ ساعة تعليمية',
+    lessonsCount: 10,
+    thumbnail: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600', // Classical writing utensil or paper
+    progress: 90,
+    nextLesson: 'الدرس العاشر: الخاتمة والتطبيقات العملية في الإيجاز والتشبيه الإيحائي',
+    featured: true,
+  },
+  {
+    id: 'course_4',
+    title: 'أسرار الخط العربي الديواني والثلث: القواعد الفنية والجمالية',
+    category: 'الفنون والعمارة التراثية',
+    categorySlug: 'heritage-arts',
+    instructorName: 'أ. معاذ السامرائي',
+    instructorAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    rating: 5.0,
+    studentsCount: 620,
+    price: 150,
+    originalPrice: 220,
+    duration: '٢٠ ساعة مادة مسجلة',
+    lessonsCount: 15,
+    thumbnail: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600', // Paint brushes calligraphy art
+    progress: 15,
+    nextLesson: 'الدرس الثاني: قواعد ميزان النقاط في خط الثلث للمبندئين',
+    featured: false,
+  },
+  {
+    id: 'course_5',
+    title: 'مقدمة شاملة في علم المخطوطات والتحقيق والترميم الأثري الرقمي',
+    category: 'علم الآثار والتحقيق',
+    categorySlug: 'archaeology',
+    instructorName: 'د. يوسف القرطبي',
+    instructorAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+    rating: 4.7,
+    studentsCount: 420,
+    price: 220,
+    originalPrice: 350,
+    duration: '٣٠ ساعة تدريبية مكثفة',
+    lessonsCount: 22,
+    thumbnail: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600', // Ancient library books
+    progress: 0,
+    nextLesson: 'الدرس الأول: مدخل تمهيدي لأنواع المداد والرقوق الجلدية القديمة',
+    featured: false,
+  },
+  {
+    id: 'course_6',
+    title: 'الأدب الأندلسي الخالد: من عهد الموشحات الفريدة إلى قصائد الرثاء الأليمة',
+    category: 'اللغة العربية آدابها',
+    categorySlug: 'arabic-language',
+    instructorName: 'أ. علياء الغرناطية',
+    instructorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+    rating: 4.8,
+    studentsCount: 780,
+    price: 95,
+    originalPrice: 150,
+    duration: '١٢ ساعة مادة مسجلة',
+    lessonsCount: 8,
+    thumbnail: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=600', // Classical study location
+    progress: 0,
+    nextLesson: 'الدرس الأول: تطور الموشحات الأندلسية الفنية ومقارنتها بنظيرتها المشرقية',
+    featured: false,
+  },
+  {
+    id: 'course_7',
+    title: 'تاريخ وحضارة مكة المكرمة والمدينة المنورة والقدس الشريف عبر العصور والمحطات الفاصلة',
+    category: 'التاريخ الإسلامي',
+    categorySlug: 'islamic-history',
+    instructorName: 'د. سامي المقدسي',
+    instructorAvatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+    rating: 4.9,
+    studentsCount: 4200,
+    price: 0, // مجانية
+    duration: '٢٥ ساعة علمية نافعة',
+    lessonsCount: 18,
+    thumbnail: 'https://images.unsplash.com/photo-1581447110411-cf9a712eb763?w=600', // Islamic historical site
+    progress: 100, // Completed!
+    nextLesson: 'مكتمل - يمكنك مراجعة الاختبار الشامل لاستخراج الشهادة المعمدة',
+    featured: false,
+  },
+];
+
+export const LIVE_SESSIONS: LiveSession[] = [
+  {
+    id: 'live_1',
+    title: 'موقف ومجلس لغة الضاد: حوار مفتوح وجلسة تفصيلية حول فقه السماع والتعلم السريع',
+    instructor: 'أ. طارق الهاشمي',
+    date: 'الخميس، ١٨ يونيو',
+    time: '٠٨:٠٠ مساءً بتوقيت مكة',
+    duration: 'ساعة ونصف',
+  },
+  {
+    id: 'live_2',
+    title: 'الأسرار الفنية لقصور غرناطة: جولة مرئية وثلاثية الأبعاد في ثنايا قصر الحمراء الأثري',
+    instructor: 'م. عبد الرحمن البغدادي',
+    date: 'الأحد، ٢٤ يونيو',
+    time: '٠٩:٣٠ مساءً بتوقيت مكة',
+    duration: 'ساعتان كاملتان',
+  },
+];
+
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    id: 'test_1',
+    name: 'سارة الهذلي',
+    role: 'طالبة تاريخ وفنون وأمينة متحف',
+    content: 'منصة آثاري ملأت فراغاً حقيقياً في مجال التعريف والتدريب على العلوم التراثية والهوية الإسلامية بطريقة أكاديمية تواكب تكنولوجيا التعليم والإنترنت المتقدم.',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  },
+  {
+    id: 'test_2',
+    name: 'فيصل الحربي',
+    role: 'مصمم غرافيك وهواة خطوط عربية',
+    content: 'بفضل دورة علم الخط العربي والديواني مع الأستاذ معاذ، تمكنت من صقل موهبتي ومعرفة القواعد الدقيقة للموازين والجمال البصري الموروث ودمجها أخيراً بأعمالي!',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+  },
+];

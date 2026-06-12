@@ -1,0 +1,614 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-white: var(--color-card, #ffffff);
+  
+  --color-stone-50: var(--color-stone-50-val);
+  --color-stone-100: var(--color-stone-100-val);
+  --color-stone-200: var(--color-stone-200-val);
+  --color-stone-300: var(--color-stone-300-val);
+  --color-stone-400: var(--color-stone-400-val);
+  --color-stone-500: var(--color-stone-500-val);
+  --color-stone-600: var(--color-stone-600-val);
+  --color-stone-700: var(--color-stone-700-val);
+  --color-stone-800: var(--color-stone-800-val);
+  --color-stone-900: var(--color-stone-900-val);
+  --color-stone-950: var(--color-stone-950-val);
+
+  /* Dynamically map core design palette to CSS variables */
+  --color-orange-50: var(--color-brand-orange-50);
+  --color-orange-100: var(--color-brand-orange-100);
+  --color-orange-600: var(--color-brand-orange-600);
+  --color-orange-700: var(--color-brand-orange-700);
+  --color-orange-750: var(--color-brand-orange-750);
+  --color-orange-850: var(--color-brand-orange-850);
+  --color-orange-950: var(--color-brand-orange-950);
+
+  --color-amber-50: var(--color-brand-amber-50);
+  --color-amber-100: var(--color-brand-amber-100);
+  --color-amber-200: var(--color-brand-amber-200);
+  --color-amber-400: var(--color-brand-amber-400);
+  --color-amber-500: var(--color-brand-amber-500);
+  --color-amber-600: var(--color-brand-amber-600);
+
+  --color-border: var(--color-border-val);
+  --color-background: var(--color-background-val);
+  --color-foreground: var(--color-foreground-val);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background-val, #FDFBF7);
+  color: var(--color-foreground-val, #1c1917);
+  direction: rtl;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+:root {
+  /* Default Branding (Classical Heritage Claret & Gold) */
+  --color-brand-orange-50: #fff7ed;
+  --color-brand-orange-100: #ffedd5;
+  --color-brand-orange-600: #ea580c;
+  --color-brand-orange-700: #962d15; /* Native Claret */
+  --color-brand-orange-750: #962d15;
+  --color-brand-orange-850: #80220e;
+  --color-brand-orange-950: #451a03;
+
+  --color-brand-amber-50: #faf4e1;
+  --color-brand-amber-100: #faf0d5;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #FDFBF7;
+  --color-foreground-val: #1c1917;
+  --color-background: #FDFBF7;
+  --color-foreground: #1c1917;
+  --color-card: #ffffff;
+  --color-card-foreground: #1c1917;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1c1917;
+  --color-primary: #C5A565;
+  --color-primary-foreground: #121E31;
+  --color-secondary: #f5f0e6;
+  --color-secondary-foreground: #1c1917;
+  --color-muted: #f5f0e6;
+  --color-muted-foreground: #6c6c70;
+  --color-accent: #f5f0e6;
+  --color-accent-foreground: #161620;
+  --color-destructive: #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border: #e5e7eb;
+  --color-border-val: #e5e7eb;
+  --color-input: #f5f0e6;
+  --color-ring: #C5A565;
+
+  /* Stone values for Default Light */
+  --color-stone-50-val: #FDFBF7;
+  --color-stone-100-val: #F5F0E6;
+  --color-stone-200-val: #e5e7eb;
+  --color-stone-300-val: #d6d3d1;
+  --color-stone-400-val: #a8a29e;
+  --color-stone-500-val: #78716c;
+  --color-stone-600-val: #57534e;
+  --color-stone-700-val: #44403c;
+  --color-stone-800-val: #292524;
+  --color-stone-900-val: #1c1917;
+  --color-stone-950-val: #0c0a09;
+
+  /* Custom Gold Palette values used by other layouts */
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #B8945F;
+  --color-light-gold: #F5EBD0;
+  --color-select-gold: #B09050;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #B8945F;
+  --color-shadow-gold: rgba(197, 165, 101, 0.2);
+
+  --color-navy: #121E31;
+  --color-navy-light: #1A2A40;
+  --color-navy-lighter: #243450;
+  --color-navy-dark: #0B1120;
+
+  --color-beige: #FDFBF7;
+  --color-beige-darker: #F5F0E6;
+
+  --color-contrast: #121E31;
+  --color-contrast-foreground: #ffffff;
+  --color-contrast-muted: #9ca3af;
+  --color-contrast-border: #334155;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+.dark {
+  /* Harmonized dark navy overlays for default branding! */
+  --color-brand-orange-50: #122137;
+  --color-brand-orange-100: #1C304B;
+  --color-brand-orange-600: #f97316;
+  --color-brand-orange-700: #ea580c;
+  --color-brand-orange-750: #C5A565;
+  --color-brand-orange-850: #E5C585;
+  --color-brand-orange-950: #ef4444;
+
+  --color-brand-amber-50: #122137;
+  --color-brand-amber-100: #1E314C;
+  --color-brand-amber-200: #1E3A5F;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #0B1120;
+  --color-foreground-val: #f3f4f6;
+  --color-background: #0B1120;
+  --color-foreground: #f3f4f6;
+  --color-card: #121E31;
+  --color-card-foreground: #f3f4f6;
+  --color-popover: #1A2A40;
+  --color-popover-foreground: #f3f4f6;
+  --color-primary: #C5A565;
+  --color-primary-foreground: #121E31;
+  --color-secondary: #1A2A40;
+  --color-secondary-foreground: #f3f4f6;
+  --color-muted: #1A2A40;
+  --color-muted-foreground: #9ca3af;
+  --color-accent: #1A2A40;
+  --color-accent-foreground: #f3f4f6;
+  --color-destructive: #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border: #1F2E45;
+  --color-border-val: #1F2E45;
+  --color-input: #1A2A40;
+  --color-ring: #C5A565;
+
+  /* Stone values for Default Dark */
+  --color-stone-50-val: #0f172a;
+  --color-stone-100-val: #1e293b;
+  --color-stone-200-val: #1f2e45;
+  --color-stone-300-val: #334155;
+  --color-stone-400-val: #64748b;
+  --color-stone-500-val: #94a3b8;
+  --color-stone-600-val: #94a3b8;
+  --color-stone-700-val: #cbd5e1;
+  --color-stone-800-val: #e2e8f0;
+  --color-stone-900-val: #f3f4f6;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #B8945F;
+  --color-light-gold: #2d2a26;
+  --color-select-gold: #B09050;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #B8945F;
+  --color-shadow-gold: rgba(197, 165, 101, 0.25);
+
+  --color-beige: #0B1120;
+  --color-beige-darker: #121E31;
+
+  --color-contrast: #0a0e18;
+  --color-contrast-foreground: #f3f4f6;
+  --color-contrast-muted: #9ca3af;
+  --color-contrast-border: #334155;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+/* ==========================================================================
+   GOLD Theme Dynamic Mappings (Rich Golden Amber Claret & Warm Suede backgrounds)
+   ========================================================================== */
+
+:root.theme-gold {
+  --color-brand-orange-50: #fefbeb;
+  --color-brand-orange-100: #fef3c7;
+  --color-brand-orange-600: #d97706;
+  --color-brand-orange-700: #b45309; /* Golden amber main action */
+  --color-brand-orange-750: #d97706;
+  --color-brand-orange-850: #92400e;
+  --color-brand-orange-950: #78350f;
+
+  --color-brand-amber-50: #fffbeb;
+  --color-brand-amber-100: #fef3c7;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565; /* Classical gold accent */
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #F8F2E2;
+  --color-foreground-val: #2d1e0f;
+  --color-background: #F8F2E2; /* Pure ancient warm gold desert background */
+  --color-foreground: #2d1e0f;
+  --color-card: #ffffff;
+  --color-card-foreground: #2d1e0f;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2d1e0f;
+  --color-muted: #f7eed2;
+  --color-muted-foreground: #7c6244;
+  --color-border: #e6dfc6;
+  --color-border-val: #e6dfc6;
+  --color-input: #fbf5df;
+  --color-ring: #c5a565;
+
+  /* Stone values for Gold Light */
+  --color-stone-50-val: #F8F2E2;
+  --color-stone-100-val: #F5EBD0;
+  --color-stone-200-val: #e6dfc6;
+  --color-stone-300-val: #cdb9a0;
+  --color-stone-400-val: #b89c7d;
+  --color-stone-500-val: #927555;
+  --color-stone-600-val: #7c6244;
+  --color-stone-700-val: #5a422d;
+  --color-stone-800-val: #422d1a;
+  --color-stone-900-val: #2d1e0f;
+  --color-stone-950-val: #1a1005;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #b8945f;
+  --color-light-gold: #fdf2d0;
+  --color-select-gold: #a68449;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #b8945f;
+  --color-shadow-gold: rgba(197, 165, 101, 0.25);
+  --color-primary: #c5a565;
+  --color-primary-foreground: #1c1917;
+
+  --color-contrast: #241407;
+  --color-contrast-foreground: #fef7e7;
+  --color-contrast-muted: #cdb9a0;
+  --color-contrast-border: #442a12;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-gold.dark {
+  --color-brand-orange-50: #201810;
+  --color-brand-orange-100: #2d2216;
+  --color-brand-orange-600: #fbbf24;
+  --color-brand-orange-700: #f59e0b;
+  --color-brand-orange-750: #f59e0b;
+  --color-brand-orange-850: #fde68a;
+  --color-brand-orange-950: #d97706;
+
+  --color-brand-amber-50: #201810;
+  --color-brand-amber-100: #2d2417;
+  --color-brand-amber-200: #3d2f20;
+  --color-brand-amber-400: #d4af37; /* Metallic leaf gold */
+  --color-brand-amber-500: #fbbf24;
+  --color-brand-amber-600: #f59e0b;
+
+  --color-background-val: #140f09;
+  --color-foreground-val: #fef5e7;
+  --color-background: #140f09; /* Deep golden-night obsidian backing */
+  --color-foreground: #fef5e7;
+  --color-card: #201810;
+  --color-card-foreground: #fef5e7;
+  --color-popover: #2d2216;
+  --color-popover-foreground: #fef5e7;
+  --color-muted: #2d2216;
+  --color-muted-foreground: #ad9a82;
+  --color-border: #3d2f20;
+  --color-border-val: #3d2f20;
+  --color-input: #2d2216;
+  --color-ring: #d4af37;
+
+  /* Stone values for Gold Dark */
+  --color-stone-50-val: #1a130c;
+  --color-stone-100-val: #251b11;
+  --color-stone-200-val: #3d2f20;
+  --color-stone-300-val: #52402d;
+  --color-stone-400-val: #826e57;
+  --color-stone-500-val: #ad9a82;
+  --color-stone-600-val: #ad9a82;
+  --color-stone-700-val: #e7dfd1;
+  --color-stone-800-val: #f2ebd9;
+  --color-stone-900-val: #fef5e7;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #f59e0b;
+  --color-light-gold: #2d2216;
+  --color-select-gold: #c5a565;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #fbbf24;
+  --color-shadow-gold: rgba(212, 175, 55, 0.3);
+  --color-primary: #d4af37;
+  --color-primary-foreground: #140f09;
+
+  --color-contrast: #0b0704;
+  --color-contrast-foreground: #fbf5df;
+  --color-contrast-muted: #ad9a82;
+  --color-contrast-border: #201810;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+/* ==========================================================================
+   FOREST Theme Dynamic Mappings
+   ========================================================================== */
+
+:root.theme-forest {
+  --color-brand-orange-50: #f0fdf4;
+  --color-brand-orange-100: #dcfce7;
+  --color-brand-orange-600: #16a34a;
+  --color-brand-orange-700: #15803d; /* Forest Green main action */
+  --color-brand-orange-750: #166534;
+  --color-brand-orange-850: #14532d;
+  --color-brand-orange-950: #052e16;
+
+  --color-brand-amber-50: #f0fdf4;
+  --color-brand-amber-100: #dcfce7;
+  --color-brand-amber-200: #bbf7d0;
+  --color-brand-amber-400: #6b9e72; /* Moss gold */
+  --color-brand-amber-500: #22c55e;
+  --color-brand-amber-600: #16a34a;
+
+  --color-background-val: #f0f5f0;
+  --color-foreground-val: #101a10;
+  --color-background: #f0f5f0;
+  --color-foreground: #101a10;
+  --color-card: #ffffff;
+  --color-card-foreground: #101a10;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #101a10;
+  --color-muted: #e6f0e6;
+  --color-muted-foreground: #5a6b5a;
+  --color-border: #d0e0d0;
+  --color-border-val: #d0e0d0;
+  --color-input: #e6f0e6;
+  --color-ring: #6b9e72;
+
+  /* Stone values for Forest Light */
+  --color-stone-50-val: #f0f5f0;
+  --color-stone-100-val: #e6f0e6;
+  --color-stone-200-val: #d0e0d0;
+  --color-stone-300-val: #b8c8b8;
+  --color-stone-400-val: #9cb09c;
+  --color-stone-500-val: #7c927c;
+  --color-stone-600-val: #5a6b5a;
+  --color-stone-700-val: #334d33;
+  --color-stone-800-val: #203020;
+  --color-stone-900-val: #101a10;
+  --color-stone-950-val: #050805;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #7ab882;
+  --color-light-gold: #d4ead6;
+  --color-select-gold: #4a7250;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #7ab882;
+  --color-shadow-gold: rgba(107, 158, 114, 0.2);
+  --color-primary: #6b9e72;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #0e1a0e;
+  --color-contrast-foreground: #e0f0e0;
+  --color-contrast-muted: #8aa88a;
+  --color-contrast-border: #2a3a2a;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-forest.dark {
+  --color-brand-orange-50: #101a10;
+  --color-brand-orange-100: #1a2a1a;
+  --color-brand-orange-600: #22c55e;
+  --color-brand-orange-700: #4ade80; /* Glowing Forest green */
+  --color-brand-orange-750: #22c55e;
+  --color-brand-orange-850: #86efac;
+  --color-brand-orange-950: #15803d;
+
+  --color-brand-amber-50: #101a10;
+  --color-brand-amber-100: #1a2a1a;
+  --color-brand-amber-200: #283828;
+  --color-brand-amber-400: #4ade80;
+  --color-brand-amber-500: #86efac;
+  --color-brand-amber-600: #22c55e;
+
+  --color-background-val: #0a0e0a;
+  --color-foreground-val: #e8f0e8;
+  --color-background: #0a0e0a;
+  --color-foreground: #e8f0e8;
+  --color-card: #101a10;
+  --color-card-foreground: #e8f0e8;
+  --color-popover: #1a2a1a;
+  --color-popover-foreground: #e8f0e8;
+  --color-muted: #1a2a1a;
+  --color-muted-foreground: #8a9a8a;
+  --color-border: #283828;
+  --color-border-val: #283828;
+  --color-input: #1a2a1a;
+  --color-ring: #6b9e72;
+
+  /* Stone values for Forest Dark */
+  --color-stone-50-val: #0f160f;
+  --color-stone-100-val: #152215;
+  --color-stone-200-val: #283828;
+  --color-stone-300-val: #3c523c;
+  --color-stone-400-val: #607a60;
+  --color-stone-500-val: #8a9a8a;
+  --color-stone-600-val: #8a9a8a;
+  --color-stone-700-val: #c8d8c8;
+  --color-stone-800-val: #dceada;
+  --color-stone-900-val: #e8f0e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #74a87c;
+  --color-light-gold: #1a2a1a;
+  --color-select-gold: #3e6044;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #74a87c;
+  --color-shadow-gold: rgba(92, 140, 99, 0.25);
+  --color-primary: #6b9e72;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #060d06;
+  --color-contrast-foreground: #d8e8d8;
+  --color-contrast-muted: #7a987a;
+  --color-contrast-border: #1a2a1a;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+/* ==========================================================================
+   GRAPHITE Theme Dynamic Mappings
+   ========================================================================== */
+
+:root.theme-graphite {
+  --color-brand-orange-50: #f3f4f6;
+  --color-brand-orange-100: #e5e7eb;
+  --color-brand-orange-600: #4b5563;
+  --color-brand-orange-700: #374151; /* Dark Graphite */
+  --color-brand-orange-750: #1f2937;
+  --color-brand-orange-850: #111827;
+  --color-brand-orange-950: #030712;
+
+  --color-brand-amber-50: #f9fafb;
+  --color-brand-amber-100: #f3f4f6;
+  --color-brand-amber-200: #e5e7eb;
+  --color-brand-amber-400: #707070; /* Sleek Slate Gray */
+  --color-brand-amber-500: #6b7280;
+  --color-brand-amber-600: #4b5563;
+
+  --color-background-val: #f2f2f2;
+  --color-foreground-val: #141414;
+  --color-background: #f2f2f2;
+  --color-foreground: #141414;
+  --color-card: #ffffff;
+  --color-card-foreground: #141414;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #141414;
+  --color-muted: #e0e0e0;
+  --color-muted-foreground: #5a5a5a;
+  --color-border: #cccccc;
+  --color-border-val: #cccccc;
+  --color-input: #e0e0e0;
+  --color-ring: #707070;
+
+  /* Stone values for Graphite Light */
+  --color-stone-50-val: #f2f2f2;
+  --color-stone-100-val: #e0e0e0;
+  --color-stone-200-val: #cccccc;
+  --color-stone-300-val: #b0b0b0;
+  --color-stone-400-val: #909090;
+  --color-stone-500-val: #707070;
+  --color-stone-600-val: #5a5a5a;
+  --color-stone-700-val: #4c4c4c;
+  --color-stone-800-val: #2b2b2b;
+  --color-stone-900-val: #141414;
+  --color-stone-950-val: #080808;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #888888;
+  --color-light-gold: #e0e0e0;
+  --color-select-gold: #484848;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #888888;
+  --color-shadow-gold: rgba(112, 112, 112, 0.18);
+  --color-primary: #707070;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #141414;
+  --color-contrast-foreground: #f0f0f0;
+  --color-contrast-muted: #909090;
+  --color-contrast-border: #303030;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-graphite.dark {
+  --color-brand-orange-50: #141414;
+  --color-brand-orange-100: #222222;
+  --color-brand-orange-600: #9ca3af;
+  --color-brand-orange-700: #cbd5e1; /* Silver highlights */
+  --color-brand-orange-750: #cbd5e1;
+  --color-brand-orange-850: #e2e8f0;
+  --color-brand-orange-950: #4b5563;
+
+  --color-brand-amber-50: #141414;
+  --color-brand-amber-100: #222222;
+  --color-brand-amber-200: #303030;
+  --color-brand-amber-400: #9ca3af;
+  --color-brand-amber-500: #e5e7eb;
+  --color-brand-amber-600: #cbd5e1;
+
+  --color-background-val: #0c0c0c;
+  --color-foreground-val: #e8e8e8;
+  --color-background: #0c0c0c;
+  --color-foreground: #e8e8e8;
+  --color-card: #141414;
+  --color-card-foreground: #e8e8e8;
+  --color-popover: #222222;
+  --color-popover-foreground: #e8e8e8;
+  --color-muted: #222222;
+  --color-muted-foreground: #888888;
+  --color-border: #303030;
+  --color-border-val: #303030;
+  --color-input: #222222;
+  --color-ring: #707070;
+
+  /* Stone values for Graphite Dark */
+  --color-stone-50-val: #0e0e0e;
+  --color-stone-100-val: #1c1c1c;
+  --color-stone-200-val: #303030;
+  --color-stone-300-val: #484848;
+  --color-stone-400-val: #686868;
+  --color-stone-500-val: #888888;
+  --color-stone-600-val: #888888;
+  --color-stone-700-val: #c0c0c0;
+  --color-stone-800-val: #dbdbdb;
+  --color-stone-900-val: #e8e8e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #787878;
+  --color-light-gold: #222222;
+  --color-select-gold: #404040;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #787878;
+  --color-shadow-gold: rgba(96, 96, 96, 0.25);
+  --color-primary: #707070;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #080808;
+  --color-contrast-foreground: #e8e8e8;
+  --color-contrast-muted: #808080;
+  --color-contrast-border: #202020;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+/* Custom gorgeous scrollbar for heritage style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fef3c7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d97706;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c2410c;
+}
+
+/* Low-opacity Islamic geometric art background placeholder classes */
+.bg-heritage-pattern {
+  background-image: radial-gradient(#d97706 0.75px, transparent 0.75px), radial-gradient(#d97706 0.75px, #fffbeb 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  opacity: 0.12;
+}
+
+.bg-heritage-pattern-dark {
+  background-image: radial-gradient(#c2410c 0.75px, transparent 0.75px), radial-gradient(#c2410c 0.75px, #451a03 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  opacity: 0.08;
+}
+
+/* Decorative stars style */
+.heritage-star {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
