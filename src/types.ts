@@ -42,6 +42,6 @@ export interface Testimonial {
   avatar: string;
 }
 
-export type ViewType = 'landing' | 'catalog' | 'dashboard' | 'auth' | 'course-details' | 'cart-checkout' | 'instructor-dashboard' | 'admin-dashboard' | 'about-contact';
+export type ViewType = 'landing' | 'catalog' | 'dashboard' | 'auth' | 'course-details' | 'cart-checkout' | 'instructor-dashboard' | 'admin-dashboard' | 'about-contact' | 'profile-settings' | 'public-profile';
 
 export type AuthSubView = 'login' | 'register' | 'forgot' | 'verify' | 'reset' | 'success';

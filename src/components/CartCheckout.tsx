@@ -10,7 +10,9 @@ import {
   ShieldCheck, 
   CreditCard,
   Percent,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -33,6 +35,10 @@ export default function CartCheckout({
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+
+  // States to facilitate a safe deletion Confirmation Dialog
+  const [courseToRemove, setCourseToRemove] = useState<Course | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const subtotal = cartItems.reduce((acc, curr) => acc + curr.price, 0);
 
@@ -179,8 +185,8 @@ export default function CartCheckout({
 
                         <button
                           onClick={() => {
-                            onRemoveFromCart(item.id);
-                            onTriggerToast(`تم حذف المقرر: ${item.title}`);
+                            setCourseToRemove(item);
+                            setIsConfirmOpen(true);
                           }}
                           className="text-stone-400 hover:text-red-700 text-xs font-bold p-2 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-100 bg-transparent cursor-pointer"
                           title="إلغاء حجز المقرر الدراسي"
@@ -337,6 +343,83 @@ export default function CartCheckout({
 
           </div>
         )}
+
+        {/* Confirmation Dialog Modal */}
+        <AnimatePresence>
+          {isConfirmOpen && courseToRemove && (
+            <div className="fixed inset-0 z-50 overflow-y-auto" id="cart-item-remove-dialog-overlay" dir="rtl">
+              {/* Backdrop blur element */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity"
+                onClick={() => {
+                  setIsConfirmOpen(false);
+                  setCourseToRemove(null);
+                }}
+              />
+
+              {/* Central container */}
+              <div className="flex min-h-screen items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                  className="relative w-full max-w-md bg-white border border-amber-200 rounded-2xl shadow-2xl overflow-hidden text-right p-6 space-y-4"
+                  id="cart-item-remove-dialog-panel"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Warning Icon Badge */}
+                    <div className="bg-amber-100 p-3 rounded-full text-orange-700 shrink-0">
+                      <AlertTriangle className="w-6 h-6" />
+                    </div>
+                    
+                    <div className="space-y-1.5 flex-1">
+                      <h3 className="text-sm font-bold text-stone-900">تأكيد إقصاء المقرر الدراسي</h3>
+                      <p className="text-xs text-stone-550 leading-relaxed text-stone-600">
+                        هل أنت متأكد من رغبتك في إقصاء وإلغاء حجز المقرر التالي من حقيبتك الأكاديمية؟
+                      </p>
+                      <div className="bg-stone-50 border border-stone-150 p-3 rounded-xl">
+                        <strong className="text-xs font-black text-stone-900 block">{courseToRemove.title}</strong>
+                        <span className="text-[10px] text-stone-500 font-medium">إشراف: {courseToRemove.instructorName}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="flex gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (courseToRemove) {
+                          onRemoveFromCart(courseToRemove.id);
+                          onTriggerToast(`تم حذف المقرر: ${courseToRemove.title} من حقيبة التسوق.`);
+                        }
+                        setIsConfirmOpen(false);
+                        setCourseToRemove(null);
+                      }}
+                      className="flex-1 bg-red-700 hover:bg-red-850 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer border-0 shadow-xs"
+                    >
+                      تأكيد الحذف والإقصاء
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsConfirmOpen(false);
+                        setCourseToRemove(null);
+                      }}
+                      className="bg-stone-105 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium py-2.5 px-4 rounded-xl transition cursor-pointer border-0"
+                    >
+                      إبقاء في الحقيبة
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </motion.div>

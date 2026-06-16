@@ -23,13 +23,15 @@ interface CourseCatalogProps {
   onAddToCart: (course: Course) => void;
   cartItems: Course[];
   onViewCourseDetails: (id: string) => void;
+  onViewInstructorProfile?: (name: string) => void;
 }
 
 export default function CourseCatalog({
   initialCategoryFilter,
   onAddToCart,
   cartItems,
-  onViewCourseDetails
+  onViewCourseDetails,
+  onViewInstructorProfile
 }: CourseCatalogProps) {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -455,6 +457,88 @@ export default function CourseCatalog({
           {/* Left Column: Course Grid, sorting and filters for mobile */}
           <main className="lg:col-span-3 space-y-6" id="catalog-main-grid-left">
             
+            {/* Real-time High Visibility Search Bar & Level Dropdown Filter */}
+            <div className="bg-white rounded-2xl border border-amber-200/80 p-5 shadow-sm space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Search query input */}
+                <div className="md:col-span-2 space-y-2">
+                  <span className="block text-xs font-bold text-stone-850 text-right">
+                    البحث الفوري والذكي عن المقررات والفضلاء:
+                  </span>
+                  <div className="relative">
+                    <input
+                      id="catalog-realtime-search-input"
+                      type="text"
+                      placeholder="اكتب عنوان الدورة أو اسم الأستاذ المحاضر (مثال: البغدادي، الحربي، البلاغة)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-stone-50 text-stone-900 dark:bg-stone-950 placeholder-stone-400 text-xs sm:text-sm py-3 px-11 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right font-sans"
+                    />
+                    <Search className="w-5 h-5 text-orange-700 absolute top-3.5 right-4 pointer-events-none" />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute left-3.5 top-3.5 text-stone-400 hover:text-stone-700 font-bold text-xs p-1 cursor-pointer bg-transparent border-0"
+                        title="مسح البحث"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Level Dropdown selector list */}
+                <div className="space-y-2">
+                  <span className="block text-xs font-bold text-stone-850 text-right">
+                    تصفية المستوى الدراسي للدورة:
+                  </span>
+                  <div className="relative">
+                    <select
+                      id="catalog-level-select"
+                      value={selectedLevels.length === 1 ? selectedLevels[0] : 'all'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'all') {
+                          setSelectedLevels([]);
+                        } else {
+                          setSelectedLevels([val]);
+                        }
+                      }}
+                      className="w-full bg-stone-50 text-stone-900 dark:bg-stone-950 text-xs sm:text-sm py-3 px-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right font-sans appearance-none cursor-pointer"
+                    >
+                      <option value="all">جميع المستويات الدراسية (الكل)</option>
+                      <option value="مبتدئ">مستوى مبتدئ (صغار الطلبة)</option>
+                      <option value="متوسط">مستوى متوسط (متوسط الأهلية)</option>
+                      <option value="متقدم">مستوى متقدم (العلماء والأسانيد)</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-orange-700 absolute left-4 top-3.5 pointer-events-none" />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Active search or level filters display info */}
+              {(searchQuery || selectedLevels.length > 0) && (
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-stone-100 text-xs text-stone-605">
+                  <span className="font-semibold text-right text-stone-800">
+                    نشط الآن: {filteredCourses.length} دورة مطابقة للفلاتر الحالية.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedLevels([]);
+                    }}
+                    className="text-xs text-orange-700 hover:text-orange-900 underline font-bold cursor-pointer bg-transparent border-0 p-0"
+                  >
+                    إعادة تعيين مرشحات البحث والمستوى ↺
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Header controls inside catalog */}
             <div className="bg-white rounded-2xl border border-amber-200/80 p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm text-right">
               
@@ -558,7 +642,12 @@ export default function CourseCatalog({
                         <div>
                           {/* Instructor name & avatar */}
                           <div className="flex items-center justify-between mb-2.5 text-xs">
-                            <div className="flex items-center gap-1.5 text-stone-700 font-medium font-sans">
+                            <button
+                              type="button"
+                              onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                              className="flex items-center gap-1.5 text-stone-700 hover:text-orange-850 font-medium font-sans bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
+                              title={`عرض الملف الشخصي لـ ${course.instructorName}`}
+                            >
                               <img 
                                 src={course.instructorAvatar} 
                                 alt={course.instructorName}
@@ -566,7 +655,7 @@ export default function CourseCatalog({
                                 referrerPolicy="no-referrer"
                               />
                               <span className="text-[11px] font-bold truncate max-w-[120px]">{course.instructorName}</span>
-                            </div>
+                            </button>
                             
                             <button
                               onClick={() => setSelectedCourseForReview(course)}

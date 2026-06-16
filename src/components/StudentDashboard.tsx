@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { COURSES, LIVE_SESSIONS } from '../data';
 import { Course, LiveSession } from '../types';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import ManuscriptCertificate from './ManuscriptCertificate';
 import LearningRoom from './LearningRoom';
 import QuizTaking from './QuizTaking';
 import LiveSessionRoom from './LiveSession';
 import MessagingCenter from './MessagingCenter';
-import AdvancedProfile from './AdvancedProfile';
 import WishlistRefunds from './WishlistRefunds';
 import InstructorApply from './InstructorApply';
 import { 
@@ -45,7 +57,7 @@ interface StudentDashboardProps {
   onNavigateToCatalog: () => void;
 }
 
-type DashboardTab = 'overview' | 'my-courses' | 'certificates' | 'favorites' | 'notifications' | 'profile' | 'instructor-apply';
+type DashboardTab = 'overview' | 'my-courses' | 'certificates' | 'favorites' | 'notifications' | 'instructor-apply';
 
 export default function StudentDashboard({
   onLogout,
@@ -92,6 +104,24 @@ export default function StudentDashboard({
   const studentCourses = COURSES.filter(c => c.progress !== undefined);
   const favoriteCourses = COURSES.slice(2, 4);
 
+  // Recharts progress & status analytics computations
+  const completedCount = studentCourses.filter(c => c.progress === 100).length;
+  const inProgressCount = studentCourses.filter(c => c.progress !== undefined && c.progress > 0 && c.progress < 100).length;
+  const notStartedCount = studentCourses.filter(c => c.progress === 0).length;
+
+  const chartData = studentCourses.map(course => ({
+    name: course.title,
+    'التقدم الحالي (%)': course.progress || 0,
+    progressPercent: course.progress || 0,
+    shortTitle: course.title.length > 15 ? course.title.substring(0, 15) + '...' : course.title,
+  }));
+
+  const pieData = [
+    { name: 'المسارات المكتملة 🎓', value: completedCount, color: '#115e59' }, // deep teal
+    { name: 'قيد الدراسة 📚', value: inProgressCount, color: '#c2410c' }, // orange-700
+    { name: 'لم تبدأ بعد ⏱️', value: notStartedCount, color: '#a8a29e' }, // stone-400
+  ].filter(item => item.value > 0);
+
   // Framer Motion entrance & stagger animation variants
   const containerVariants: any = {
     hidden: { opacity: 0 },
@@ -133,7 +163,6 @@ export default function StudentDashboard({
     { id: 'certificates' as DashboardTab, label: 'الشهادات والإجازات', icon: <Award className="w-5 h-5" /> },
     { id: 'favorites' as DashboardTab, label: 'المفضلة وطلب الاسترداد', icon: <Heart className="w-5 h-5" /> },
     { id: 'notifications' as DashboardTab, label: 'مركز الرسائل والتنبيهات', icon: <Bell className="w-5 h-5" /> },
-    { id: 'profile' as DashboardTab, label: 'الملف الشخصي والضبط', icon: <User className="w-5 h-5" /> },
     { id: 'instructor-apply' as DashboardTab, label: 'الانضمام كمدرب', icon: <GraduationCap className="w-5 h-5" /> },
   ];
 
@@ -335,6 +364,152 @@ export default function StudentDashboard({
                         <Play className="w-4 h-4 fill-current ml-[-2px] text-orange-700" />
                         <span>متابعة المشاهدة الآن</span>
                       </button>
+
+                    </div>
+                  </section>
+
+                  {/* STUDENTS PROGRESS CHARTS AND METRICS */}
+                  <section className="bg-white rounded-3xl border border-amber-200/80 p-6 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-amber-100">
+                      <div>
+                        <h2 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 bg-orange-700 rounded-full animate-pulse" />
+                          <span>تحليل الإنجاز والمثابرة العلمية</span>
+                        </h2>
+                        <p className="text-[10px] text-stone-500 font-light mt-1">تتبع مرئي حقيقي لتقدمك في المسارات التراثية المكتملة مقابل المقررات قيد المدارسة (مكتبة Recharts)</p>
+                      </div>
+                      
+                      {/* Metric Badges Info */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 rounded-lg">
+                          المكتملة: {completedCount} 🎓
+                        </span>
+                        <span className="text-[10px] font-black bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-lg">
+                          قيد النهل: {inProgressCount} 📚
+                        </span>
+                        {notStartedCount > 0 && (
+                          <span className="text-[10px] font-black bg-stone-100 text-stone-600 border border-stone-200 px-2.5 py-1 rounded-lg">
+                            لم تبدأ: {notStartedCount} ⏱️
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      
+                      {/* Left: Bar chart representing progress per course */}
+                      <div className="lg:col-span-2 space-y-3 bg-stone-50/50 p-4 rounded-2xl border border-stone-100/60" id="progress-bar-chart-container">
+                        <h3 className="text-xs font-bold text-stone-800 text-right">مستوى النهل والتحصيل التفصيلي (%)</h3>
+                        <p className="text-[9px] text-stone-450 leading-none">مقارنة بصرية دقيقة لنسب تقدم الطالب في كل مسار تعليمي مسجل</p>
+                        
+                        <div className="h-64 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={chartData}
+                              margin={{ top: 10, right: 10, left: -25, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
+                              <XAxis 
+                                dataKey="shortTitle" 
+                                tick={{ fontSize: 9, fill: '#57534e', fontWeight: 600 }} 
+                                axisLine={false}
+                                tickLine={false}
+                              />
+                              <YAxis 
+                                tick={{ fontSize: 9, fill: '#78716c' }} 
+                                domain={[0, 100]} 
+                                axisLine={false}
+                                tickLine={false}
+                              />
+                              <Tooltip 
+                                contentStyle={{ 
+                                  direction: 'rtl',
+                                  textAlign: 'right',
+                                  backgroundColor: '#1c1917', 
+                                  border: 'none', 
+                                  borderRadius: '12px',
+                                  color: '#fef3c7',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                }}
+                                formatter={(value: any) => [`${value}%`, 'التقدم']}
+                                labelFormatter={(label: any) => `المسار: ${label}`}
+                              />
+                              <Bar 
+                                dataKey="التقدم الحالي (%)" 
+                                radius={[8, 8, 0, 0]} 
+                                fill="#c2410c"
+                              >
+                                {chartData.map((entry, index) => {
+                                  // Customize color based on completion! Teal for 100%, Orange-dark for others
+                                  const color = entry.progressPercent === 100 ? '#115e59' : '#c2410c';
+                                  return <Cell key={`cell-${index}`} fill={color} />;
+                                })}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* Right: Pie Chart / Breakdown status of courses */}
+                      <div className="space-y-4 bg-stone-50/50 p-4 rounded-2xl border border-stone-100/60 flex flex-col justify-between" id="status-pie-chart-container">
+                        <div>
+                          <h3 className="text-xs font-bold text-stone-800 text-right">رصيد التحصيل والأهلية</h3>
+                          <p className="text-[9px] text-stone-450 leading-none">توزع الأرصدة الدراسية في مشوار الطالب العلمي</p>
+                        </div>
+
+                        <div className="h-44 w-full relative flex items-center justify-center">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={pieData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={50}
+                                outerRadius={70}
+                                paddingAngle={5}
+                                dataKey="value"
+                              >
+                                {pieData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  direction: 'rtl',
+                                  textAlign: 'right',
+                                  backgroundColor: '#1c1917', 
+                                  border: 'none', 
+                                  borderRadius: '10px',
+                                  color: '#fef3c7',
+                                  fontSize: '10px'
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          {/* Inside donut content summary badge */}
+                          <div className="absolute inset-x-0 mx-auto flex flex-col items-center justify-center">
+                            <span className="text-base font-black text-stone-900">
+                              {studentCourses.length}
+                            </span>
+                            <span className="text-[8px] text-stone-500 font-bold leading-none">إجمالي المسارات</span>
+                          </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="space-y-1.5" id="pie-chart-legends">
+                          {pieData.map((entry, i) => (
+                            <div key={i} className="flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: entry.color }} />
+                                <span className="text-stone-750 font-semibold">{entry.name}</span>
+                              </div>
+                              <span className="font-bold text-stone-900">{entry.value} مسار ({((entry.value / studentCourses.length) * 100).toFixed(0)}%)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
                     </div>
                   </section>
@@ -689,20 +864,7 @@ export default function StudentDashboard({
                 )}
               </AnimatePresence>
 
-              {/* TAB 6: ADVANCED PROFILE & SETTINGS */}
-              <AnimatePresence mode="wait">
-                {activeTab === 'profile' && (
-                  <motion.div 
-                    key="profile"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <AdvancedProfile userName={userName} onTriggerToast={handleTriggerToast} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+
 
               {/* TAB 7: BECOME AN INSTRUCTOR */}
               <AnimatePresence mode="wait">

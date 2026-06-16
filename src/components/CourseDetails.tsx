@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Course } from '../types';
+import { Course, ViewType } from '../types';
 import { COURSES } from '../data';
 import { 
   ArrowRight, 
@@ -22,7 +22,8 @@ import {
   TrendingUp,
   AwardIcon,
   BookMarked,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -30,8 +31,9 @@ interface CourseDetailsProps {
   courseId: string;
   onAddToCart: (course: Course) => void;
   cartItems: Course[];
-  setActiveView: (view: 'landing' | 'catalog' | 'dashboard' | 'auth' | 'course-details' | 'cart-checkout') => void;
+  setActiveView: (view: ViewType) => void;
   onTriggerToast: (msg: string) => void;
+  onViewInstructorProfile?: (name: string) => void;
 }
 
 export default function CourseDetails({
@@ -39,7 +41,8 @@ export default function CourseDetails({
   onAddToCart,
   cartItems,
   setActiveView,
-  onTriggerToast
+  onTriggerToast,
+  onViewInstructorProfile
 }: CourseDetailsProps) {
   const [favorite, setFavorite] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
@@ -201,6 +204,10 @@ export default function CourseDetails({
   ];
 
   const [reviewsList, setReviewsList] = useState(courseReviews);
+  const dynamicAvgRating = reviewsList.length > 0
+    ? reviewsList.reduce((acc, curr) => acc + curr.rating, 0) / reviewsList.length
+    : course.rating;
+
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [newReviewName, setNewReviewName] = useState('طالب مجتهد');
   const [newReviewRating, setNewReviewRating] = useState(5);
@@ -290,18 +297,18 @@ export default function CourseDetails({
               
               {/* Rating stars */}
               <div className="flex items-center gap-1.5 text-amber-505 bg-black/45 px-3 py-1.5 rounded-xl border border-stone-800">
-                <span className="font-extrabold text-amber-400 font-mono text-sm">{course.rating.toFixed(1)}</span>
+                <span className="font-extrabold text-amber-400 font-mono text-sm">{dynamicAvgRating.toFixed(1)}</span>
                 <div className="flex text-amber-400 gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star 
                       key={star} 
                       className={`w-3.5 h-3.5 fill-current ${
-                        star <= Math.round(course.rating) ? 'text-amber-400' : 'text-stone-605 text-stone-700'
+                        star <= Math.round(dynamicAvgRating) ? 'text-amber-400' : 'text-stone-700'
                       }`} 
                     />
                   ))}
                 </div>
-                <span className="text-stone-400 text-[10px]">(٣ مراجعات مصادقة)</span>
+                <span className="text-stone-400 text-[10px]">({reviewsList.length} مراجعات مصادقة)</span>
               </div>
 
               {/* Enrolled Students Count */}
@@ -596,7 +603,16 @@ export default function CourseDetails({
                 
                 <div className="space-y-1">
                   <span className="text-[9px] text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-bold">عضو الهيئة الاستشارية المعتمد</span>
-                  <h3 className="font-black text-stone-950 text-base mt-2">{course.instructorName}</h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-3 mt-2 justify-center md:justify-start">
+                    <h3 className="font-black text-stone-950 text-base">{course.instructorName}</h3>
+                    <button
+                      type="button"
+                      onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                      className="bg-orange-700 hover:bg-orange-850 text-amber-50 text-[10px] sm:text-xs font-black py-1 px-3 rounded-lg border-0 cursor-pointer shadow-xs transition"
+                    >
+                      عرض الملف الشخصي العام ←
+                    </button>
+                  </div>
                   <p className="text-[11px] text-stone-500 font-sans italic font-light">مؤلف وباحث ومحقق بارز للأسانيد التاريخية والفنون الزخرفية الإسلامية</p>
                 </div>
 
@@ -617,7 +633,7 @@ export default function CourseDetails({
                   <div className="text-right">
                     <span className="text-[10px] text-stone-400 block">متوسط التقييم:</span>
                     <strong className="font-bold text-orange-950 flex items-center gap-0.5 justify-start font-mono">
-                      <span>{course.rating.toFixed(1)}</span>
+                      <span>{dynamicAvgRating.toFixed(1)}</span>
                       <Star className="w-3 h-3 fill-amber-500 text-amber-500 inline-block mb-1 font-mono" />
                     </strong>
                   </div>

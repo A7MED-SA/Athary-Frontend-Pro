@@ -25,6 +25,7 @@ interface LandingPageProps {
   onAddToCart: (course: Course) => void;
   cartItems: Course[];
   onViewCourseDetails: (id: string) => void;
+  onViewInstructorProfile?: (name: string) => void;
 }
 
 export default function LandingPage({
@@ -32,7 +33,8 @@ export default function LandingPage({
   setCategoryFilter,
   onAddToCart,
   cartItems,
-  onViewCourseDetails
+  onViewCourseDetails,
+  onViewInstructorProfile
 }: LandingPageProps) {
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
@@ -367,15 +369,20 @@ export default function LandingPage({
                     <div>
                       {/* Instructor and rating row */}
                       <div className="flex items-center justify-between mb-3 text-xs text-stone-500 dark:text-stone-400">
-                        <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                          className="flex items-center gap-2 hover:text-orange-850 font-semibold text-[var(--color-foreground)] bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
+                          title={`عرض الملف الشخصي لـ ${course.instructorName}`}
+                        >
                           <img 
                             src={course.instructorAvatar} 
                             alt={course.instructorName}
                             className="w-6 h-6 rounded-full border border-[var(--color-border)]"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="font-semibold text-[var(--color-foreground)]">{course.instructorName}</span>
-                        </div>
+                          <span>{course.instructorName}</span>
+                        </button>
                         <div className="flex items-center gap-1 text-amber-600 font-bold">
                           <span>{course.rating.toFixed(1)}</span>
                           <Star className="w-3.5 h-3.5 fill-current" />

@@ -612,3 +612,32 @@ body {
 .heritage-star {
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
 }
+
+/* Custom premium print layout */
+@media print {
+  #preview-floating-deck,
+  nav,
+  footer,
+  button,
+  .no-print,
+  #copy-deeplink-btn,
+  #qrcode-modal-overlay,
+  .button-group-deck-controls,
+  .global-toast-container {
+    display: none !important;
+  }
+  
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: serif !important;
+    direction: rtl !important;
+  }
+  
+  main, .print-container, .max-w-6xl {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

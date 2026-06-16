@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { ViewType } from '../types';
-import { BookOpen, ShoppingBag, Menu, X, Landmark, User, Bookmark, LogIn, Award, Bell, Trash2, CheckCheck } from 'lucide-react';
+import { BookOpen, ShoppingBag, Menu, X, Landmark, User, Bookmark, LogIn, Award, Bell, Trash2, CheckCheck, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNotificationStore } from '../stores/notificationStore';
 import ThemeSettingsPopover from './ThemeSettingsPopover';
+import { useTheme } from '../hooks/useTheme';
 
 interface NavbarProps {
   activeView: ViewType;
@@ -26,6 +27,7 @@ export default function Navbar({
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const { themeMode, toggleThemeMode } = useTheme();
 
   // Connection to the Zustand notification store
   const { 
@@ -123,6 +125,20 @@ export default function Navbar({
             
             {/* Theme Customizer Switcher Popover */}
             <ThemeSettingsPopover />
+
+            {/* Dark/Light Mode Switcher Button */}
+            <button
+              onClick={toggleThemeMode}
+              className="p-2.5 text-stone-700 dark:text-stone-300 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-stone-900 rounded-full transition-all duration-200 focus:outline-none cursor-pointer flex items-center justify-center"
+              title={themeMode === 'dark' ? 'التحويل للمظهر المضيء ☀️' : 'التحويل للمظهر الداكن 🌙'}
+              id="navbar-theme-toggle-btn"
+            >
+              {themeMode === 'dark' ? (
+                <Sun className="w-5.5 h-5.5 text-amber-500 animate-pulse" />
+              ) : (
+                <Moon className="w-5.5 h-5.5 text-stone-700" />
+              )}
+            </button>
 
             {/* Notification Bell with Dropdown Popover */}
             <div className="relative">
@@ -267,6 +283,15 @@ export default function Navbar({
                       <p className="font-semibold text-stone-900">{userName}</p>
                       <p className="text-[10px] text-amber-700">بوابة الطالب</p>
                     </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveView('profile-settings')}
+                    className="p-2 text-stone-600 hover:text-orange-700 hover:bg-orange-50 border border-stone-200 hover:border-orange-200 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                    title="إعدادات الحساب والملف الشخصي ⚙️"
+                  >
+                    <User className="w-4 h-4 text-orange-750" />
+                    <span className="text-xs font-bold leading-none px-1">الملف الشخصي</span>
                   </button>
                   
                   <button 
