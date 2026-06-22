@@ -23,8 +23,11 @@ import {
   AwardIcon,
   BookMarked,
   X,
-  Compass
+  Compass,
+  Sparkles,
+  Check
 } from 'lucide-react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface CourseDetailsProps {
@@ -177,6 +180,46 @@ export default function CourseDetails({
 
   const syllabusChapters = getSyllabus(course.id);
   const whatYouWillLearn = getWhatYouWillLearn(course.id);
+
+  const [completedLessons, setCompletedLessons] = useState<Record<string, boolean>>(() => {
+    const cacheKey = `athari_completed_lessons_${course.id}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        // fallback
+      }
+    }
+
+    const initialMap: Record<string, boolean> = {};
+    const progressPercent = course.progress || 0;
+    const allLessons: { chapIdx: number; lesIdx: number }[] = [];
+    syllabusChapters.forEach((chapter, chapNo) => {
+      chapter.lessons.forEach((_, lesNo) => {
+        allLessons.push({ chapIdx: chapNo, lesIdx: lesNo });
+      });
+    });
+
+    const completedCount = Math.round((progressPercent / 100) * allLessons.length);
+    for (let i = 0; i < completedCount; i++) {
+      if (allLessons[i]) {
+        const lessonKey = `${allLessons[i].chapIdx}-${allLessons[i].lesIdx}`;
+        initialMap[lessonKey] = true;
+      }
+    }
+    return initialMap;
+  });
+
+  const toggleLessonCompletion = (chapIdx: number, lesIdx: number) => {
+    const lessonKey = `${chapIdx}-${lesIdx}`;
+    setCompletedLessons(prev => {
+      const updated = { ...prev, [lessonKey]: !prev[lessonKey] };
+      localStorage.setItem(`athari_completed_lessons_${course.id}`, JSON.stringify(updated));
+      return updated;
+    });
+    onTriggerToast('🎯 تم تحديث حالة تقدم الدرس في الفصل بنجاح!');
+  };
 
   // Mock course reviews (very high fidelity)
   const courseReviews = [
@@ -529,53 +572,170 @@ export default function CourseDetails({
               </div>
 
               {/* Accordion container */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {syllabusChapters.map((chapter, chapIdx) => {
                   const isOpen = activeAccordion === chapIdx;
+                  
+                  // Compute section progress
+                  const chapterLessons = chapter.lessons;
+                  const completedInChapter = chapterLessons.filter((_, idx) => !!completedLessons[`${chapIdx}-${idx}`]).length;
+                  const chapterProgress = chapterLessons.length > 0 ? (completedInChapter / chapterLessons.length) * 100 : 0;
+
                   return (
                     <div 
                       key={chapIdx} 
-                      className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
+                      className={`border rounded-2xl overflow-hidden transition-all duration-300 shadow-xs ${
                         isOpen 
-                          ? 'border-amber-300 bg-amber-50/15' 
-                          : 'border-stone-200 hover:border-amber-250 bg-white'
+                          ? 'border-orange-300 bg-amber-50/10' 
+                          : 'border-stone-200 hover:border-amber-200 bg-white'
                       }`}
                     >
                       {/* Chapter Trigger Toggle */}
                       <button
                         onClick={() => setActiveAccordion(isOpen ? null : chapIdx)}
-                        className="w-full px-5 py-4 flex items-center justify-between text-right font-bold text-xs sm:text-sm text-stone-900 hover:text-orange-900 transition focus:outline-none cursor-pointer border-0 bg-transparent"
+                        className="w-full px-5 py-4.5 flex items-center justify-between text-right font-bold text-xs sm:text-sm text-stone-900 hover:text-orange-950 transition focus:outline-none cursor-pointer border-0 bg-transparent"
                       >
-                        <span className="leading-snug pr-2 border-r-3 border-amber-400">{chapter.title}</span>
-                        <span className="text-[10px] bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full font-sans">
-                          {chapter.lessons.length} دروس
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="leading-snug pr-3.5 border-r-3 border-orange-500">{chapter.title}</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-950 font-bold px-2 py-0.5 rounded-full">
+                            {completedInChapter}/{chapterLessons.length} منجز
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {/* Mini visual bar next to title */}
+                          <div className="w-16 bg-stone-200 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden hidden sm:block">
+                            <div className="bg-teal-650 bg-teal-600 h-full transition-all duration-300" style={{ width: `${chapterProgress}%` }} />
+                          </div>
+                          <span className="text-[10px] bg-stone-100 text-stone-600 px-2.5 py-1 rounded-full font-sans">
+                            {chapter.lessons.length} دروس
+                          </span>
+                        </div>
                       </button>
 
                       {/* Lessons Grid list content under Chapter */}
                       {isOpen && (
-                        <div className="px-5 pb-4 pt-1 divide-y divide-amber-100/55 text-xs text-stone-700">
-                          {chapter.lessons.map((lesson, lesIdx) => (
-                            <div key={lesIdx} className="py-3 flex items-center justify-between gap-3 font-light text-left">
-                              
-                              <div className="flex items-center gap-2.5 text-right w-full">
-                                {lesson.free ? (
-                                  <span className="text-[9px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded leading-none shrink-0 border border-teal-200">مجاني</span>
-                                ) : (
-                                  <Lock className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                                )}
-                                <span className={`text-stone-850 font-medium leading-relaxed ${lesson.free ? 'font-semibold text-stone-900' : ''}`}>
-                                  {lesson.title}
-                                </span>
+                        <div className="px-5 pb-5 pt-3 border-t border-dashed border-stone-200/60 text-xs text-stone-700 space-y-4">
+                          
+                          {/* ADVANCED PROGRESS TIMELINE */}
+                          <div className="bg-stone-50/75 p-4 rounded-xl border border-amber-200/30 space-y-3.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+                              <div>
+                                <h4 className="text-[11px] font-black text-stone-900 flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-orange-600 animate-pulse" />
+                                  <span>مؤشر التحصيل المنهجي المتقدم</span>
+                                </h4>
+                                <p className="text-[9.5px] text-stone-400 font-light">
+                                  تفصيل تسلسلي للدروس المحصلة والمتبقية في الفصل. انقر على الدوائر أو على خانات الاختيار للتعديل.
+                                </p>
                               </div>
-
-                              <div className="flex items-center gap-2 text-[10px] text-stone-450 text-stone-400 shrink-0 font-mono">
-                                <Clock className="w-3 h-3 text-stone-400" />
-                                <span>{lesson.duration}</span>
+                              <div className="text-right sm:text-left">
+                                <span className="text-[9px] font-bold text-stone-400 block">اكتمال هذا القسم:</span>
+                                <span className="text-xs font-mono font-black text-teal-700">{completedInChapter} من {chapterLessons.length} ({Math.round(chapterProgress)}%)</span>
                               </div>
-
                             </div>
-                          ))}
+
+                            {/* Horizontal Segment Connector Line & Dots */}
+                            <div className="relative pt-5 pb-1 px-4.5">
+                              {/* Background Connector Bar Line */}
+                              <div className="absolute top-7.5 left-5 right-5 h-1 bg-stone-200 rounded-full" />
+                              
+                              {/* Active Green Progress Line */}
+                              <div 
+                                className="absolute top-7.5 right-5 h-1 bg-gradient-to-l from-teal-600 to-emerald-500 rounded-full transition-all duration-500"
+                                style={{ width: `${chapterProgress}%` }}
+                              />
+
+                              {/* Nodes for each lesson */}
+                              <div className="relative flex justify-between items-center z-10" dir="rtl">
+                                {chapterLessons.map((lesson, index) => {
+                                  const isDone = !!completedLessons[`${chapIdx}-${index}`];
+                                  const isNext = !isDone && (index === 0 || !!completedLessons[`${chapIdx}-${index - 1}`]);
+                                  
+                                  return (
+                                    <div 
+                                      key={index} 
+                                      className="flex flex-col items-center group relative cursor-pointer"
+                                      onClick={() => toggleLessonCompletion(chapIdx, index)}
+                                    >
+                                      {/* Tooltip */}
+                                      <div className="absolute bottom-9 opacity-0 group-hover:opacity-100 transition-opacity bg-stone-900 text-amber-50 text-[9px] py-1 px-2.5 rounded-lg whitespace-nowrap shadow-xl pointer-events-none z-30 border border-stone-850 text-right">
+                                        <span className="font-bold block">{lesson.title}</span>
+                                        <span className="text-stone-400 font-mono text-[8px]">{lesson.duration} • {isDone ? '✓ مكتمل' : isNext ? '🎯 الدرس القادم' : '⏳ معلق'}</span>
+                                      </div>
+
+                                      {/* Bubble node */}
+                                      <div 
+                                        className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-300 font-sans text-[9px] font-bold ${
+                                          isDone 
+                                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-200' 
+                                            : isNext 
+                                              ? 'bg-white border-orange-500 text-orange-600 animate-pulse shadow-sm shadow-orange-100 ring-2 ring-orange-500/10' 
+                                              : 'bg-white border-stone-300 text-stone-400'
+                                        }`}
+                                      >
+                                        {isDone ? '✓' : index + 1}
+                                      </div>
+
+                                      {/* Order Label under node */}
+                                      <span className={`text-[8.5px] mt-1.5 font-bold transition-colors ${
+                                        isDone ? 'text-emerald-700' : isNext ? 'text-orange-600' : 'text-stone-400'
+                                      }`}>
+                                        {`درس ${index + 1}`}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* LESSONS ROWS WITH CHECKBOXES */}
+                          <div className="divide-y divide-stone-100/80 bg-white p-2 rounded-xl border border-stone-200/50">
+                            {chapter.lessons.map((lesson, lesIdx) => {
+                              const isCompleted = !!completedLessons[`${chapIdx}-${lesIdx}`];
+                              return (
+                                <div key={lesIdx} className="py-2.5 px-2 flex items-center justify-between gap-3 font-light text-left group/row">
+                                  
+                                  <div className="flex items-center gap-3 text-right w-full">
+                                    {/* Action checkmark button representing progress checkbox */}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleLessonCompletion(chapIdx, lesIdx)}
+                                      className={`w-5 h-5 rounded-md flex items-center justify-center border cursor-pointer transition ${
+                                        isCompleted
+                                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100'
+                                          : 'bg-stone-50 border-stone-300 text-transparent hover:border-orange-500 hover:text-[#C2410C]/40'
+                                      }`}
+                                      title={isCompleted ? 'تحديد كغير مكتمل' : 'تحديد كمكتمل'}
+                                    >
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </button>
+
+                                    {lesson.free ? (
+                                      <span className="text-[9px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded leading-none shrink-0 border border-teal-200">مجاني</span>
+                                    ) : (
+                                      <Lock className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                    )}
+                                    <span 
+                                      onClick={() => toggleLessonCompletion(chapIdx, lesIdx)}
+                                      className={`text-stone-850 font-medium leading-relaxed cursor-pointer transition-all ${
+                                        isCompleted ? 'line-through text-stone-400 font-normal font-sans' : 'hover:text-orange-900'
+                                      } ${lesson.free && !isCompleted ? 'font-semibold text-stone-900' : ''}`}
+                                    >
+                                      {lesson.title}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 text-[10px] text-stone-400 shrink-0 font-mono">
+                                    <Clock className="w-3 h-3 text-stone-400" />
+                                    <span>{lesson.duration}</span>
+                                  </div>
+
+                                </div>
+                              );
+                            })}
+                          </div>
+
                         </div>
                       )}
 

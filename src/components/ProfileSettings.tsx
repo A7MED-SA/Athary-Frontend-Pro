@@ -17,7 +17,9 @@ import {
   Smartphone,
   Laptop,
   Globe,
-  AlertCircle
+  AlertCircle,
+  Bell,
+  Calendar
 } from 'lucide-react';
 
 interface PhoneItem {
@@ -51,7 +53,7 @@ interface ProfileSettingsProps {
   onTriggerToast: (msg: string) => void;
 }
 
-type SettingsTab = 'personal' | 'phones' | 'addresses' | 'security';
+type SettingsTab = 'personal' | 'phones' | 'addresses' | 'security' | 'notifications';
 
 export default function ProfileSettings({
   onBackToMain,
@@ -76,6 +78,79 @@ export default function ProfileSettings({
   const [avatarUrl, setAvatarUrl] = useState<string>(() => {
     return localStorage.getItem('athari_avatarUrl') || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80';
   });
+  
+  // Advanced Public Profile fields (matching registration)
+  const [firstName, setFirstName] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).firstName || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_firstName') || 'أحمد';
+  });
+  const [lastName, setLastName] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).lastName || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_lastName') || 'التميمي';
+  });
+  const [gender, setGender] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).gender || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_gender') || 'male';
+  });
+  const [dob, setDob] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).dob || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_dob') || '1995-04-12';
+  });
+  const [country, setCountry] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).country || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_country') || 'المملكة العربية السعودية';
+  });
+  const [city, setCity] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).city || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_city') || 'الرياض';
+  });
+  const [streetLine1, setStreetLine1] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).streetLine1 || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_streetLine1') || 'الملز، طريق صلاح الدين';
+  });
+  const [postalCode, setPostalCode] = useState<string>(() => {
+    const reg = localStorage.getItem('athari_registered_user');
+    if (reg) {
+      try { return JSON.parse(reg).postalCode || ''; } catch(_) {}
+    }
+    return localStorage.getItem('athari_postalCode') || '11564';
+  });
+
+  // Notification Preferences states
+  const [notifSmsLive, setNotifSmsLive] = useState<boolean>(() => {
+    return localStorage.getItem('athari_notif_smsLive') !== 'false';
+  });
+  const [notifEmailManuscript, setNotifEmailManuscript] = useState<boolean>(() => {
+    return localStorage.getItem('athari_notif_emailManuscript') !== 'false';
+  });
+  const [notifPushAnnouncements, setNotifPushAnnouncements] = useState<boolean>(() => {
+    return localStorage.getItem('athari_notif_pushAnnouncements') !== 'false';
+  });
+  const [notifWeeklyDigest, setNotifWeeklyDigest] = useState<boolean>(() => {
+    return localStorage.getItem('athari_notif_weeklyDigest') === 'true';
+  });
+
   const [isLoadingPicture, setIsLoadingPicture] = useState<boolean>(false);
   const [uploadStep, setUploadStep] = useState<number>(0); 
   
@@ -93,6 +168,39 @@ export default function ProfileSettings({
   const [isAddingPhone, setIsAddingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [newPhoneLabel, setNewPhoneLabel] = useState('');
+
+  // Real-time automatic form validation effect
+  useEffect(() => {
+    const errors: Record<string, string> = {};
+
+    if (firstName.trim().length === 0) {
+      errors.firstName = 'الاسم الأول مطلوب ولا يمكن حفظه فارغاً.';
+    } else if (firstName.length > 100) {
+      errors.firstName = 'الاسم الأول يجب ألا يتجاوز ١٠٠ حرفاً.';
+    }
+
+    if (lastName.trim().length === 0) {
+      errors.lastName = 'اسم العائلة مطلوب ولا يمكن حفظه فارغاً.';
+    } else if (lastName.length > 100) {
+      errors.lastName = 'اسم العائلة يجب ألا يتجاوز ١٠٠ حرفاً.';
+    }
+
+    if (fullName.trim().length < 5) {
+      errors.fullName = 'الاسم الكامل يجب ألا يقل عن ٥ أحرف كحد أدنى للإجازات العلمية.';
+    }
+
+    if (postalCode && !/^[a-zA-Z0-9\s-]{4,10}$/.test(postalCode)) {
+      errors.postalCode = 'الرمز البريدي يجب أن يتكون من ٤ إلى ١٠ حروف أو أرقام.';
+    }
+
+    if (isAddingPhone && newPhone) {
+      if (!/^\+?[0-9\s-]{7,16}$/.test(newPhone)) {
+        errors.newPhone = 'رقم الجوال الشريف المدخل غير صالح (يرجى توفير أرقام فقط).';
+      }
+    }
+
+    setValidationErrors(errors);
+  }, [firstName, lastName, fullName, postalCode, isAddingPhone, newPhone]);
 
   // 3. Addresses list state (custom persist)
   const [addresses, setAddresses] = useState<AddressItem[]>(() => {
@@ -123,6 +231,22 @@ export default function ProfileSettings({
       localStorage.setItem('athari_phones', JSON.stringify(phones));
       localStorage.setItem('athari_addresses', JSON.stringify(addresses));
 
+      // Extra fields
+      localStorage.setItem('athari_firstName', firstName);
+      localStorage.setItem('athari_lastName', lastName);
+      localStorage.setItem('athari_gender', gender);
+      localStorage.setItem('athari_dob', dob);
+      localStorage.setItem('athari_country', country);
+      localStorage.setItem('athari_city', city);
+      localStorage.setItem('athari_streetLine1', streetLine1);
+      localStorage.setItem('athari_postalCode', postalCode);
+
+      // Notification settings
+      localStorage.setItem('athari_notif_smsLive', String(notifSmsLive));
+      localStorage.setItem('athari_notif_emailManuscript', String(notifEmailManuscript));
+      localStorage.setItem('athari_notif_pushAnnouncements', String(notifPushAnnouncements));
+      localStorage.setItem('athari_notif_weeklyDigest', String(notifWeeklyDigest));
+
       // Bubble up name updates to upper modules
       if (fullName.trim() && fullName.length >= 5) {
         onUpdateUserName(fullName);
@@ -136,7 +260,11 @@ export default function ProfileSettings({
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, [fullName, bio, avatarUrl, phones, addresses]);
+  }, [
+    fullName, bio, avatarUrl, phones, addresses,
+    firstName, lastName, gender, dob, country, city, streetLine1, postalCode,
+    notifSmsLive, notifEmailManuscript, notifPushAnnouncements, notifWeeklyDigest
+  ]);
 
   // 4. Security states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -181,15 +309,21 @@ export default function ProfileSettings({
   // 1. Personal Info Save
   const handleSavePersonalInfo = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationErrors({});
-
-    // Simple robust validation simulation mirroring FluntValidation
-    if (!fullName.trim()) {
-      setValidationErrors({ fullName: 'الاسم الكامل يجب ألا يكون فارغاً لمصادقة الإجازات.' });
+    
+    // Check automatic validation errors first
+    if (firstName.trim().length === 0) {
+      onTriggerToast('❌ يرجى ملء الاسم الأول لتأكيد الحفظ الشرفي.');
       return;
     }
-    if (fullName.length < 5) {
-      setValidationErrors({ fullName: 'يجب أن يحتوي الاسم على ٥ أحرف كحد أدنى للمطابقة الدقيقة.' });
+    if (lastName.trim().length === 0) {
+      onTriggerToast('❌ يرجى ملء اسم العائلة لتأكيد الحفظ الشرفي.');
+    }
+    if (fullName.trim().length < 5) {
+      onTriggerToast('❌ الاسم الكامل المقترح قصير جداً ولا يطابق معايير الإجازات.');
+      return;
+    }
+    if (postalCode && !/^[a-zA-Z0-9\s-]{4,10}$/.test(postalCode)) {
+      onTriggerToast('❌ الرمز البريدي غير صالح. يجب أن يحتوي من ٤ إلى ١٠ أحرف أو أرقام.');
       return;
     }
 
@@ -216,6 +350,11 @@ export default function ProfileSettings({
   const handleAddPhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPhone.trim()) return;
+
+    if (validationErrors.newPhone) {
+      onTriggerToast('❌ ' + validationErrors.newPhone);
+      return;
+    }
     
     const isFirst = phones.length === 0;
     const item: PhoneItem = {
@@ -331,7 +470,7 @@ export default function ProfileSettings({
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-50 border border-amber-200/40 text-[10px] font-extrabold text-stone-700 animate-fade-in">
             <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
               autosaveStatus === 'saving' ? 'bg-orange-600 animate-ping' :
-              autosaveStatus === 'saved' ? 'bg-emerald-600 animate-bounce' : 'bg-[#C2410C]/80'
+              autosaveStatus === 'saved' ? 'bg-emerald-600 animate-bounce' : 'bg-orange-600/80'
             }`} />
             <span>
               {autosaveStatus === 'saving' ? (
@@ -354,7 +493,7 @@ export default function ProfileSettings({
             {/* Core Vertical Navigation Menu */}
             <div className="bg-white rounded-3xl border border-stone-250/60 p-4 shadow-sm">
               <div className="p-3 border-b border-stone-100 mb-2">
-                <h2 className="text-xs font-black text-[#5C230E] font-serif tracking-tight">إعدادات البوابة الشريفة</h2>
+                <h2 className="text-xs font-black text-orange-950 font-serif tracking-tight">إعدادات البوابة الشريفة</h2>
                 <p className="text-[10px] text-stone-400 mt-1">إدارة معلومات الباحث وأمان الحساب</p>
               </div>
 
@@ -409,6 +548,18 @@ export default function ProfileSettings({
                   <span>الأمان والجلسات</span>
                 </button>
 
+                <button
+                  onClick={() => setActiveTab('notifications')}
+                  className={`w-full text-right px-4.5 py-3 rounded-2xl text-xs font-black transition border-0 cursor-pointer flex items-center gap-3 shrink-0 ${
+                    activeTab === 'notifications'
+                      ? 'bg-orange-700 text-amber-50 shadow-xs shadow-orange-950/20'
+                      : 'text-stone-600 hover:bg-stone-55 hover:bg-stone-100 bg-transparent'
+                  }`}
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>تفضيلات الإشعارات</span>
+                </button>
+
                 <div className="h-0.5 bg-stone-100 my-2 hidden lg:block" />
 
                 <button
@@ -423,8 +574,8 @@ export default function ProfileSettings({
             </div>
 
             {/* Quick Vintage Fact Box */}
-            <div className="bg-[#FAF9F5] rounded-3xl border border-amber-200/70 p-5 text-right space-y-2">
-              <span className="text-[10px] text-amber-800 font-extrabold">ميثاق التوطين والسيادة</span>
+            <div className="bg-orange-50/20 rounded-3xl border border-stone-200 p-5 text-right space-y-2">
+              <span className="text-[10px] text-orange-700 font-extrabold">ميثاق التوطين والسيادة</span>
               <h3 className="text-xs font-black text-stone-900 font-serif leading-snug">رأس مال معرفي آمن</h3>
               <p className="text-[11px] text-stone-500 leading-relaxed font-light">
                 تعتمد منصة آثاري على تشفير المفاتيح المزدوج وتخزين المرفقات المباشرة عبر مستودعاتنا الوطنية لضمان عدم تسريب الإجازات والأقراص العلمية.
@@ -438,17 +589,19 @@ export default function ProfileSettings({
             
             {/* HEADER BOX */}
             <div className="border-b border-stone-150 pb-4 mb-6 text-right">
-              <h1 className="text-base sm:text-lg font-black text-[#5C230E] font-serif leading-none">
+              <h1 className="text-base sm:text-lg font-black text-orange-950 font-serif leading-none">
                 {activeTab === 'personal' && 'المعلومات الشخصية والبيان التعريفي'}
                 {activeTab === 'phones' && 'كابينة أرقام الجوال والمراسلة'}
                 {activeTab === 'addresses' && 'عناوين شحن وتنسيب الإجازات'}
                 {activeTab === 'security' && 'حصن حماية الحساب وسجلات الجلسات'}
+                {activeTab === 'notifications' && 'إدارة تفضيلات الإشعارات والتنبيهات'}
               </h1>
               <p className="text-xs text-stone-550 mt-1 leading-relaxed">
-                {activeTab === 'personal' && 'قم بضبط اسمك الرباعي بدقة لتطابق فحص الشهادات التراكمية وسيرتك المعرفية.'}
+                {activeTab === 'personal' && 'قم بضبط اسمك وتفاصيل ملفك الشخصي بدقة لتطابق فحص الشهادات التراكمية وسيرتك المعرفية.'}
                 {activeTab === 'phones' && 'أرقام جوال مضافة وقنوات سحب التحقق الثنائي لضمان استلام إشعارات البث.'}
                 {activeTab === 'addresses' && 'عناوين بريدية معتمدة تضمن وصول شهاداتك الذهبية الفاخرة للعنوان الصحيح.'}
                 {activeTab === 'security' && 'سجلات الأوقات النشطة وتفويضات الدخول لجميع عتادك وحواسبك الشخصية.'}
+                {activeTab === 'notifications' && 'تحكم في كيفية ومواعيد إشعارك بقنوات البث المباشر، المراجعات، والأخبار الأكاديمية.'}
               </p>
             </div>
 
@@ -459,7 +612,7 @@ export default function ProfileSettings({
               <div className="space-y-6">
                 
                 {/* Avatar section with smart feedback */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 bg-[#FAF9F5] p-5 rounded-2xl border border-amber-200/50">
+                <div className="bg-orange-50/20 p-5 rounded-2xl border border-stone-200">
                   <div className="relative w-[120px] h-[120px] rounded-full shrink-0 bg-stone-200 border-2 border-orange-700/80 overflow-hidden shadow">
                     {avatarUrl ? (
                       <img 
@@ -493,7 +646,7 @@ export default function ProfileSettings({
                         type="button"
                         onClick={handlePictureUploadSimulation}
                         disabled={isLoadingPicture}
-                        className="bg-[#962D15] hover:bg-[#7D220F] text-amber-50 text-xs font-black py-2 px-4 rounded-xl shadow-xs transition border-0 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                        className="bg-orange-700 hover:bg-orange-850 text-amber-50 text-xs font-black py-2 px-4 rounded-xl shadow-xs transition border-0 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       >
                         <Upload className="w-3.5 h-3.5" />
                         <span>تغيير الصورة</span>
@@ -512,12 +665,55 @@ export default function ProfileSettings({
                 </div>
 
                 {/* Info Text form */}
-                <form onSubmit={handleSavePersonalInfo} className="space-y-4">
+                <form onSubmit={handleSavePersonalInfo} className="space-y-6">
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">الاسم الأول</label>
+                      <input 
+                        type="text"
+                        maxLength={100}
+                        className={`w-full bg-stone-50 p-3 text-xs text-stone-950 border rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-semibold ${
+                          validationErrors.firstName ? 'border-red-500 ring-2 ring-red-100' : 'border-stone-250/80'
+                        }`}
+                        value={firstName}
+                        onChange={(e) => {
+                          setFirstName(e.target.value);
+                          setFullName(`${e.target.value} ${lastName}`);
+                        }}
+                        placeholder="أحمد"
+                      />
+                      {validationErrors.firstName && (
+                        <p className="text-[10px] text-red-650 text-red-600 font-bold mt-1">⚠️ {validationErrors.firstName}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">اسم العائلة</label>
+                      <input 
+                        type="text"
+                        maxLength={100}
+                        className={`w-full bg-stone-50 p-3 text-xs text-stone-950 border rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-semibold ${
+                          validationErrors.lastName ? 'border-red-500 ring-2 ring-red-100' : 'border-stone-250/80'
+                        }`}
+                        value={lastName}
+                        onChange={(e) => {
+                          setLastName(e.target.value);
+                          setFullName(`${firstName} ${e.target.value}`);
+                        }}
+                        placeholder="التميمي"
+                      />
+                      {validationErrors.lastName && (
+                        <p className="text-[10px] text-red-650 text-red-600 font-bold mt-1">⚠️ {validationErrors.lastName}</p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-stone-900 block">الاسم الشريف بالكامل</label>
+                    <label className="text-xs font-bold text-stone-900 block font-serif">الاسم الكامل الشريف (المسجل بالإجازات)</label>
                     <input 
                       type="text"
-                      className={`w-full bg-stone-50 p-3 text-xs text-stone-950 border rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-semibold ${
+                      className={`w-full bg-stone-100 p-3 text-xs text-stone-900 border rounded-xl focus:outline-none font-bold ${
                         validationErrors.fullName ? 'border-red-700 ring-1 ring-red-400' : 'border-stone-250/80'
                       }`}
                       value={fullName}
@@ -536,8 +732,97 @@ export default function ProfileSettings({
                     )}
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">الجنس</label>
+                      <select
+                        className="w-full bg-stone-50 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700"
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                      >
+                        <option value="male">ذكر</option>
+                        <option value="female">أنثى</option>
+                        <option value="prefer_not_to_say">يفضل عدم الإفصاح</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">تاريخ الميلاد</label>
+                      <input 
+                        type="date"
+                        className="w-full bg-stone-50 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-mono"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-stone-100 my-4" />
+                  <h3 className="text-xs font-black text-orange-950 font-serif mb-2">معلومات الإقامة والتوصيل المالي</h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">الدولة</label>
+                      <div className="relative">
+                        <input 
+                          type="text"
+                          className="w-full bg-stone-50 pr-10 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-semibold"
+                          value={country}
+                          onChange={(e) => setCountry(e.target.value)}
+                          placeholder="المملكة العربية السعودية..."
+                        />
+                        <Globe className="w-4 h-4 text-stone-400 absolute right-3.5 top-3.5" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">المدينة</label>
+                      <div className="relative">
+                        <input 
+                          type="text"
+                          className="w-full bg-stone-50 pr-10 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-semibold"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="الرياض"
+                        />
+                        <MapPin className="w-4 h-4 text-stone-400 absolute right-3.5 top-3.5" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-xs font-bold text-stone-900 block">عنوان الشارع والحي (تفصيلي)</label>
+                      <input 
+                        type="text"
+                        className="w-full bg-stone-50 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700"
+                        value={streetLine1}
+                        onChange={(e) => setStreetLine1(e.target.value)}
+                        placeholder="حي الملز، شارع صلاح الدين الأيوبي..."
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-stone-900 block">الرمز البريدي</label>
+                      <input 
+                        type="text"
+                        className={`w-full bg-stone-50 p-3 text-xs text-stone-950 border rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 font-mono ${
+                          validationErrors.postalCode ? 'border-red-500 ring-2 ring-red-100' : 'border-stone-250/80'
+                        }`}
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        placeholder="11564"
+                      />
+                      {validationErrors.postalCode && (
+                        <p className="text-[10px] text-red-650 text-red-600 font-bold mt-1">⚠️ {validationErrors.postalCode}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-stone-100 my-4" />
+
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-stone-700 block">عنوان البريد الإلكتروني (غير قابل للتعديل)</label>
+                    <label className="text-xs font-bold text-stone-750 block">عنوان البريد الإلكتروني (غير قابل للتعديل)</label>
                     <div className="relative">
                       <input 
                         type="email"
@@ -559,7 +844,7 @@ export default function ProfileSettings({
                       <span className="text-[10px] text-stone-400 font-mono">{bio.length}/500 حرف</span>
                     </div>
                     <textarea 
-                      rows={4}
+                      rows={3}
                       className="w-full bg-stone-50 p-3 text-xs text-stone-950 border border-stone-250/80 rounded-xl focus:outline-none focus:bg-white focus:border-orange-700 leading-relaxed font-sans"
                       maxLength={500}
                       value={bio}
@@ -596,10 +881,10 @@ export default function ProfileSettings({
                 
                 {/* Section Header */}
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
-                  <h3 className="text-xs sm:text-sm font-black text-[#5C230E] font-serif">إدارة هويات الهواتف المعتمدة</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-orange-950 font-serif">إدارة هويات الهواتف المعتمدة</h3>
                   <button
                     onClick={() => setIsAddingPhone(!isAddingPhone)}
-                    className="bg-[#962D15] hover:bg-[#7D220F] text-amber-50 text-[11px] py-1.5 px-3 rounded-lg font-black flex items-center gap-1 transition-all border-0 cursor-pointer"
+                    className="bg-orange-700 hover:bg-orange-850 text-amber-50 text-[11px] py-1.5 px-3 rounded-lg font-black flex items-center gap-1 transition-all border-0 cursor-pointer"
                   >
                     {isAddingPhone ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                     <span>{isAddingPhone ? 'إلغاء' : 'إضافة رقم جديد'}</span>
@@ -617,8 +902,13 @@ export default function ProfileSettings({
                           value={newPhone}
                           onChange={(e) => setNewPhone(e.target.value)}
                           placeholder="+966 5x xxx xxxx"
-                          className="w-full bg-white text-stone-950 text-xs py-2 px-3 rounded-lg border border-stone-200 focus:outline-none"
+                          className={`w-full bg-white text-stone-950 text-xs py-2 px-3 rounded-lg border focus:outline-none ${
+                            validationErrors.newPhone ? 'border-red-500 ring-2 ring-red-100' : 'border-stone-200'
+                          }`}
                         />
+                        {validationErrors.newPhone && (
+                          <p className="text-[9.5px] text-red-600 font-bold mt-1">⚠️ {validationErrors.newPhone}</p>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-stone-700 block">وصف الرقم</label>
@@ -648,7 +938,7 @@ export default function ProfileSettings({
                     <div key={p.id} className="p-4 bg-stone-50/50 hover:bg-white rounded-2xl border border-stone-200 flex items-center justify-between transition group">
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center border-0 ${
-                          p.isDefault ? 'bg-orange-100 text-[#962D15]' : 'bg-stone-100 text-stone-400'
+                          p.isDefault ? 'bg-orange-100 text-orange-750 dark:bg-orange-950/40 dark:text-orange-400' : 'bg-stone-100 text-stone-400'
                         }`}>
                           <Phone className="w-4 h-4" />
                         </div>
@@ -666,7 +956,7 @@ export default function ProfileSettings({
                         ) : (
                           <button
                             onClick={() => handleSetPhoneDefault(p.id)}
-                            className="bg-transparent hover:bg-[#FAF9F5] p-2 text-stone-300 hover:text-amber-500 rounded-lg transition border-0 cursor-pointer"
+                            className="bg-transparent hover:bg-orange-50/30 p-2 text-stone-300 hover:text-amber-500 rounded-lg transition border-0 cursor-pointer"
                             title="تعيين كافتراضي"
                           >
                             <Star className="w-4.5 h-4.5" />
@@ -694,13 +984,13 @@ export default function ProfileSettings({
                 
                 {/* Section Header */}
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3">
-                  <h3 className="text-xs sm:text-sm font-black text-[#5C230E] font-serif">العناوين المعتمدة لشحن السجلات</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-orange-950 font-serif">العناوين المعتمدة لشحن السجلات</h3>
                   <button
                     onClick={() => {
                       setEditingAddress(null);
                       setIsAddingAddress(!isAddingAddress);
                     }}
-                    className="bg-[#962D15] hover:bg-[#7D220F] text-amber-50 text-[11px] py-1.5 px-3 rounded-lg font-black flex items-center gap-1 transition-all border-0 cursor-pointer"
+                    className="bg-orange-700 hover:bg-orange-850 text-amber-50 text-[11px] py-1.5 px-3 rounded-lg font-black flex items-center gap-1 transition-all border-0 cursor-pointer"
                   >
                     {isAddingAddress ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                     <span>{isAddingAddress ? 'إلغاء' : 'إضافة عنوان جديد'}</span>
@@ -795,13 +1085,13 @@ export default function ProfileSettings({
                       key={a.id} 
                       className={`p-4 rounded-2xl border flex flex-col justify-between text-right transition-all duration-300 ${
                         a.isDefault 
-                          ? 'border-orange-600 bg-[#FAF9F5] shadow-2xs' 
+                          ? 'border-orange-600 bg-orange-50/20 shadow-2xs' 
                           : 'border-stone-200 bg-white hover:border-stone-400'
                       }`}
                     >
                       <div className="space-y-2">
                         <div className="flex justify-between items-center text-right">
-                          <span className="font-black text-xs text-[#5C230E] font-serif">{a.title}</span>
+                          <span className="font-black text-xs text-orange-950 font-serif">{a.title}</span>
                           
                           {a.isDefault && (
                             <span className="text-[9px] bg-amber-100 text-amber-950 px-2.5 py-0.5 rounded-full border border-amber-300">
@@ -816,8 +1106,8 @@ export default function ProfileSettings({
                         {!a.isDefault && (
                           <button
                             onClick={() => handleSetAddressDefault(a.id)}
-                            className="text-[10px] text-[#962D15] hover:text-[#7D220F] bg-transparent border-0 cursor-pointer flex items-center gap-1 font-black"
-                            title="سداد افتراضي"
+                            className="text-[10px] text-orange-700 hover:text-orange-850 bg-transparent border-0 cursor-pointer flex items-center gap-1 font-black"
+                            title="تعيين كافتراضي"
                           >
                             <Star className="w-3.5 h-3.5 fill-current" />
                             <span>تعيين كافتراضي</span>
@@ -825,6 +1115,7 @@ export default function ProfileSettings({
                         )}
 
                         <button
+                          type="button"
                           onClick={() => setEditingAddress(a)}
                           className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition border-0 cursor-pointer"
                           title="تعديل العنوان"
@@ -833,6 +1124,7 @@ export default function ProfileSettings({
                         </button>
 
                         <button
+                          type="button"
                           onClick={() => handleDeleteAddress(a.id)}
                           className="p-1.5 text-stone-300 hover:text-red-700 hover:bg-red-50 rounded-lg transition border-0 cursor-pointer"
                           title="حذف العنوان"
@@ -955,6 +1247,127 @@ export default function ProfileSettings({
                   </div>
                 </div>
 
+              </div>
+            )}
+
+            {/* TAB 5: NOTIFICATIONS PREFERENCES */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-6 animate-fade-in text-right" dir="rtl">
+                <div className="bg-orange-50/20 p-4 rounded-2xl border border-stone-200 mb-4 text-right">
+                  <span className="text-[11px] font-extrabold text-orange-950">🔔 إشعارات البوابة الشريفة</span>
+                  <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                    يتم مزامنة تعديلاتك تلقائياً مع خيوط إشعارات الحساب. تحكم بقنوات الاتصال المفضلة لضمان استلاف تقارير المدرسين والإجازات التراكمية.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* SMS notifications config */}
+                  <div className="p-5 bg-stone-50 rounded-2xl border border-stone-250/60 flex items-start justify-between gap-4">
+                    <div className="space-y-1 text-right flex-1">
+                      <h4 className="text-xs font-black text-stone-900">تنبيهات البث المفتوح والدروس المباشرة (SMS)</h4>
+                      <p className="text-[11px] text-stone-500 leading-normal font-light">
+                        تلقي رسائل جوال نصية هامة عند بدء المدرس في شرح مخطوط حية لمساعدتك على الحضور الفوري والتعليق.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={notifSmsLive}
+                        onChange={(e) => {
+                          setNotifSmsLive(e.target.checked);
+                          onTriggerToast(e.target.checked ? '🔔 تم تشغيل تنبيهات البث المباشر الميداني عبر SMS!' : '🔕 تم إيقاف تنبيهات SMS لبث الدروس.');
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
+                    </label>
+                  </div>
+
+                  {/* Written evaluation email notifications */}
+                  <div className="p-5 bg-stone-50 rounded-2xl border border-stone-250/60 flex items-start justify-between gap-4">
+                    <div className="space-y-1 text-right flex-1">
+                      <h4 className="text-xs font-black text-stone-900">مراجعة وتدبيج المخطوطات والواجبات العلمية (البريد الإلكتروني)</h4>
+                      <p className="text-[11px] text-stone-500 leading-normal font-light">
+                        تلقي رسالة آلية عبر بريدك المسجل فور قيام أحد الأساتذة بتقييم فرضك المكتوب أو كتابة حواشٍ نقدية عليه.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={notifEmailManuscript}
+                        onChange={(e) => {
+                          setNotifEmailManuscript(e.target.checked);
+                          onTriggerToast(e.target.checked ? '🔔 تم تغذية قنوات مراجعات المخطوطات الأكاديمية بالبريد!' : '🔕 تم كتم البريد التقييمي للمهام.');
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
+                    </label>
+                  </div>
+
+                  {/* Public administrative alerts via Webpush */}
+                  <div className="p-5 bg-stone-50 rounded-2xl border border-stone-250/60 flex items-start justify-between gap-4">
+                    <div className="space-y-1 text-right flex-1">
+                      <h4 className="text-xs font-black text-stone-900">إشعار بالمستجدات والقرارات الإدارية العليا (إشارات ويب مدمجة)</h4>
+                      <p className="text-[11px] text-stone-500 leading-normal font-light">
+                        تنبيهات منبثقة غامرة للأجهزة لقرارات مجلس إدارة الأثر الأكاديمي، بما يشمل تعديلات المناهج الشريفة.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={notifPushAnnouncements}
+                        onChange={(e) => {
+                          setNotifPushAnnouncements(e.target.checked);
+                          onTriggerToast(e.target.checked ? '🔔 تم تشغيل تنبيه السواري والقرارات الإدارية بنجاح.' : '🔕 تم إلغاء تنبيهات الويب الفوقية للقرارات.');
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
+                    </label>
+                  </div>
+
+                  {/* Weekly report summary */}
+                  <div className="p-5 bg-stone-50 rounded-2xl border border-stone-250/60 flex items-start justify-between gap-4">
+                    <div className="space-y-1 text-right flex-1">
+                      <h4 className="text-xs font-black text-stone-900">الملخص الأسبوعي للدارس (تقرير قياس الأثر التحليلي)</h4>
+                      <p className="text-[11px] text-stone-500 leading-normal font-light">
+                        تلقي تقرير شامل في صبيحة كل سبت يوضح كمية استهلاكك للمحاضرات وعدد الساعات التراكمية ومستوى تقدم معدلاتك.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={notifWeeklyDigest}
+                        onChange={(e) => {
+                          setNotifWeeklyDigest(e.target.checked);
+                          onTriggerToast(e.target.checked ? '🔔 تم تفعيل البريد التلخيصي السبتي التراكمي.' : '🔕 تم إلغاء الملخص الأسبوعي المعرفي.');
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
+                  <button
+                    type="button"
+                    onClick={onBackToMain}
+                    className="bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold py-2.5 px-6 rounded-xl text-xs transition border-0 cursor-pointer"
+                  >
+                    العودة للرئيسية
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onTriggerToast('✓ تم تأمين وحفظ كافة تفضيلات الإشعارات والتنبيهات في السجل السحابي!')}
+                    className="bg-orange-700 hover:bg-orange-850 text-amber-50 font-black py-2.5 px-6 rounded-xl text-xs shadow-sm transition border-0 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>تأكيد الحفظ الرئيسي</span>
+                  </button>
+                </div>
               </div>
             )}
 

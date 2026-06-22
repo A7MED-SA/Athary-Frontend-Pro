@@ -267,7 +267,7 @@ export default function CourseCatalog({
   };
 
   return (
-    <div className="bg-amber-50/40 min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans" dir="rtl" id="athary-catalog-page">
+    <div className="bg-[var(--color-background)] text-[var(--color-foreground)] min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans" dir="rtl" id="athary-catalog-page">
       <div className="max-w-7xl mx-auto">
         
         {/* Banner Section */}

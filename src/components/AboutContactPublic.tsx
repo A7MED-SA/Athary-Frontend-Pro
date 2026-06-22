@@ -67,7 +67,7 @@ export default function AboutContactPublic() {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50/40 text-stone-900 pb-20 pt-10 px-4 sm:px-6 lg:px-8 dir-rtl text-right font-sans selection:bg-orange-200 selection:text-orange-900" id="about-contact-public-view">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] pb-20 pt-10 px-4 sm:px-6 lg:px-8 text-right font-sans selection:bg-orange-200 selection:text-orange-900" id="about-contact-public-view">
       
       {/* 1. HERO SECTION */}
       <div className="max-w-6xl mx-auto text-center space-y-4 mb-16 relative">
@@ -78,7 +78,7 @@ export default function AboutContactPublic() {
           <span>رسالتنا: صون المعارف وتأصيل الحكمة والتاريخ</span>
         </span>
         
-        <h1 className="text-3xl md:text-5xl font-black text-[#5C230E] font-serif tracking-tight leading-tight mt-2">
+        <h1 className="text-3xl md:text-5xl font-black text-orange-950 font-serif tracking-tight leading-tight mt-2">
           إحياء التراث المكتوب والآثاري برؤية معاصرة
         </h1>
         
@@ -95,7 +95,7 @@ export default function AboutContactPublic() {
           <div className="w-10 h-10 bg-amber-50 text-amber-900 rounded-2xl flex items-center justify-center mx-auto text-sm border border-amber-100 font-bold">
             📜
           </div>
-          <h3 className="text-xl font-mono font-extrabold text-[#962D15] leading-none">+٢٠٠ مخطوطة</h3>
+          <h3 className="text-xl font-mono font-extrabold text-orange-700 leading-none">+٢٠٠ مخطوطة</h3>
           <p className="text-[11px] text-stone-500 font-medium">تم فك ترميزها وتدبيج مقررها</p>
           <div className="absolute bottom-0 inset-x-0 h-1 bg-orange-600/40" />
         </div>
@@ -105,7 +105,7 @@ export default function AboutContactPublic() {
           <div className="w-10 h-10 bg-orange-50 text-orange-950 rounded-2xl flex items-center justify-center mx-auto text-sm border border-orange-100 font-bold">
             🎓
           </div>
-          <h3 className="text-xl font-mono font-extrabold text-[#962D15] leading-none">+١٠,٠٠٠ متعلم</h3>
+          <h3 className="text-xl font-mono font-extrabold text-orange-700 leading-none">+١٠,٠٠٠ متعلم</h3>
           <p className="text-[11px] text-stone-500 font-medium font-sans">تلقوا الإجازات والشهادات الكبرى</p>
           <div className="absolute bottom-0 inset-x-0 h-1 bg-orange-600/40" />
         </div>
@@ -115,7 +115,7 @@ export default function AboutContactPublic() {
           <div className="w-10 h-10 bg-emerald-50 text-emerald-900 rounded-2xl flex items-center justify-center mx-auto text-sm border border-emerald-100 font-bold">
             🕌
           </div>
-          <h3 className="text-xl font-mono font-extrabold text-[#962D15] leading-none">١٤ عاماً</h3>
+          <h3 className="text-xl font-mono font-extrabold text-orange-700 leading-none">١٤ عاماً</h3>
           <p className="text-[11px] text-stone-500 font-medium">من البحث الميداني والتعليم الأصيل</p>
           <div className="absolute bottom-0 inset-x-0 h-1 bg-orange-600/40" />
         </div>
@@ -199,7 +199,7 @@ export default function AboutContactPublic() {
             ) : (
               <button
                 type="submit"
-                className="w-full bg-[#962D15] hover:bg-[#7D220F] text-amber-50 font-black py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2 border-0 cursor-pointer"
+                className="w-full bg-orange-700 hover:bg-orange-850 text-amber-50 font-black py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2 border-0 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>إرسال وتوثيق الرسالة بالمجلس المعرفي</span>
@@ -210,7 +210,7 @@ export default function AboutContactPublic() {
         </div>
 
         {/* Contact info & Office Map (Right Column) */}
-        <div className="lg:col-span-5 bg-[#FAF9F5] rounded-3xl border border-amber-200 p-8 shadow-xs flex flex-col justify-between space-y-8">
+        <div className="lg:col-span-5 bg-orange-50/20 rounded-3xl border border-stone-200 p-8 shadow-xs flex flex-col justify-between space-y-8">
           
           {/* Info blocks section */}
           <div className="space-y-6">
@@ -223,7 +223,7 @@ export default function AboutContactPublic() {
               
               {/* Item 1 */}
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 bg-amber-55 bg-amber-100 text-[#962D15] rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
+                <div className="w-9 h-9 bg-amber-55 bg-amber-100 text-orange-700 rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5 text-right">
@@ -234,7 +234,7 @@ export default function AboutContactPublic() {
 
               {/* Item 2 */}
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 bg-amber-55 bg-amber-105 bg-amber-100 text-[#962D15] rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
+                <div className="w-9 h-9 bg-amber-55 bg-amber-105 bg-amber-100 text-orange-700 rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
                   <Phone className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5 text-right">
@@ -245,7 +245,7 @@ export default function AboutContactPublic() {
 
               {/* Item 3 */}
               <div className="flex items-start gap-3.5">
-                <div className="w-9 h-9 bg-amber-55 bg-amber-105 bg-amber-100 text-[#962D15] rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
+                <div className="w-9 h-9 bg-amber-55 bg-amber-105 bg-amber-100 text-orange-700 rounded-xl flex items-center justify-center shrink-0 border border-amber-200">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div className="space-y-0.5 text-right">
@@ -294,7 +294,7 @@ export default function AboutContactPublic() {
         <div className="flex flex-wrap justify-center sm:justify-end gap-5 text-xs font-black">
           <button 
             onClick={() => setActiveLegalModal('privacy')}
-            className="text-[#962D15] hover:text-[#7D220F] hover:underline bg-transparent border-0 cursor-pointer text-xs"
+            className="text-orange-700 hover:text-orange-850 hover:underline bg-transparent border-0 cursor-pointer text-xs"
           >
             سياسة الخصوصية والأمان
           </button>
@@ -303,7 +303,7 @@ export default function AboutContactPublic() {
           
           <button 
             onClick={() => setActiveLegalModal('terms')}
-            className="text-[#962D15] hover:text-[#7D220F] hover:underline bg-transparent border-0 cursor-pointer text-xs"
+            className="text-orange-700 hover:text-orange-850 hover:underline bg-transparent border-0 cursor-pointer text-xs"
           >
             شروط وبنود الاستخدام العلمي
           </button>
@@ -312,7 +312,7 @@ export default function AboutContactPublic() {
           
           <button 
             onClick={() => setActiveLegalModal('refund')}
-            className="text-[#962D15] hover:text-[#7D220F] hover:underline bg-transparent border-0 cursor-pointer text-xs"
+            className="text-orange-700 hover:text-orange-850 hover:underline bg-transparent border-0 cursor-pointer text-xs"
           >
             سياسة الاسترداد والمالية
           </button>
@@ -356,7 +356,7 @@ export default function AboutContactPublic() {
 
             {/* Document Content */}
             <div className="space-y-4 text-right">
-              <h4 className="font-extrabold text-stone-900 border-r-4 border-[#942B10] pr-3 text-xs">
+              <h4 className="font-extrabold text-stone-900 border-r-4 border-orange-700 pr-3 text-xs">
                 {legalContent[activeLegalModal].title}
               </h4>
               
@@ -375,7 +375,7 @@ export default function AboutContactPublic() {
                   // Trigger simple print/alert feedback
                   alert('📄 تم نسخ واعتماد شروط هذه الوثيقة في سجلات متصفحك الدراسي بنجاح.');
                 }}
-                className="flex-1 bg-[#962D15] hover:bg-[#7D220F] text-amber-50 py-2.5 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition"
+                className="flex-1 bg-orange-700 hover:bg-orange-850 text-amber-50 py-2.5 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition"
               >
                 الموافقة والاعتماد للوثيقة
               </button>

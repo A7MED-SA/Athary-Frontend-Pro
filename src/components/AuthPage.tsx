@@ -11,7 +11,12 @@ import {
   CheckCircle, 
   KeyRound, 
   Loader2, 
-  AlertCircle 
+  AlertCircle,
+  MapPin,
+  Calendar,
+  Globe,
+  Building,
+  Check
 } from 'lucide-react';
 
 interface AuthPageProps {
@@ -29,6 +34,19 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
   const [phone, setPhone] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
+  // New registration fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
+  const [dob, setDob] = useState('');
+  const [country, setCountry] = useState('المملكة العربية السعودية');
+  const [city, setCity] = useState('');
+  const [streetLine1, setStreetLine1] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  
+  // Registration current multi-step state (1, 2, 3)
+  const [registerStep, setRegisterStep] = useState(1);
+  
   // Password Visibility toggles
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
@@ -36,6 +54,146 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
   // Common UI State Indicators
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    phone?: string;
+    firstName?: string;
+    lastName?: string;
+    postalCode?: string;
+  }>({});
+
+  // Restore registration draft from localStorage on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('athari_registration_draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.password) setPassword(parsed.password);
+        if (parsed.confirmPassword) setConfirmPassword(parsed.confirmPassword);
+        if (parsed.firstName) setFirstName(parsed.firstName);
+        if (parsed.lastName) setLastName(parsed.lastName);
+        if (parsed.phone) setPhone(parsed.phone);
+        if (parsed.gender) setGender(parsed.gender);
+        if (parsed.dob) setDob(parsed.dob);
+        if (parsed.country) setCountry(parsed.country);
+        if (parsed.city) setCity(parsed.city);
+        if (parsed.streetLine1) setStreetLine1(parsed.streetLine1);
+        if (parsed.postalCode) setPostalCode(parsed.postalCode);
+        if (parsed.registerStep) setRegisterStep(parsed.registerStep);
+        if (parsed.subView) setSubView(parsed.subView);
+
+        // Notify user of restored draft
+        setTimeout(() => {
+          handleTriggerToast('📝 تم استعادة مسودة التسجيل المحفوظة تلقائياً بنجاح لتجنب فقدان البيانات!');
+        }, 800);
+      } catch (err) {
+        console.error('Failed to restore registration draft:', err);
+      }
+    }
+  }, []);
+
+  // Password Strength checker based on backend Identity rules
+  const checkPasswordStrength = (pass: string) => {
+    return {
+      minLength: pass.length >= 8,
+      hasUpper: /[A-Z]/.test(pass),
+      hasLower: /[a-z]/.test(pass),
+      hasNumber: /[0-9]/.test(pass),
+      hasSpecial: /[^A-Za-z0-9]/.test(pass),
+    };
+  };
+
+  const strength = checkPasswordStrength(password);
+  const strengthCount = Object.values(strength).filter(Boolean).length;
+
+  // Auto-save registration draft to localStorage on change
+  useEffect(() => {
+    if (subView === 'register') {
+      const draft = {
+        email,
+        password,
+        confirmPassword,
+        firstName,
+        lastName,
+        phone,
+        gender,
+        dob,
+        country,
+        city,
+        streetLine1,
+        postalCode,
+        registerStep,
+        subView
+      };
+      localStorage.setItem('athari_registration_draft', JSON.stringify(draft));
+    }
+  }, [
+    email, password, confirmPassword, firstName, lastName, phone, gender,
+    dob, country, city, streetLine1, postalCode, registerStep, subView
+  ]);
+
+  // Real-time Form Validation logic
+  useEffect(() => {
+    const errors: typeof validationErrors = {};
+    
+    // Email validate
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.email = 'شكل البريد الإلكتروني غير صحيح (مثال: student@athari.edu)';
+      }
+    }
+
+    // First and last names
+    if (firstName) {
+      if (firstName.trim().length === 0) {
+        errors.firstName = 'الاسم الأول مطلوب ولا يمكن تركه فارغاً.';
+      } else if (firstName.length > 100) {
+        errors.firstName = 'الاسم الأول طويل جداً (الحد الأقصى ١٠٠ حرف).';
+      }
+    }
+    if (lastName) {
+      if (lastName.trim().length === 0) {
+        errors.lastName = 'اسم العائلة مطلوب ولا يمكن تركه فارغاً.';
+      } else if (lastName.length > 100) {
+        errors.lastName = 'اسم العائلة طويل جداً (الحد الأقصى ١٠٠ حرف).';
+      }
+    }
+
+    // Password validate
+    if (password) {
+      if (password.length < 8) {
+        errors.password = 'تتطلب معايير الأمان ٨ أحرف على الأقل لشفرة المرور.';
+      } else if (strengthCount < 3) {
+        errors.password = 'نوصي بكلمة مرور أقوى (امزج حروفاً وأرقاماً ورموزاً).';
+      }
+    }
+
+    // Confirm password validate
+    if (confirmPassword && password !== confirmPassword) {
+      errors.confirmPassword = 'تأكيد كلمة المرور وتطابقها مع المدخل الأول غير صحيح.';
+    }
+
+    // Phone validate
+    if (phone) {
+      if (!/^\+?[0-9\s-]{7,16}$/.test(phone)) {
+        errors.phone = 'رقم الجوال المقدم غير صالح (أرقام فقط مع رمز البلد الاختياري).';
+      }
+    }
+
+    // Postal code validate
+    if (postalCode) {
+      if (!/^[a-zA-Z0-9\s-]{4,10}$/.test(postalCode)) {
+        errors.postalCode = 'الرمز البريدي يجب أن يتكون من ٤ إلى ١٠ حروف أو أرقام.';
+      }
+    }
+
+    setValidationErrors(errors);
+  }, [email, password, confirmPassword, phone, firstName, lastName, postalCode, strengthCount]);
 
   // OTP 6 digits input state
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
@@ -64,20 +222,6 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
     }
   };
 
-  // Password Strength checker based on backend Identity rules
-  const checkPasswordStrength = (pass: string) => {
-    return {
-      minLength: pass.length >= 8,
-      hasUpper: /[A-Z]/.test(pass),
-      hasLower: /[a-z]/.test(pass),
-      hasNumber: /[0-9]/.test(pass),
-      hasSpecial: /[^A-Za-z0-9]/.test(pass),
-    };
-  };
-
-  const strength = checkPasswordStrength(password);
-  const strengthCount = Object.values(strength).filter(Boolean).length;
-
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -100,26 +244,73 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!fullName || !email || !password || !phone) {
-      setErrorMessage('يرجى تعبئة كامل الحقول المطلوبة لإكمال التوثيق.');
+    if (registerStep === 1) {
+      if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
+        setErrorMessage('يرجى تعبئة كامل الحقول الأساسية المطلوبة بالخطوة الأولى.');
+        return;
+      }
+      if (validationErrors.firstName || validationErrors.lastName || validationErrors.email || validationErrors.password || validationErrors.confirmPassword) {
+        setErrorMessage('يرجى تصحيح الأخطاء المشار إليها باللون الأحمر قبل الانتقال للخطوة التالية.');
+        return;
+      }
+      if (firstName.length > 100 || lastName.length > 100) {
+        setErrorMessage('الاسم الأول أو الأخير يجب ألا يتجاوز ١٠٠ حرفاً.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setErrorMessage('عذراً، كلمتا المرور غير متطابقتين، تأكد من المدخلات.');
+        return;
+      }
+      if (strengthCount < 3) {
+        setErrorMessage('يرجى توفير كلمة مرور أقوى تناسب المتطلبات الأمنية (حروف وأرقام ورموز).');
+        return;
+      }
+      setFullName(`${firstName.trim()} ${lastName.trim()}`);
+      setRegisterStep(2);
       return;
     }
 
-    if (password !== confirmPassword) {
-      setErrorMessage('عذراً، كلمتا المرور غير متابقتين، تأكد من المدخلات.');
+    if (registerStep === 2) {
+      if (!phone.trim()) {
+        setErrorMessage('يرجى توفير رقم الهاتف للاتصال وتلقي التنبيهات.');
+        return;
+      }
+      if (validationErrors.phone) {
+        setErrorMessage('يرجى تصحيح خطأ رقم الهاتف قبل الانتقال للخطوة التالية.');
+        return;
+      }
+      setRegisterStep(3);
       return;
     }
 
-    if (strengthCount < 4) {
-      setErrorMessage('يرجى توفير كلمة مرور أقوى تناسب المتطلبات الأمنية.');
-      return;
+    if (registerStep === 3) {
+      if (validationErrors.postalCode) {
+        setErrorMessage('يرجى تصحيح خطأ الرمز البريدي قبل إتمام التسجيل.');
+        return;
+      }
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        // Persist newly registered credentials to simulate state in localStorage for Account Settings!
+        const registrationData = {
+          email,
+          firstName,
+          lastName,
+          phone,
+          gender,
+          dob,
+          country,
+          city,
+          streetLine1,
+          postalCode,
+          fullName: `${firstName} ${lastName}`
+        };
+        localStorage.setItem('athari_registered_user', JSON.stringify(registrationData));
+        // Clear the draft registration as it is now completed
+        localStorage.removeItem('athari_registration_draft');
+        setSubView('verify'); // Lead to OTP verification screen
+      }, 1200);
     }
-
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSubView('verify'); // Lead to OTP verification screen
-    }, 1200);
   };
 
   const handleOtpChange = (element: HTMLInputElement, index: number) => {
@@ -363,142 +554,338 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
 
             {/* Form View 2: REGISTER */}
             {subView === 'register' && (
-              <div className="space-y-6" id="register-subview">
+              <div className="space-y-5" id="register-subview">
                 <div className="text-right">
                   <h2 className="text-xl font-bold text-stone-900">إنشاء حساب جديد بمنصة آثاري</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1">ابدأ رحلتك المعرفية وسجل في الفصول العلمية الممنهحة.</p>
+                  <p className="text-xs text-stone-500 font-light mt-1">ابدأ رحلتك المعرفية وسجل في الفصول العلمية الممنهجة بالمنصة.</p>
+                </div>
+
+                {/* WIZARD STEP INDICATOR */}
+                <div className="grid grid-cols-3 gap-2 py-2 text-center" dir="rtl">
+                  <div className="space-y-1">
+                    <div className={`h-1.5 rounded-full transition ${registerStep >= 1 ? 'bg-orange-700' : 'bg-stone-200'}`} />
+                    <span className={`text-[9.5px] font-bold ${registerStep === 1 ? 'text-orange-700' : 'text-stone-400'}`}>١. الحساب والأمان</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className={`h-1.5 rounded-full transition ${registerStep >= 2 ? 'bg-orange-700' : 'bg-stone-200'}`} />
+                    <span className={`text-[9.5px] font-bold ${registerStep === 2 ? 'text-orange-700' : 'text-stone-400'}`}>٢. الهوية والاتصال</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className={`h-1.5 rounded-full transition ${registerStep >= 3 ? 'bg-orange-700' : 'bg-stone-200'}`} />
+                    <span className={`text-[9.5px] font-bold ${registerStep === 3 ? 'text-orange-700' : 'text-stone-400'}`}>٣. محل الإقامة</span>
+                  </div>
                 </div>
 
                 <form onSubmit={handleRegisterSubmit} className="space-y-4">
                   
-                  <div className="space-y-1 text-right">
-                    <label className="text-xs font-bold text-stone-700">الاسم والكنية بالكامل</label>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="أحمد التميمي"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <User className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 text-right">
-                    <label className="text-xs font-bold text-stone-700">البريد الإلكتروني للدارس</label>
-                    <div className="relative">
-                      <input 
-                        type="email" 
-                        required
-                        placeholder="example@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none"
-                      />
-                      <Mail className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 text-right">
-                    <label className="text-xs font-bold text-stone-700">رقم الهاتف للهواتف النقالة</label>
-                    <div className="relative">
-                      <input 
-                        type="tel" 
-                        required
-                        placeholder="+966 50 123 4567"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none"
-                      />
-                      <Phone className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
-                    <div className="space-y-1 text-right">
-                      <label className="text-xs font-bold text-stone-700">كلمة المرور المقترحة</label>
-                      <div className="relative">
-                        <input 
-                          type={showPass ? "text" : "password"} 
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none"
-                        />
-                        <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                        <button
-                          type="button"
-                          onClick={() => setShowPass(!showPass)}
-                          className="absolute top-3.5 left-3 text-stone-400"
-                        >
-                          {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                  {/* STEP 1: BASICS & SECURITY */}
+                  {registerStep === 1 && (
+                    <div className="space-y-3.5 text-right">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">الاسم الأول <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              required
+                              placeholder="أحمد"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                                validationErrors.firstName ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                              }`}
+                            />
+                            <User className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                          {validationErrors.firstName && (
+                            <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.firstName}</p>
+                          )}
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">اسم العائلة <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              required
+                              placeholder="التميمي"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                                validationErrors.lastName ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                              }`}
+                            />
+                            <User className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                          {validationErrors.lastName && (
+                            <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.lastName}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-1 text-right">
-                      <label className="text-xs font-bold text-stone-700">تأكيد كلمة المرور</label>
-                      <div className="relative">
-                        <input 
-                          type={showConfirmPass ? "text" : "password"} 
-                          required
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none"
-                        />
-                        <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPass(!showConfirmPass)}
-                          className="absolute top-3.5 left-3 text-stone-400"
-                        >
-                          {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                      <div className="space-y-1 text-right">
+                        <label className="text-xs font-bold text-stone-700">البريد الإلكتروني للدارس <span className="text-red-500">*</span></label>
+                        <div className="relative">
+                          <input 
+                            type="email" 
+                            required
+                            placeholder="example@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                              validationErrors.email ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                            }`}
+                          />
+                          <Mail className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                        </div>
+                        {validationErrors.email && (
+                          <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.email}</p>
+                        )}
                       </div>
-                    </div>
 
-                  </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">كلمة المرور المقترحة <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <input 
+                              type={showPass ? "text" : "password"} 
+                              required
+                              placeholder="••••••••"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                                validationErrors.password ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                              }`}
+                            />
+                            <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                            <button
+                              type="button"
+                              onClick={() => setShowPass(!showPass)}
+                              className="absolute top-3.5 left-3 text-stone-400 hover:text-stone-605"
+                            >
+                              {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {validationErrors.password && (
+                            <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.password}</p>
+                          )}
+                        </div>
 
-                  {/* Password Strength Checklist panel */}
-                  {password.length > 0 && (
-                    <div className="p-3 bg-amber-50 rounded-xl text-[10px] space-y-1.5 text-right">
-                      <p className="font-bold text-stone-800">قوة كلمة المرور المقرّة أمنياً:</p>
-                      <div className="w-full bg-stone-200 h-1 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full transition-all duration-300 ${
-                            strengthCount < 2 ? 'bg-red-500' : strengthCount < 4 ? 'bg-amber-500' : 'bg-teal-600'
-                          }`}
-                          style={{ width: `${(strengthCount / 5) * 100}%` }}
-                        />
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">تأكيد كلمة المرور <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <input 
+                              type={showConfirmPass ? "text" : "password"} 
+                              required
+                              placeholder="••••••••"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                                validationErrors.confirmPassword ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                              }`}
+                            />
+                            <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPass(!showConfirmPass)}
+                              className="absolute top-3.5 left-3 text-stone-400 hover:text-stone-605"
+                            >
+                              {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {validationErrors.confirmPassword && (
+                            <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.confirmPassword}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
-                        <span className={strength.minLength ? 'text-teal-700' : 'text-stone-400'}>✓ ٨ أحرف على الأقل</span>
-                        <span className={strength.hasUpper ? 'text-teal-700' : 'text-stone-400'}>✓ حرف كبير</span>
-                        <span className={strength.hasLower ? 'text-teal-700' : 'text-stone-400'}>✓ حرف صغير</span>
-                        <span className={strength.hasNumber ? 'text-teal-700' : 'text-stone-400'}>✓ رقم واحد</span>
-                        <span className={strength.hasSpecial ? 'text-teal-700' : 'text-stone-400'}>✓ رمز خاص</span>
+
+                      {/* Password Strength Checklist panel */}
+                      {password.length > 0 && (
+                        <div className="p-3 bg-amber-50 rounded-xl text-[10px] space-y-1.5 text-right border border-amber-100">
+                          <p className="font-bold text-stone-800">قوة كلمة المرور المقرّة أمنياً:</p>
+                          <div className="w-full bg-stone-200 h-1 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-300 ${
+                                strengthCount < 2 ? 'bg-red-500' : strengthCount < 4 ? 'bg-amber-500' : 'bg-teal-600'
+                              }`}
+                              style={{ width: `${(strengthCount / 5) * 100}%` }}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                            <span className={strength.minLength ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ ٨ أحرف على الأقل</span>
+                            <span className={strength.hasUpper ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ حرف كبير</span>
+                            <span className={strength.hasLower ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ حرف صغير</span>
+                            <span className={strength.hasNumber ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ رقم واحد</span>
+                            <span className={strength.hasSpecial ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ رمز خاص</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                   {/* STEP 2: IDENTITY & CONTACT */}
+                  {registerStep === 2 && (
+                    <div className="space-y-3.5 text-right">
+                      <div className="space-y-1 text-right">
+                        <label className="text-xs font-bold text-stone-700">رقم الهاتف للهواتف النقالة <span className="text-red-500">*</span></label>
+                        <div className="relative">
+                          <input 
+                            type="tel" 
+                            required
+                            placeholder="+966 50 123 4567"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                              validationErrors.phone ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                            }`}
+                          />
+                          <Phone className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                        </div>
+                        {validationErrors.phone && (
+                          <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.phone}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">الجنس (اختياري)</label>
+                          <div className="relative">
+                            <select 
+                              value={gender}
+                              onChange={(e) => setGender(e.target.value)}
+                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-3 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right appearance-none cursor-pointer"
+                            >
+                              <option value="">اختر الجنس...</option>
+                              <option value="male">ذكر</option>
+                              <option value="female">أنثى</option>
+                              <option value="other">أخرى</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">تاريخ الميلاد (اختياري)</label>
+                          <div className="relative">
+                            <input 
+                              type="date" 
+                              value={dob}
+                              onChange={(e) => setDob(e.target.value)}
+                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                            />
+                            <Calendar className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-orange-700 hover:bg-orange-850 text-amber-50 font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs"
-                    id="register-btn-final"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'إنشاء وحجز المقعد الأكاديمي'}
-                  </button>
+                  {/* STEP 3: RESIDENCY & ADDRESS */}
+                  {registerStep === 3 && (
+                    <div className="space-y-3.5 text-right">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">الدولة (اختياري)</label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              placeholder="المملكة العربية السعودية"
+                              value={country}
+                              onChange={(e) => setCountry(e.target.value)}
+                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                            />
+                            <Globe className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">المدينة (اختياري)</label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              placeholder="الرياض"
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
+                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                            />
+                            <Building className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">اسم الشارع وعنوان الإقامة (اختياري)</label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              placeholder="الملز، طريق صلاح الدين"
+                              value={streetLine1}
+                              onChange={(e) => setStreetLine1(e.target.value)}
+                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                            />
+                            <MapPin className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 text-right">
+                          <label className="text-xs font-bold text-stone-700">الرمز البريدي (اختياري)</label>
+                          <div className="relative">
+                            <input 
+                              type="text" 
+                              placeholder="11564"
+                              value={postalCode}
+                              onChange={(e) => setPostalCode(e.target.value)}
+                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${
+                                validationErrors.postalCode ? 'border-red-500 ring-2 ring-red-200' : 'border-amber-200'
+                              }`}
+                            />
+                            <MapPin className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
+                          </div>
+                          {validationErrors.postalCode && (
+                            <p className="text-[10px] text-red-600 mt-1 font-bold">⚠️ {validationErrors.postalCode}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NAVIGATION STEP CONTROLS */}
+                  <div className="flex gap-4 pt-2">
+                    {registerStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setErrorMessage(null);
+                          setRegisterStep((prev) => prev - 1);
+                        }}
+                        className="w-1/3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-1.5 text-xs cursor-pointer border-0"
+                      >
+                        السابق
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className={`font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs cursor-pointer border-0 ${
+                        registerStep > 1 ? 'w-2/3' : 'w-full'
+                      } bg-orange-700 hover:bg-orange-850 text-amber-50`}
+                      id="register-btn-final"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : registerStep < 3 ? (
+                        <span className="flex items-center gap-1">الخطوة التالية ➔</span>
+                      ) : (
+                        <span>إنشاء وحجز المقعد الأكاديمي ✓</span>
+                      )}
+                    </button>
+                  </div>
 
                 </form>
 
                 {/* Footer Switch */}
                 <div className="pt-6 border-t border-amber-50 text-center text-xs text-stone-600">
                   <span>لديك حساب بالفعل بالمجلس؟ </span>
-                  <button onClick={() => setSubView('login')} className="text-orange-700 font-bold hover:underline">
+                  <button onClick={() => setSubView('login')} className="text-orange-700 font-bold hover:underline cursor-pointer bg-transparent border-0">
                     تسجيل الدخول الآن
                   </button>
                 </div>

@@ -262,7 +262,7 @@ export default function InstructorDashboard({
       {/* Dynamic Background Motif */}
       <div className="absolute inset-x-0 top-0 h-[480px] overflow-hidden pointer-events-none z-0">
         <div className="bg-heritage-pattern opacity-[0.06] absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#962D15]/5 via-amber-500/0 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-orange-700/5 via-amber-500/0 to-transparent" />
       </div>
 
       <div className="flex flex-1 relative z-10">
@@ -553,7 +553,7 @@ export default function InstructorDashboard({
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 rounded-full bg-[#C5A565] border border-stone-300" />
+                                <span className="w-3 h-3 rounded-full bg-amber-400 border border-stone-300" />
                                 <span>الذهبي الأصيل (آثاري)</span>
                               </div>
                               {themeColor === 'gold' && <span className="text-[9px] text-amber-600">✓ نَشِط</span>}
@@ -687,7 +687,7 @@ export default function InstructorDashboard({
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-xl font-extrabold text-[#962D15] font-mono">٢ قيد المعالجة</h3>
+                    <h3 className="text-xl font-extrabold text-orange-700 font-mono">٢ قيد المعالجة</h3>
                     <p className="text-[10px] text-amber-700 flex items-center gap-1">بينها صكّ وشهادات معلقة</p>
                   </div>
                 </div>
@@ -761,8 +761,8 @@ export default function InstructorDashboard({
                       >
                         <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#962D15" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="#d97706" stopOpacity={0.0}/>
+                            <stop offset="5%" stopColor="var(--color-brand-orange-700)" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="var(--color-brand-orange-600)" stopOpacity={0.0}/>
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#fed7aa" opacity={0.15} />
@@ -782,8 +782,8 @@ export default function InstructorDashboard({
                         />
                         <Tooltip 
                           contentStyle={{ 
-                            backgroundColor: '#fff', 
-                            border: '1.5px solid #fed7aa', 
+                            backgroundColor: 'white', 
+                            border: '1.5px solid var(--color-border)', 
                             borderRadius: '16px',
                             textAlign: 'right',
                             fontSize: '11px'
@@ -794,7 +794,7 @@ export default function InstructorDashboard({
                         <Area 
                           type="monotone" 
                           dataKey="revenue" 
-                          stroke="#962D15" 
+                          stroke="var(--color-brand-orange-700)" 
                           strokeWidth={3} 
                           fillOpacity={1} 
                           fill="url(#colorRevenue)" 
@@ -821,8 +821,8 @@ export default function InstructorDashboard({
                         />
                         <Tooltip 
                           contentStyle={{ 
-                            backgroundColor: '#fff', 
-                            border: '1.5px solid #fed7aa', 
+                            backgroundColor: 'white', 
+                            border: '1.5px solid var(--color-border)', 
                             borderRadius: '16px',
                             textAlign: 'right',
                             fontSize: '11px'
@@ -959,7 +959,7 @@ export default function InstructorDashboard({
                               <div className="flex items-center gap-3">
                                 <img src={c.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover border border-amber-100" />
                                 <div className="space-y-0.5">
-                                  <h4 className="font-extrabold text-[#962D15] max-w-sm leading-snug line-clamp-2">{c.title}</h4>
+                                  <h4 className="font-extrabold text-orange-700 max-w-sm leading-snug line-clamp-2">{c.title}</h4>
                                   <p className="text-[9px] text-stone-400">قسم: {c.category}</p>
                                 </div>
                               </div>
@@ -1072,7 +1072,7 @@ export default function InstructorDashboard({
                   </div>
 
                   {/* Trust Advice Callout Card */}
-                  <div className="bg-[#FFFDF9] border border-dashed border-amber-300 rounded-3xl p-5 text-right space-y-3">
+                  <div className="bg-orange-50/20 border border-dashed border-stone-200 rounded-3xl p-5 text-right space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-amber-700">
                         <LineCheckIcon />
@@ -1100,7 +1100,7 @@ export default function InstructorDashboard({
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-base font-extrabold text-[#962D15]">سجل الدورات والمناهج التابعة لك</h2>
+                  <h2 className="text-base font-extrabold text-orange-700 font-serif">سجل الدورات والمناهج التابعة لك</h2>
                   <p className="text-xs text-stone-500">مراجعة وتحرير المخرجات التفاعلية وأسماء الدارسين المعتمدين.</p>
                 </div>
                 <button
@@ -1240,13 +1240,13 @@ export default function InstructorDashboard({
               id="instructor-revisions-tab"
             >
               <div>
-                <h2 className="text-base font-extrabold text-[#962D15]">طلبات التعديل والتدقيق العلمي المعلقة</h2>
+                <h2 className="text-base font-extrabold text-orange-700 font-serif">طلبات التعديل والتدقيق العلمي المعلقة</h2>
                 <p className="text-xs text-stone-500 leading-relaxed font-light">
                   تقوم اللجنة الاستشارية بتسجيل ملاحظاتها التقويمية واللغوية وتمريرها إليك هنا لملاءمة مساقات ميثاق منصة آثاري المعرفي.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl border border-amber-150-10 bg-[#FFFDF9] space-y-3">
+              <div className="p-5 rounded-2xl border border-stone-200 bg-orange-50/20 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-extrabold text-xs text-stone-900">ملاحظة التدقيق في: فلسفة تناسب النقطة والقياس الهندسي المعتمد</h4>
@@ -1291,7 +1291,7 @@ export default function InstructorDashboard({
               id="instructor-earnings-tab"
             >
               <div>
-                <h2 className="text-base font-extrabold text-[#962D15] flex items-center gap-2">
+                <h2 className="text-base font-extrabold text-orange-700 flex items-center gap-2 font-serif">
                   <DollarSign className="w-5 h-5 text-orange-700" />
                   <span>عائدات وتصفية المحاضرات التفاعلية</span>
                 </h2>
@@ -1312,7 +1312,7 @@ export default function InstructorDashboard({
                   </div>
                 </div>
 
-                <div className="bg-[#FFFDF9] border border-amber-200/60 p-5 rounded-2xl flex flex-col justify-between text-right">
+                <div className="bg-orange-50/20 border border-stone-200 p-5 rounded-2xl flex flex-col justify-between text-right">
                   <div>
                     <span className="text-[10px] text-stone-500 font-bold block mb-1">الرصيد المتاح للسحب اليوم</span>
                     <h3 className="text-2xl font-black text-orange-950 font-mono">٥٢,٣٢٠ ر.س</h3>
