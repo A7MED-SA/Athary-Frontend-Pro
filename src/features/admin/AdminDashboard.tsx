@@ -40,6 +40,7 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAppContext } from '../../providers/AppProvider';
 
 // Import Phase 7 Components
 import ReviewsModeration from './ReviewsModeration';
@@ -122,15 +123,8 @@ interface SignalRNotification {
   read: boolean;
 }
 
-export default function AdminDashboard({
-  userName = 'المشرف العام (أحمد)',
-  onLogout,
-  onTriggerToast = () => {}
-}: {
-  userName?: string;
-  onLogout: () => void;
-  onTriggerToast?: (msg: string) => void;
-}) {
+export default function AdminDashboard() {
+  const { userName, handleLogout, displayToast } = useAppContext();
   // Tabs for the Admin Workbench
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'teachers' | 'orders-refunds' | 'categories' | 'settings' | 'reviews' | 'announcements' | 'media' | 'system-logs'>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -358,7 +352,7 @@ export default function AdminDashboard({
 
         setSignalrNotifications(prev => [mockNotif, ...prev]);
         setActiveToast(mockNotif);
-        onTriggerToast('💡 إشعار بث حي فوري عبر SignalR: ' + mockNotif.title);
+        displayToast('💡 إشعار بث حي فوري عبر SignalR: ' + mockNotif.title);
 
         // Auto remove toast after 6 seconds
         setTimeout(() => {
@@ -467,7 +461,7 @@ export default function AdminDashboard({
 
     setSignalrNotifications(prev => [chosen, ...prev]);
     setActiveToast(chosen);
-    onTriggerToast('🔔 تم بث إشعار تجريبي فوري عبر SignalR Hub ونقل البيانات لقوائم المراجعة!');
+    displayToast('🔔 تم بث إشعار تجريبي فوري عبر SignalR Hub ونقل البيانات لقوائم المراجعة!');
     
     // Auto-insert action to audit logs
     const newLog: ActivityLog = {
@@ -488,15 +482,15 @@ export default function AdminDashboard({
     if (notif.type === 'course') {
       setActiveTab('courses');
       setSelectedCourseId(notif.payloadId);
-      onTriggerToast(`تم نقلك وتلوين الدورة المطلوبة: ${notif.title}`);
+      displayToast(`تم نقلك وتلوين الدورة المطلوبة: ${notif.title}`);
     } else if (notif.type === 'teacher') {
       setActiveTab('teachers');
       setExpandedTeacherIds(prev => ({ ...prev, [notif.payloadId]: true }));
-      onTriggerToast(`تم تمريز وفحص طلب المدرس: ${notif.payloadId}`);
+      displayToast(`تم تمريز وفحص طلب المدرس: ${notif.payloadId}`);
     } else if (notif.type === 'refund') {
       setActiveTab('orders-refunds');
       setFinancialSubTab('refunds');
-      onTriggerToast(`تم فتح قيد الاستردادات المالية لمعاينة المعاملة.`);
+      displayToast(`تم فتح قيد الاستردادات المالية لمعاينة المعاملة.`);
     }
   };
 
@@ -527,7 +521,7 @@ export default function AdminDashboard({
         user: 'أنت'
       };
       setActivityLogs(prev => [newLog, ...prev]);
-      onTriggerToast(`✅ مبارك! تم إقرار واعتماد مقرر الدورة ونشره فوراً في دليل آثاري.`);
+      displayToast(`✅ مبارك! تم إقرار واعتماد مقرر الدورة ونشره فوراً في دليل آثاري.`);
     }
   };
 
@@ -551,7 +545,7 @@ export default function AdminDashboard({
           time: 'الآن',
           user: 'أنت'
         }, ...prev]);
-        onTriggerToast(`❌ تم رفض ونقض اعتماد المقرر وإصدار خطاب الملاحظات للمعد.`);
+        displayToast(`❌ تم رفض ونقض اعتماد المقرر وإصدار خطاب الملاحظات للمعد.`);
       }
     } else if (rejectionTarget.type === 'teacher') {
       setTeachers(prev => prev.map(t => t.id === rejectionTarget.id ? { ...t, status: 'Rejected' } : t));
@@ -564,7 +558,7 @@ export default function AdminDashboard({
           time: 'الآن',
           user: 'أنت'
         }, ...prev]);
-        onTriggerToast(`❌ تم ترحيل طلب الباحث وتأجيل صلاحياته مع مخاطبته لتقديم مستندات أشمل.`);
+        displayToast(`❌ تم ترحيل طلب الباحث وتأجيل صلاحياته مع مخاطبته لتقديم مستندات أشمل.`);
       }
     } else if (rejectionTarget.type === 'refund') {
       setRefunds(prev => prev.map(r => r.id === rejectionTarget.id ? { ...r, status: 'Rejected', rejectionReason: rejectionReasonText } : r));
@@ -577,7 +571,7 @@ export default function AdminDashboard({
           time: 'الآن',
           user: 'أنت'
         }, ...prev]);
-        onTriggerToast(`❌ تم رفض صرف طلب الاسترداد وحفظ المعاملة استناداً إلى اللائحة العامة للمنصة.`);
+        displayToast(`❌ تم رفض صرف طلب الاسترداد وحفظ المعاملة استناداً إلى اللائحة العامة للمنصة.`);
       }
     }
 
@@ -597,7 +591,7 @@ export default function AdminDashboard({
         time: 'منذ ثوانٍ',
         user: 'أنت'
       }, ...prev]);
-      onTriggerToast(`🎉 عظيم! تم تفويض رخصة التدريس المعرفي ودخول المدرس لقاعة الشرف بنجاح.`);
+      displayToast(`🎉 عظيم! تم تفويض رخصة التدريس المعرفي ودخول المدرس لقاعة الشرف بنجاح.`);
     }
   };
 
@@ -615,14 +609,14 @@ export default function AdminDashboard({
         time: 'الآن',
         user: 'أنت'
       }, ...prev]);
-      onTriggerToast(`💳 تم توجيه أمر صرف وموازنة المرتجع بقيمة ${target.amount} ر.س إلى حساب الدارس بنجاح.`);
+      displayToast(`💳 تم توجيه أمر صرف وموازنة المرتجع بقيمة ${target.amount} ر.س إلى حساب الدارس بنجاح.`);
     }
   };
 
   const handleAddNewCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!catNameInput.trim() || !catSlugInput.trim()) {
-      onTriggerToast('⚠️ فضلاً، ينبغي ملء اسم القسم والرمز التبويبي بالكامل.');
+      displayToast('⚠️ فضلاً، ينبغي ملء اسم القسم والرمز التبويبي بالكامل.');
       return;
     }
 
@@ -644,7 +638,7 @@ export default function AdminDashboard({
       time: 'منذ ثوانٍ',
       user: 'أنت'
     }, ...prev]);
-    onTriggerToast(`✨ تم إشعاع وتبويب قسم "${newCat.name}" كبوابة تدريبية جديدة بالمنصة.`);
+    displayToast(`✨ تم إشعاع وتبويب قسم "${newCat.name}" كبوابة تدريبية جديدة بالمنصة.`);
   };
 
   const handleDeleteCategoryObj = (id: string) => {
@@ -658,7 +652,7 @@ export default function AdminDashboard({
       time: 'الآن',
       user: 'أنت'
     }, ...prev]);
-    onTriggerToast(`🧹 تم مسح التبويب المعرفي وعزل مكنونات القسم بنجاح.`);
+    displayToast(`🧹 تم مسح التبويب المعرفي وعزل مكنونات القسم بنجاح.`);
   };
 
   // Switch row expanded visibility for teacher CV inspection
@@ -951,7 +945,7 @@ export default function AdminDashboard({
                 </div>
 
                 <button
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-950/40 hover:text-red-300 transition text-right text-xs font-semibold cursor-pointer border-0 bg-transparent"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1012,7 +1006,7 @@ export default function AdminDashboard({
                   </span>
                   <button 
                     onClick={() => {
-                      onTriggerToast('🔄 تم فحص قنوات الربط بالخلفية وتدقيق المقاعد المفتوحة.');
+                      displayToast('🔄 تم فحص قنوات الربط بالخلفية وتدقيق المقاعد المفتوحة.');
                       setActivityLogs(prev => [{
                         id: `log_${Date.now()}`,
                         action: 'تحديث بيانات الاعتماد والمقاعد النشطة مع قنوات الإشراف الكبرى',
@@ -1756,7 +1750,7 @@ export default function AdminDashboard({
 
                                         <button
                                           onClick={() => {
-                                            onTriggerToast('📥 جاري تنزيل السجل والوثائق المصادقة للباحث الموقعة بصيرة شريفة.');
+                                            displayToast('📥 جاري تنزيل السجل والوثائق المصادقة للباحث الموقعة بصيرة شريفة.');
                                           }}
                                           className="w-full text-center bg-orange-700 hover:bg-orange-800 text-amber-50 text-[10px] font-black py-2 rounded-xl border-0 shadow-xs cursor-pointer transition flex items-center justify-center gap-1.5"
                                         >
@@ -2136,7 +2130,7 @@ export default function AdminDashboard({
               <div className="pt-4 border-t border-stone-100 flex justify-end">
                 <button
                   onClick={() => {
-                    onTriggerToast('💾 تم حفظ سجل التغييرات وقوانين التدقيق وحفظ المعايير بنجاح.');
+                    displayToast('💾 تم حفظ سجل التغييرات وقوانين التدقيق وحفظ المعايير بنجاح.');
                     setActivityLogs(prev => [{
                       id: `log_${Date.now()}`,
                       action: 'تحديث قواعد قبول وحوكمة المقررات وتثبيت إعدادات الوزارة',
@@ -2161,7 +2155,7 @@ export default function AdminDashboard({
             ========================================================================= */}
         {activeTab === 'reviews' && (
           <div className="space-y-6 animate-fade-in" id="reviews-moderation-workbench">
-            <ReviewsModeration onTriggerToast={onTriggerToast} />
+            <ReviewsModeration onTriggerToast={displayToast} />
           </div>
         )}
 
@@ -2170,7 +2164,7 @@ export default function AdminDashboard({
             ========================================================================= */}
         {activeTab === 'announcements' && (
           <div className="space-y-6 animate-fade-in" id="announcements-center-workbench">
-            <AnnouncementsCenter onTriggerToast={onTriggerToast} />
+            <AnnouncementsCenter onTriggerToast={displayToast} />
           </div>
         )}
 
@@ -2179,7 +2173,7 @@ export default function AdminDashboard({
             ========================================================================= */}
         {activeTab === 'media' && (
           <div className="space-y-6 animate-fade-in" id="media-library-workbench">
-            <MediaLibrary onTriggerToast={onTriggerToast} />
+            <MediaLibrary onTriggerToast={displayToast} />
           </div>
         )}
 
@@ -2188,7 +2182,7 @@ export default function AdminDashboard({
             ========================================================================= */}
         {activeTab === 'system-logs' && (
           <div className="space-y-6 animate-fade-in" id="system-activity-settings-workbench">
-            <SystemActivitySettings onTriggerToast={onTriggerToast} />
+            <SystemActivitySettings onTriggerToast={displayToast} />
           </div>
         )}
 

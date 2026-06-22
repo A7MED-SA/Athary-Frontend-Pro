@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../providers/AppProvider';
 import { COURSES, LIVE_SESSIONS } from '../../data';
 import { Course, LiveSession } from '../../types';
 import {
@@ -51,19 +53,11 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface StudentDashboardProps {
-  onLogout: () => void;
-  userName?: string;
-  onNavigateToCatalog: () => void;
-}
-
 type DashboardTab = 'overview' | 'my-courses' | 'certificates' | 'favorites' | 'notifications' | 'instructor-apply';
 
-export default function StudentDashboard({
-  onLogout,
-  userName = 'أحمد التميمي',
-  onNavigateToCatalog
-}: StudentDashboardProps) {
+export default function StudentDashboard() {
+  const { handleLogout, userName = 'أحمد التميمي', displayToast } = useAppContext();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -237,7 +231,7 @@ export default function StudentDashboard({
           {/* Sidebar bottom action: Logout */}
           <div className="pt-6 border-t border-amber-100 mt-6">
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-xs font-bold text-stone-600 hover:bg-red-50 hover:text-red-700 transition"
               id="sidebar-logout-btn"
             >
@@ -722,7 +716,7 @@ export default function StudentDashboard({
                         </p>
                       </div>
                       <button
-                        onClick={onNavigateToCatalog}
+                        onClick={() => navigate('/catalog')}
                         className="bg-amber-100 hover:bg-amber-200 text-orange-800 text-[11px] font-bold px-4 py-2 rounded-xl transition border-0 cursor-pointer text-center"
                       >
                         زيارة كتالوج الدورات
@@ -844,7 +838,7 @@ export default function StudentDashboard({
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <WishlistRefunds onNavigateToCatalog={onNavigateToCatalog} onTriggerToast={handleTriggerToast} />
+                    <WishlistRefunds onNavigateToCatalog={() => navigate('/catalog')} onTriggerToast={displayToast} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -859,7 +853,7 @@ export default function StudentDashboard({
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <MessagingCenter onTriggerToast={handleTriggerToast} />
+                    <MessagingCenter onTriggerToast={displayToast} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -876,7 +870,7 @@ export default function StudentDashboard({
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <InstructorApply onTriggerToast={handleTriggerToast} />
+                    <InstructorApply onTriggerToast={displayToast} />
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -1,26 +1,20 @@
+import { useNavigate } from 'react-router-dom';
 import { Compass, ArrowLeft, Home, Search } from 'lucide-react';
-import { ViewType } from '../../types';
 
-export default function NotFound({
-  setActiveView
-}: {
-  setActiveView: (view: ViewType) => void;
-}) {
+export default function NotFound() {
+  const navigate = useNavigate();
+
   return (
-    <div 
+    <div
       className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-16 text-right dir-rtl font-sans selection:bg-orange-200 selection:text-orange-900 bg-amber-50/20"
       id="athary-404-view"
     >
       <div className="max-w-md w-full text-center space-y-6">
-        
-        {/* Retro visual representing a lost ancient map compass */}
+
         <div className="relative w-32 h-32 mx-auto">
           <div className="absolute inset-0 bg-radial from-orange-500/10 to-transparent blur-xl rounded-full" />
-          
           <div className="w-24 h-24 bg-white border-2 border-dashed border-amber-300 rounded-full flex items-center justify-center mx-auto shadow-md relative">
             <Compass className="w-12 h-12 text-orange-700 animate-spin-slow" />
-            
-            {/* 404 Badge */}
             <div className="absolute -bottom-1 -right-1 bg-orange-800 text-amber-50 text-[10px] font-mono font-black py-1 px-2.5 rounded-full ring-2 ring-white shadow">
               404
             </div>
@@ -39,9 +33,8 @@ export default function NotFound({
           </p>
         </div>
 
-        {/* Action controls */}
         <div className="bg-white p-5 rounded-3xl border border-amber-100 shadow-xs space-y-4">
-          
+
           <div className="space-y-1.5 text-center">
             <span className="text-[11px] text-stone-700 block font-semibold flex items-center justify-center gap-1.5">
               <Search className="w-4 h-4 text-stone-400" />
@@ -52,7 +45,7 @@ export default function NotFound({
 
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setActiveView('landing')}
+              onClick={() => navigate('/')}
               className="bg-[#962D15] hover:bg-[#7D220F] text-amber-50 py-3 px-4 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition flex items-center justify-center gap-1.5"
             >
               <Home className="w-3.5 h-3.5" />
@@ -60,7 +53,7 @@ export default function NotFound({
             </button>
 
             <button
-              onClick={() => setActiveView('catalog')}
+              onClick={() => navigate('/catalog')}
               className="bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 px-4 rounded-xl text-xs font-bold border-0 cursor-pointer transition flex items-center justify-center gap-1.5"
             >
               <span>كتالوج المساقات</span>

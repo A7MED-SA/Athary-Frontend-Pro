@@ -9,12 +9,8 @@ try {
       const desc = Object.getOwnPropertyDescriptor(obj, 'fetch');
       if (!desc || desc.configurable) {
         Object.defineProperty(obj, 'fetch', {
-          get() {
-            return currentFetch;
-          },
-          set(value) {
-            currentFetch = value;
-          },
+          get() { return currentFetch; },
+          set(value) { currentFetch = value; },
           configurable: true,
           enumerable: true,
         });
@@ -26,7 +22,7 @@ try {
 
   patchDescriptor(window);
   patchDescriptor(globalThis);
-  
+
   if (typeof (window as any).global === 'undefined') {
     (window as any).global = window;
   } else {
@@ -36,25 +32,27 @@ try {
   console.warn("Failed standard fetch patching:", e);
 }
 
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/query-client';
+import { router } from './router';
 import './index.css';
 
 // Immediate theme enforcement to prevent flashing
 try {
   const savedMode = localStorage.getItem('theme-mode') || 'light';
   const savedTheme = localStorage.getItem('theme-color') || 'default';
-  
+
   if (savedMode === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
   }
 
-  // Clear any active subclasses to avoid duplication or overlaps
   document.documentElement.classList.remove('theme-gold', 'theme-forest', 'theme-graphite');
-  
+
   let mappedClass = '';
   if (savedTheme === 'gold' || savedTheme === 'theme-gold') mappedClass = 'theme-gold';
   else if (savedTheme === 'forest' || savedTheme === 'theme-forest') mappedClass = 'theme-forest';
@@ -69,6 +67,8 @@ try {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </StrictMode>,
 );

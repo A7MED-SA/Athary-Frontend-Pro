@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CATEGORIES, COURSES } from '../../data';
-import { Course, Category, ViewType } from '../../types';
+import { Course } from '../../types';
 import { 
   BookOpen, 
   PenTool, 
@@ -18,36 +19,22 @@ import {
   MapPin, 
   Clock 
 } from 'lucide-react';
+import { useAppContext } from '../../providers/AppProvider';
 
-interface LandingPageProps {
-  setActiveView: (view: ViewType) => void;
-  setCategoryFilter: (categorySlug: string | null) => void;
-  onAddToCart: (course: Course) => void;
-  cartItems: Course[];
-  onViewCourseDetails: (id: string) => void;
-  onViewInstructorProfile?: (name: string) => void;
-}
-
-export default function LandingPage({
-  setActiveView,
-  setCategoryFilter,
-  onAddToCart,
-  cartItems,
-  onViewCourseDetails,
-  onViewInstructorProfile
-}: LandingPageProps) {
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const { cartItems, handleAddToCart } = useAppContext();
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   // Filter 3 courses to display as featured
   const featuredCourses = COURSES.slice(0, 3);
 
   const handleCategoryClick = (slug: string) => {
-    setCategoryFilter(slug);
-    setActiveView('catalog');
+    navigate('/catalog', { state: { initialCategory: slug } });
   };
 
   const handleAddToCartLocal = (course: Course) => {
-    onAddToCart(course);
+    handleAddToCart(course);
     setSuccessToast(course.title);
     setTimeout(() => {
       setSuccessToast(null);
@@ -115,7 +102,7 @@ export default function LandingPage({
 
               <div className="flex flex-wrap gap-4 pt-4">
                 <button
-                  onClick={() => { setCategoryFilter(null); setActiveView('catalog'); }}
+                  onClick={() => navigate('/catalog')}
                   className="bg-[var(--color-brand-orange-700)] hover:bg-[var(--color-brand-orange-850)] text-amber-50 font-bold px-8 py-4 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2"
                   id="hero-explore-btn"
                 >
@@ -320,7 +307,7 @@ export default function LandingPage({
             </div>
             
             <button
-              onClick={() => { setCategoryFilter(null); setActiveView('catalog'); }}
+              onClick={() => navigate('/catalog')}
               className="bg-[var(--color-card)] hover:bg-[var(--color-secondary)]/10 text-[var(--color-foreground)] border border-[var(--color-border)] font-bold px-6 py-3 rounded-xl transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto"
             >
               <span>رؤية كل الدورات المدرجة</span>
@@ -341,7 +328,7 @@ export default function LandingPage({
                   
                   {/* Thumbnail */}
                   <div 
-                    onClick={() => onViewCourseDetails(course.id)}
+                    onClick={() => navigate('/course/' + course.id)}
                     className="relative h-56 overflow-hidden cursor-pointer"
                   >
                     <img 
@@ -371,7 +358,7 @@ export default function LandingPage({
                       <div className="flex items-center justify-between mb-3 text-xs text-stone-500 dark:text-stone-400">
                         <button
                           type="button"
-                          onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                          onClick={() => navigate('/instructor/' + encodeURIComponent(course.instructorName))}
                           className="flex items-center gap-2 hover:text-orange-800 font-semibold text-[var(--color-foreground)] bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
                           title={`عرض الملف الشخصي لـ ${course.instructorName}`}
                         >
@@ -391,7 +378,7 @@ export default function LandingPage({
 
                       {/* Title */}
                       <h3 
-                        onClick={() => onViewCourseDetails(course.id)}
+                        onClick={() => navigate('/course/' + course.id)}
                         className="font-bold text-[var(--color-foreground)] text-base sm:text-base leading-snug line-clamp-2 hover:text-[var(--color-brand-orange-700)] transition-all cursor-pointer"
                       >
                         {course.title}

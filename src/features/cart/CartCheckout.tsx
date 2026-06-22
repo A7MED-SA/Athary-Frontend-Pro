@@ -1,5 +1,7 @@
 import { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Course } from '../../types';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   Trash2, 
   Lock, 
@@ -16,21 +18,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface CartCheckoutProps {
-  cartItems: Course[];
-  onRemoveFromCart: (id: string) => void;
-  onCheckout: () => void;
-  setActiveView: (view: 'landing' | 'catalog' | 'dashboard' | 'auth' | 'course-details' | 'cart-checkout') => void;
-  onTriggerToast: (msg: string) => void;
-}
-
-export default function CartCheckout({
-  cartItems,
-  onRemoveFromCart,
-  onCheckout,
-  setActiveView,
-  onTriggerToast
-}: CartCheckoutProps) {
+export default function CartCheckout() {
+  const navigate = useNavigate();
+  const { cartItems, handleRemoveFromCart, handleCheckout, displayToast } = useAppContext();
   const [coupon, setCoupon] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
@@ -53,13 +43,13 @@ export default function CartCheckout({
       const discountAmount = Math.round(subtotal * 0.25); // 25% discount
       setAppliedDiscount(discountAmount);
       setAppliedCode(code);
-      onTriggerToast(`🎉 تم تطبيق كوبون التأسيس (${code}) بخصم ٢٥% بنجاح!`);
+      displayToast(`🎉 تم تطبيق كوبون التأسيس (${code}) بخصم ٢٥% بنجاح!`);
       setCoupon('');
     } else if (code === 'FREE100' || code === 'ATHARY_FREE') {
       const discountAmount = subtotal; // 100% free!
       setAppliedDiscount(discountAmount);
       setAppliedCode(code);
-      onTriggerToast(`🎉 تم تطبيق الكوبون الترويجي الشامل بنجاح! الرسوم أصبحت مجانية بالكامل.`);
+      displayToast(`🎉 تم تطبيق الكوبون الترويجي الشامل بنجاح! الرسوم أصبحت مجانية بالكامل.`);
       setCoupon('');
     } else {
       setCouponError('عذراً، هذا الكوبون غير موجود أو منتهي الصلاحية بانتهاء الموسم التمهيدي.');
@@ -88,7 +78,7 @@ export default function CartCheckout({
         {/* Navigation Breadcrumb header in visual harmony */}
         <div className="mb-6 flex items-center justify-between">
           <button 
-            onClick={() => setActiveView('catalog')}
+            onClick={() => navigate('/catalog')}
             className="text-stone-600 hover:text-orange-700 text-xs font-bold flex items-center gap-1 bg-transparent border-0 cursor-pointer"
           >
             <ArrowRight className="w-4 h-4 ml-1" />
@@ -119,7 +109,7 @@ export default function CartCheckout({
             </div>
 
             <button
-              onClick={() => setActiveView('catalog')}
+              onClick={() => navigate('/catalog')}
               className="bg-orange-700 hover:bg-orange-800 text-amber-50 text-xs font-black py-3 px-8 rounded-xl transition shadow border-0 cursor-pointer"
             >
               استكشف كتالوج الدبلومات والمسارات
@@ -163,7 +153,7 @@ export default function CartCheckout({
                           </span>
                           
                           <h4 
-                            onClick={() => { setActiveView('course-details'); }}
+                            onClick={() => { navigate('/course-details'); }}
                             className="font-black text-xs sm:text-xs text-stone-900 leading-snug line-clamp-2 hover:text-orange-700 cursor-pointer transition"
                           >
                             {item.title}
@@ -308,7 +298,7 @@ export default function CartCheckout({
                 {/* Final Checkout Button with robust lock indicators */}
                 <div className="space-y-2.5 pt-2">
                   <button
-                    onClick={onCheckout}
+                    onClick={handleCheckout}
                     className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-black py-4 rounded-xl text-xs sm:text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     <Lock className="w-4 h-4 shrink-0 text-amber-300" />
@@ -394,8 +384,8 @@ export default function CartCheckout({
                       type="button"
                       onClick={() => {
                         if (courseToRemove) {
-                          onRemoveFromCart(courseToRemove.id);
-                          onTriggerToast(`تم حذف المقرر: ${courseToRemove.title} من حقيبة التسوق.`);
+                          handleRemoveFromCart(courseToRemove.id);
+                          displayToast(`تم حذف المقرر: ${courseToRemove.title} من حقيبة التسوق.`);
                         }
                         setIsConfirmOpen(false);
                         setCourseToRemove(null);

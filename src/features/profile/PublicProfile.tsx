@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   Award, 
   Users, 
@@ -21,21 +23,11 @@ import {
 } from 'lucide-react';
 import { COURSES } from '../../data';
 
-interface PublicProfileProps {
-  instructorName?: string;
-  onBack: () => void;
-  onSelectCourse: (courseId: string) => void;
-  onStartChat?: (withName: string) => void;
-  isLoggedIn?: boolean;
-}
-
-export default function PublicProfile({
-  instructorName = 'م. عبد الرحمن البغدادي',
-  onBack,
-  onSelectCourse,
-  onStartChat,
-  isLoggedIn = true
-}: PublicProfileProps) {
+export default function PublicProfile() {
+  const { name: instructorParam } = useParams();
+  const instructorName = instructorParam || 'م. عبد الرحمن البغدادي';
+  const navigate = useNavigate();
+  const { isLoggedIn, displayToast } = useAppContext();
   const [isCopied, setIsCopied] = useState(false);
 
   // Fetch current logged in user details from system persistence
@@ -113,7 +105,7 @@ export default function PublicProfile({
       <div className="max-w-4xl mx-auto px-4 pt-6">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <button
-            onClick={onBack}
+            onClick={() => navigate(-1)}
             className="w-full sm:w-auto bg-[var(--color-card)] hover:bg-[var(--color-stone-100-val)] text-[var(--color-brand-orange-700)] dark:text-orange-400 font-black text-xs py-2.5 px-5 rounded-xl border border-[var(--color-border)] transition duration-150 flex items-center justify-center gap-2 cursor-pointer shadow-xs shrink-0"
           >
             <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -130,9 +122,9 @@ export default function PublicProfile({
               <span>{isCopied ? 'تم نسخ الرابط!' : 'مشاركة هذا الملف'}</span>
             </button>
 
-            {isLoggedIn && onStartChat && (
+            {isLoggedIn && (
               <button
-                onClick={() => onStartChat(instructorName)}
+                onClick={() => { displayToast(`تم فتح نافذة المراسلة المباشرة والمشورة مع الأستاذ ${instructorName}`); navigate('/dashboard'); }}
                 className="flex-1 sm:flex-initial bg-[var(--color-brand-orange-700)] hover:bg-[var(--color-brand-orange-850)] text-stone-50 text-xs font-black py-2.5 px-5 rounded-xl border-0 cursor-pointer flex items-center justify-center gap-1.5 shadow-md transition-all hover:scale-[1.02]"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -264,7 +256,7 @@ export default function PublicProfile({
                     <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border)]">
                       <span className="font-black text-xs text-[var(--color-foreground)] font-mono">{c.price} USD</span>
                       <button
-                        onClick={() => onSelectCourse(c.id)}
+                        onClick={() => navigate('/course/' + c.id)}
                         className="bg-[var(--color-stone-105)] hover:bg-[var(--color-stone-100-val)] text-[var(--color-brand-orange-700)] dark:text-orange-400 text-[10.5px] font-black py-1 px-3 rounded-lg border border-[var(--color-border)] transition flex items-center gap-1 cursor-pointer"
                       >
                         <span>عرض المنهج المقدر</span>

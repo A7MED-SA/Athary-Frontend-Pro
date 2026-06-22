@@ -1,6 +1,8 @@
 import { useState, useEffect, FormEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { COURSES, CATEGORIES } from '../../data';
-import { Course, ViewType } from '../../types';
+import { Course } from '../../types';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   Search, 
   RotateCcw, 
@@ -18,21 +20,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface CourseCatalogProps {
-  initialCategoryFilter: string | null;
-  onAddToCart: (course: Course) => void;
-  cartItems: Course[];
-  onViewCourseDetails: (id: string) => void;
-  onViewInstructorProfile?: (name: string) => void;
-}
+export default function CourseCatalog() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { handleAddToCart, cartItems } = useAppContext();
+  const initialCategoryFilter = (location.state as { initialCategory?: string | null })?.initialCategory ?? null;
 
-export default function CourseCatalog({
-  initialCategoryFilter,
-  onAddToCart,
-  cartItems,
-  onViewCourseDetails,
-  onViewInstructorProfile
-}: CourseCatalogProps) {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -259,7 +252,7 @@ export default function CourseCatalog({
   };
 
   const handleAddToCartLocal = (course: Course) => {
-    onAddToCart(course);
+    handleAddToCart(course);
     setAddedCourseId(course.id);
     setTimeout(() => {
       setAddedCourseId(null);
@@ -614,7 +607,7 @@ export default function CourseCatalog({
                       
                       {/* Image Thumbnail with soft orange warm overlay */}
                       <div 
-                        onClick={() => onViewCourseDetails(course.id)}
+                        onClick={() => navigate('/course/' + course.id)}
                         className="relative h-48 overflow-hidden cursor-pointer"
                       >
                         <img 
@@ -644,7 +637,7 @@ export default function CourseCatalog({
                           <div className="flex items-center justify-between mb-2.5 text-xs">
                             <button
                               type="button"
-                              onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                              onClick={() => navigate('/instructor/' + encodeURIComponent(course.instructorName))}
                               className="flex items-center gap-1.5 text-stone-700 hover:text-orange-800 font-medium font-sans bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
                               title={`عرض الملف الشخصي لـ ${course.instructorName}`}
                             >
@@ -678,7 +671,7 @@ export default function CourseCatalog({
 
                           {/* Title - maximum 2 lines */}
                           <h3 
-                            onClick={() => onViewCourseDetails(course.id)}
+                            onClick={() => navigate('/course/' + course.id)}
                             className="font-bold text-stone-900 text-sm sm:text-sm leading-snug line-clamp-2 group-hover:text-orange-700 transition duration-150 cursor-pointer"
                           >
                             {course.title}

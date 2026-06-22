@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AuthSubView, ViewType } from '../../types';
+import { useNavigate } from 'react-router-dom';
+import { AuthSubView } from '../../types';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   Mail, 
   Lock, 
@@ -19,12 +21,9 @@ import {
   Check
 } from 'lucide-react';
 
-interface AuthPageProps {
-  onLoginSuccess: (name: string) => void;
-  setActiveView: (view: ViewType) => void;
-}
-
-export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProps) {
+export default function AuthPage() {
+  const navigate = useNavigate();
+  const { handleLoginSuccess } = useAppContext();
   const [subView, setSubView] = useState<AuthSubView>('login');
   
   // Custom form input states
@@ -235,7 +234,7 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
     // Simulate API delay
     setTimeout(() => {
       setLoading(false);
-      onLoginSuccess(email.split('@')[0]);
+      handleLoginSuccess(email.split('@')[0]);
       setSubView('success');
     }, 1200);
   };
@@ -530,7 +529,7 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
                   type="button"
                   onClick={() => {
                     handleTriggerToast?.('تسجيل دخول جوجل غير مفعل ببيئة التطوير، جار المحاكاة...');
-                    onLoginSuccess('أحمد التميمي');
+                    handleLoginSuccess('أحمد التميمي');
                     setSubView('success');
                   }}
                   className="w-full border border-stone-200 hover:bg-stone-50 text-stone-800 text-xs font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
@@ -1087,8 +1086,8 @@ export default function AuthPage({ onLoginSuccess, setActiveView }: AuthPageProp
                 <div className="pt-6">
                   <button
                     onClick={() => {
-                      onLoginSuccess(fullName || 'أحمد التميمي');
-                      setActiveView('dashboard'); // Direct transition to dashboard on success
+                      handleLoginSuccess(fullName || 'أحمد التميمي');
+                      navigate('/dashboard'); // Direct transition to dashboard on success
                     }}
                     className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-4 rounded-xl text-xs transition shadow-md hover:shadow-lg"
                     id="success-dashboard-redirect"

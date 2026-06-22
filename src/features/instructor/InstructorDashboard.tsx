@@ -39,6 +39,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { Course } from '../../types';
+import { useAppContext } from '../../providers/AppProvider';
 import CourseBuilder from './CourseBuilder';
 import { AreaChart, Area, BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -64,14 +65,6 @@ function Badge({ className, children, variant = 'default', ...props }: BadgeProp
       {children}
     </div>
   );
-}
-
-interface InstructorDashboardProps {
-  onLogout: () => void;
-  userName: string;
-  onTriggerToast: (msg: string) => void;
-  coursesList: Course[];
-  setCoursesList: React.Dispatch<React.SetStateAction<Course[]>>;
 }
 
 // Initial dummy instructor courses
@@ -114,13 +107,8 @@ const INITIAL_INSTRUCTOR_COURSES = [
   }
 ];
 
-export default function InstructorDashboard({
-  onLogout,
-  userName = "أحمد التميمي",
-  onTriggerToast,
-  coursesList,
-  setCoursesList
-}: InstructorDashboardProps) {
+export default function InstructorDashboard() {
+  const { handleLogout, userName, displayToast, coursesList, setCoursesList } = useAppContext();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'my-courses' | 'course-builder' | 'revisions' | 'earnings' | 'notifications'>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -163,7 +151,7 @@ export default function InstructorDashboard({
     } else {
       document.documentElement.classList.remove('dark');
     }
-    onTriggerToast(mode === 'dark' ? '🌒 تم تفعيل النمط الداكن بنجاح.' : '☀️ تم تفعيل النمط المضيء بنجاح.');
+    displayToast(mode === 'dark' ? '🌒 تم تفعيل النمط الداكن بنجاح.' : '☀️ تم تفعيل النمط المضيء بنجاح.');
   };
 
   const applyThemeColor = (color: 'gold' | 'forest' | 'graphite') => {
@@ -174,7 +162,7 @@ export default function InstructorDashboard({
       document.documentElement.classList.add(`theme-${color}`);
     }
     const colorNames = { gold: 'الذهبي الأصيل', forest: 'الغابة العشبية', graphite: 'الجرافيت الحجري' };
-    onTriggerToast(`🎨 تم تحويل نسق ألوان المنصة إلى مظهر ${colorNames[color]}.`);
+    displayToast(`🎨 تم تحويل نسق ألوان المنصة إلى مظهر ${colorNames[color]}.`);
   };
   const [notifications, setNotifications] = useState([
     {
@@ -207,25 +195,25 @@ export default function InstructorDashboard({
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(notifications.map(n => n.id === id ? { ...n, unread: false } : n));
-    onTriggerToast('تم تحديد التنبيه كمقروء.');
+    displayToast('تم تحديد التنبيه كمقروء.');
   };
 
   const handleMarkAllRead = () => {
     setNotifications(notifications.map(n => ({ ...n, unread: false })));
-    onTriggerToast('✅ تم اعتبار جميع التنبيهات مقروءة.');
+    displayToast('✅ تم اعتبار جميع التنبيهات مقروءة.');
   };
 
   // Reset and enter Draft Builder
   const handleOpenNewCourseBuilder = () => {
     setEditingCourseId(null);
     setActiveTab('course-builder');
-    onTriggerToast('تم تجهيز كراستك ومحرر منشئ الدورات بالتصنيف والتحقق المعياري.');
+    displayToast('تم تجهيز كراستك ومحرر منشئ الدورات بالتصنيف والتحقق المعياري.');
   };
 
   const handleEditExistingCourse = (course: any) => {
     setEditingCourseId(course.id);
     setActiveTab('course-builder');
-    onTriggerToast('جاري استيراد وتحميل كراسة المناهج والتعديل المباشر عليها بموجة React Hook Form.');
+    displayToast('جاري استيراد وتحميل كراسة المناهج والتعديل المباشر عليها بموجة React Hook Form.');
   };
 
   const [insightMetric, setInsightMetric] = useState<'revenue' | 'students'>('revenue');
@@ -359,7 +347,7 @@ export default function InstructorDashboard({
                 </div>
 
                 <button
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-950/40 hover:text-red-300 transition text-right text-xs font-semibold cursor-pointer border-0 bg-transparent"
                 >
                   <LogOut className="w-4 h-4" />
@@ -609,7 +597,7 @@ export default function InstructorDashboard({
               <button
                 onClick={() => {
                   setActiveTab('overview');
-                  onTriggerToast('🔄 تم تحديث لوحة التحكم وربطها بقاعدة البيانات الآن.');
+                  displayToast('🔄 تم تحديث لوحة التحكم وربطها بقاعدة البيانات الآن.');
                 }}
                 className="bg-white border border-amber-200 text-stone-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition cursor-pointer hover:bg-amber-50"
               >
@@ -1002,7 +990,7 @@ export default function InstructorDashboard({
                                 <button
                                   onClick={() => {
                                     setInstructorCourses(instructorCourses.filter(item => item.id !== c.id));
-                                    onTriggerToast('تم سحب المنهج وقرائنه بنجاح.');
+                                    displayToast('تم سحب المنهج وقرائنه بنجاح.');
                                   }}
                                   className="p-1 text-stone-400 hover:text-red-700 hover:bg-red-50 rounded transition border-0 bg-transparent cursor-pointer"
                                   title="حذف وحفظ الأرشيف"
@@ -1043,7 +1031,7 @@ export default function InstructorDashboard({
 
                       <button
                         onClick={() => {
-                          onTriggerToast('🔔 جاري تفريغ ومراجعة إسنادات وصكوك الإجازة المرفوعة لقسم المراجعة.');
+                          displayToast('🔔 جاري تفريغ ومراجعة إسنادات وصكوك الإجازة المرفوعة لقسم المراجعة.');
                           setActiveTab('revisions');
                         }}
                         className="w-full text-right bg-[var(--color-brand-orange-950)]/5 hover:bg-[var(--color-brand-orange-950)]/10 text-[var(--color-brand-orange-950)] p-3.5 rounded-xl text-xs font-bold transition flex items-center justify-between border-0 cursor-pointer"
@@ -1057,7 +1045,7 @@ export default function InstructorDashboard({
 
                       <button
                         onClick={() => {
-                          onTriggerToast('🏦 تم إرسال طلب تصفير العائدات وجدولة سحب الأرباح للحساب البنكي المعتمد.');
+                          displayToast('🏦 تم إرسال طلب تصفير العائدات وجدولة سحب الأرباح للحساب البنكي المعتمد.');
                         }}
                         className="w-full text-right bg-stone-50 border border-amber-200/90 hover:bg-amber-100/40 p-3.5 rounded-xl text-xs font-bold transition flex items-center justify-between text-stone-700 cursor-pointer"
                       >
@@ -1175,7 +1163,7 @@ export default function InstructorDashboard({
                           <button
                             onClick={() => {
                               setInstructorCourses(instructorCourses.filter(item => item.id !== c.id));
-                              onTriggerToast('تم سحب المنهج وقرائنه بنجاح.');
+                              displayToast('تم سحب المنهج وقرائنه بنجاح.');
                             }}
                             className="bg-stone-50 hover:bg-red-50 text-stone-500 hover:text-red-700 rounded-xl text-center font-medium py-2 transition border border-stone-200 cursor-pointer text-xs"
                           >
@@ -1195,7 +1183,7 @@ export default function InstructorDashboard({
           {activeTab === 'course-builder' && (
             <CourseBuilder
               onBack={() => setActiveTab('overview')}
-              onTriggerToast={onTriggerToast}
+              onTriggerToast={displayToast}
               initialCourse={editingCourseId ? instructorCourses.find(c => c.id === editingCourseId) as any : null}
               onSave={(submittedCourse: any) => {
                 const isEditing = instructorCourses.some(item => item.id === submittedCourse.id);
@@ -1225,7 +1213,7 @@ export default function InstructorDashboard({
                 
                 // Update parent lists
                 setCoursesList([submittedCourse as any, ...coursesList.filter(c => c.id !== submittedCourse.id)]);
-                onTriggerToast('🏮 تم حفظ وإرسال الدبلوم الأكاديمي للجهة الاستشارية بآثاري!');
+                displayToast('🏮 تم حفظ وإرسال الدبلوم الأكاديمي للجهة الاستشارية بآثاري!');
                 setActiveTab('overview');
               }}
             />
@@ -1265,14 +1253,14 @@ export default function InstructorDashboard({
                     onClick={() => {
                       setEditingCourseId("inst_2");
                       setActiveTab('course-builder');
-                      onTriggerToast('جاري استيراد وتوجيه كراسة المناهج لبناء المنهج والتعديل المباشر.');
+                      displayToast('جاري استيراد وتوجيه كراسة المناهج لبناء المنهج والتعديل المباشر.');
                     }}
                     className="bg-orange-700 hover:bg-orange-800 text-amber-50 text-[10px] font-bold px-4 py-2 rounded-lg border-0 cursor-pointer"
                   >
                     تعديل المنهج فوراً
                   </button>
                   <button
-                    onClick={() => onTriggerToast('تم الرد برسالة موثقة لفضيلة المشرف المدقق.')}
+                    onClick={() => displayToast('تم الرد برسالة موثقة لفضيلة المشرف المدقق.')}
                     className="bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-medium px-4 py-2 rounded-lg border-0"
                   >
                     مراسلة المشرف للأمانة العلمية
@@ -1319,7 +1307,7 @@ export default function InstructorDashboard({
                   </div>
 
                   <button
-                    onClick={() => onTriggerToast('🏦 تم تسجيل تسوية مصرفية بقيمة ٥٢,٣٢٠ ر.س بنجاح، جاري معالجة التحويل البنكي للراجحي.')}
+                    onClick={() => displayToast('🏦 تم تسجيل تسوية مصرفية بقيمة ٥٢,٣٢٠ ر.س بنجاح، جاري معالجة التحويل البنكي للراجحي.')}
                     className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 text-xs font-bold py-2.5 rounded-xl transition border-0 block cursor-pointer mt-4"
                   >
                     تصفية وسحب الرصيد البنكي للراجع

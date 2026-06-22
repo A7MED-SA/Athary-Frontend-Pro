@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   User, 
   Phone, 
@@ -45,23 +47,13 @@ interface AuthSession {
   isCurrent: boolean;
 }
 
-interface ProfileSettingsProps {
-  onBackToMain: () => void;
-  userName: string;
-  userEmail?: string;
-  onUpdateUserName: (name: string) => void;
-  onTriggerToast: (msg: string) => void;
-}
-
 type SettingsTab = 'personal' | 'phones' | 'addresses' | 'security' | 'notifications';
 
-export default function ProfileSettings({
-  onBackToMain,
-  userName,
-  userEmail = 'ahmedmelk32@gmail.com',
-  onUpdateUserName,
-  onTriggerToast
-}: ProfileSettingsProps) {
+export default function ProfileSettings() {
+  const navigate = useNavigate();
+  const { userName, setUserName, displayToast } = useAppContext();
+  const userEmail = 'ahmedmelk32@gmail.com';
+
   const [activeTab, setActiveTab] = useState<SettingsTab>('personal');
   
   // Autosave Status: 'idle' | 'saving' | 'saved'
@@ -249,7 +241,7 @@ export default function ProfileSettings({
 
       // Bubble up name updates to upper modules
       if (fullName.trim() && fullName.length >= 5) {
-        onUpdateUserName(fullName);
+        setUserName(fullName);
       }
     } catch (err) {
       console.error('Error auto-syncing to local storage:', err);
@@ -284,18 +276,18 @@ export default function ProfileSettings({
 
     setTimeout(() => {
       setUploadStep(2); // Uploading to MinIO directly using URL
-      onTriggerToast('⚡ الخطوة الأولى: تم طلب رابط التحميل من MinIO للنوع ProfilePicture...');
+      displayToast('⚡ الخطوة الأولى: تم طلب رابط التحميل من MinIO للنوع ProfilePicture...');
       
       setTimeout(() => {
         setUploadStep(3); // POST /api/media/confirm-upload with fileId
-        onTriggerToast('🔄 الخطوة الثانية: جاري النقل السحابي الخادم لقنوات الأرشيف...');
+        displayToast('🔄 الخطوة الثانية: جاري النقل السحابي الخادم لقنوات الأرشيف...');
 
         setTimeout(() => {
           setUploadStep(4); // POST /api/profile/picture
           setAvatarUrl('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80');
           setIsLoadingPicture(false);
           setUploadStep(0);
-          onTriggerToast('✅ تم تأكيد النقل المزدوج وحفظ رابط الصورة الرسمية بنجاح!');
+          displayToast('✅ تم تأكيد النقل المزدوج وحفظ رابط الصورة الرسمية بنجاح!');
         }, 1200);
       }, 1000);
     }, 800);
@@ -303,7 +295,7 @@ export default function ProfileSettings({
 
   const handleRemovePicture = () => {
     setAvatarUrl('');
-    onTriggerToast('🗑️ تم إزالة الصورة الشخصية من السجلات.');
+    displayToast('🗑️ تم إزالة الصورة الشخصية من السجلات.');
   };
 
   // 1. Personal Info Save
@@ -312,23 +304,23 @@ export default function ProfileSettings({
     
     // Check automatic validation errors first
     if (firstName.trim().length === 0) {
-      onTriggerToast('❌ يرجى ملء الاسم الأول لتأكيد الحفظ الشرفي.');
+      displayToast('❌ يرجى ملء الاسم الأول لتأكيد الحفظ الشرفي.');
       return;
     }
     if (lastName.trim().length === 0) {
-      onTriggerToast('❌ يرجى ملء اسم العائلة لتأكيد الحفظ الشرفي.');
+      displayToast('❌ يرجى ملء اسم العائلة لتأكيد الحفظ الشرفي.');
     }
     if (fullName.trim().length < 5) {
-      onTriggerToast('❌ الاسم الكامل المقترح قصير جداً ولا يطابق معايير الإجازات.');
+      displayToast('❌ الاسم الكامل المقترح قصير جداً ولا يطابق معايير الإجازات.');
       return;
     }
     if (postalCode && !/^[a-zA-Z0-9\s-]{4,10}$/.test(postalCode)) {
-      onTriggerToast('❌ الرمز البريدي غير صالح. يجب أن يحتوي من ٤ إلى ١٠ أحرف أو أرقام.');
+      displayToast('❌ الرمز البريدي غير صالح. يجب أن يحتوي من ٤ إلى ١٠ أحرف أو أرقام.');
       return;
     }
 
-    onUpdateUserName(fullName);
-    onTriggerToast('🎉 تم ترحيل التعديلات الطوعية وتحديث نموذج IdentityUser بنجاح!');
+    setUserName(fullName);
+    displayToast('🎉 تم ترحيل التعديلات الطوعية وتحديث نموذج IdentityUser بنجاح!');
   };
 
   // Optimistic UI updates for Phones
@@ -339,7 +331,7 @@ export default function ProfileSettings({
       ...p,
       isDefault: p.id === phoneId
     })));
-    onTriggerToast('⭐ تم تغيير رقم الجوال الافتراضي للمراسلة الفورية فوراً!');
+    displayToast('⭐ تم تغيير رقم الجوال الافتراضي للمراسلة الفورية فوراً!');
 
     // Simulated API call PUT /api/profile/phones/{phoneId}/default
     setTimeout(() => {
@@ -352,7 +344,7 @@ export default function ProfileSettings({
     if (!newPhone.trim()) return;
 
     if (validationErrors.newPhone) {
-      onTriggerToast('❌ ' + validationErrors.newPhone);
+      displayToast('❌ ' + validationErrors.newPhone);
       return;
     }
     
@@ -368,17 +360,17 @@ export default function ProfileSettings({
     setNewPhone('');
     setNewPhoneLabel('');
     setIsAddingPhone(false);
-    onTriggerToast('✓ تم إضافة رقم الهاتف الجديد وسيتلقى إشعار تأكيد SMS.');
+    displayToast('✓ تم إضافة رقم الهاتف الجديد وسيتلقى إشعار تأكيد SMS.');
   };
 
   const handleDeletePhone = (phoneId: string) => {
     const item = phones.find(p => p.id === phoneId);
     if (item?.isDefault) {
-      onTriggerToast('⚠️ لا يمكن حذف رقم المراسلة الافتراضي. يرجى اختيار بديل أولا.');
+      displayToast('⚠️ لا يمكن حذف رقم المراسلة الافتراضي. يرجى اختيار بديل أولا.');
       return;
     }
     setPhones(phones.filter(p => p.id !== phoneId));
-    onTriggerToast('🗑️ تم حذف رقم الهاتف من سجل الحساب.');
+    displayToast('🗑️ تم حذف رقم الهاتف من سجل الحساب.');
   };
 
   // Optimistic UI updates for Addresses
@@ -387,13 +379,13 @@ export default function ProfileSettings({
       ...a,
       isDefault: a.id === addrId
     })));
-    onTriggerToast('⭐ تم تعيين عنوان الشحن الافتراضي بنجاح (تحديث فوري)!');
+    displayToast('⭐ تم تعيين عنوان الشحن الافتراضي بنجاح (تحديث فوري)!');
   };
 
   const handleAddAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAddrTitle.trim() || !newAddrLine.trim()) {
-      onTriggerToast('❌ يرجى ملء كافة تفاصيل العنوان.');
+      displayToast('❌ يرجى ملء كافة تفاصيل العنوان.');
       return;
     }
 
@@ -408,7 +400,7 @@ export default function ProfileSettings({
     setNewAddrTitle('');
     setNewAddrLine('');
     setIsAddingAddress(false);
-    onTriggerToast('✓ تم تدبيج العنوان الجديد في سجل المراسلات المعتمدة.');
+    displayToast('✓ تم تدبيج العنوان الجديد في سجل المراسلات المعتمدة.');
   };
 
   const handleUpdateAddressSubmit = (e: React.FormEvent) => {
@@ -417,41 +409,41 @@ export default function ProfileSettings({
 
     setAddresses(addresses.map(a => a.id === editingAddress.id ? editingAddress : a));
     setEditingAddress(null);
-    onTriggerToast('✓ تم تحديث وتصويب تفاصيل العنوان المالي.');
+    displayToast('✓ تم تحديث وتصويب تفاصيل العنوان المالي.');
   };
 
   const handleDeleteAddress = (addrId: string) => {
     const item = addresses.find(a => a.id === addrId);
     if (item?.isDefault) {
-      onTriggerToast('⚠️ يرجى ترك عنوان الشحن الافتراضي أو استبداله قبل الحذف.');
+      displayToast('⚠️ يرجى ترك عنوان الشحن الافتراضي أو استبداله قبل الحذف.');
       return;
     }
     setAddresses(addresses.filter(a => a.id !== addrId));
-    onTriggerToast('🗑️ تم إقصاء العنوان من نظام الشحن الأثري.');
+    displayToast('🗑️ تم إقصاء العنوان من نظام الشحن الأثري.');
   };
 
   // Password reset simulation
   const handlePasswordReset = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) {
-      onTriggerToast('⚠️ يرجى تعمير كافة الخانات لتحديث القفل الشفري.');
+      displayToast('⚠️ يرجى تعمير كافة الخانات لتحديث القفل الشفري.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      onTriggerToast('❌ فحص المطابقة فشل! الرموز الجديدة غير متطابقة.');
+      displayToast('❌ فحص المطابقة فشل! الرموز الجديدة غير متطابقة.');
       return;
     }
 
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
-    onTriggerToast('🔒 تم تغيير شفرة المرور وتشفير سجل الدارس بالكامل بنجاح!');
+    displayToast('🔒 تم تغيير شفرة المرور وتشفير سجل الدارس بالكامل بنجاح!');
   };
 
   // Terminate session
   const handleTerminateSession = (sessId: string) => {
     setSessions(sessions.filter(s => s.id !== sessId));
-    onTriggerToast('✓ تم إلغاء توقيع تفويض الجهاز المختار.');
+    displayToast('✓ تم إلغاء توقيع تفويض الجهاز المختار.');
   };
 
   return (
@@ -461,7 +453,7 @@ export default function ProfileSettings({
         {/* Navigation Breadcrumb & Premium Autosave indicator */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 bg-white py-3 px-5 rounded-2xl border border-stone-200/50 shadow-xs">
           <div className="flex items-center gap-2 text-stone-500 text-xs">
-            <span className="hover:text-stone-900 cursor-pointer text-stone-500 font-semibold" onClick={onBackToMain}>الرئيسية</span>
+            <span className="hover:text-stone-900 cursor-pointer text-stone-500 font-semibold" onClick={() => navigate(-1)}>الرئيسية</span>
             <span className="text-stone-300">/</span>
             <span className="text-orange-950 font-black">إعدادات الحساب</span>
           </div>
@@ -563,7 +555,7 @@ export default function ProfileSettings({
                 <div className="h-0.5 bg-stone-100 my-2 hidden lg:block" />
 
                 <button
-                  onClick={onBackToMain}
+                  onClick={() => navigate(-1)}
                   className="w-full text-right px-4.5 py-3 rounded-2xl text-xs font-extrabold text-orange-900 hover:bg-amber-50 bg-transparent transition border-0 cursor-pointer flex items-center gap-3 shrink-0"
                 >
                   <ArrowRight className="w-4 h-4 text-orange-700" />
@@ -856,7 +848,7 @@ export default function ProfileSettings({
                   <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
                     <button
                       type="button"
-                      onClick={onBackToMain}
+                      onClick={() => navigate(-1)}
                       className="bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold py-2.5 px-6 rounded-xl text-xs transition border-0 cursor-pointer"
                     >
                       إلغاء
@@ -1276,7 +1268,7 @@ export default function ProfileSettings({
                         checked={notifSmsLive}
                         onChange={(e) => {
                           setNotifSmsLive(e.target.checked);
-                          onTriggerToast(e.target.checked ? '🔔 تم تشغيل تنبيهات البث المباشر الميداني عبر SMS!' : '🔕 تم إيقاف تنبيهات SMS لبث الدروس.');
+                          displayToast(e.target.checked ? '🔔 تم تشغيل تنبيهات البث المباشر الميداني عبر SMS!' : '🔕 تم إيقاف تنبيهات SMS لبث الدروس.');
                         }}
                       />
                       <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
@@ -1298,7 +1290,7 @@ export default function ProfileSettings({
                         checked={notifEmailManuscript}
                         onChange={(e) => {
                           setNotifEmailManuscript(e.target.checked);
-                          onTriggerToast(e.target.checked ? '🔔 تم تغذية قنوات مراجعات المخطوطات الأكاديمية بالبريد!' : '🔕 تم كتم البريد التقييمي للمهام.');
+                          displayToast(e.target.checked ? '🔔 تم تغذية قنوات مراجعات المخطوطات الأكاديمية بالبريد!' : '🔕 تم كتم البريد التقييمي للمهام.');
                         }}
                       />
                       <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
@@ -1320,7 +1312,7 @@ export default function ProfileSettings({
                         checked={notifPushAnnouncements}
                         onChange={(e) => {
                           setNotifPushAnnouncements(e.target.checked);
-                          onTriggerToast(e.target.checked ? '🔔 تم تشغيل تنبيه السواري والقرارات الإدارية بنجاح.' : '🔕 تم إلغاء تنبيهات الويب الفوقية للقرارات.');
+                          displayToast(e.target.checked ? '🔔 تم تشغيل تنبيه السواري والقرارات الإدارية بنجاح.' : '🔕 تم إلغاء تنبيهات الويب الفوقية للقرارات.');
                         }}
                       />
                       <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
@@ -1342,7 +1334,7 @@ export default function ProfileSettings({
                         checked={notifWeeklyDigest}
                         onChange={(e) => {
                           setNotifWeeklyDigest(e.target.checked);
-                          onTriggerToast(e.target.checked ? '🔔 تم تفعيل البريد التلخيصي السبتي التراكمي.' : '🔕 تم إلغاء الملخص الأسبوعي المعرفي.');
+                          displayToast(e.target.checked ? '🔔 تم تفعيل البريد التلخيصي السبتي التراكمي.' : '🔕 تم إلغاء الملخص الأسبوعي المعرفي.');
                         }}
                       />
                       <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-700"></div>
@@ -1353,7 +1345,7 @@ export default function ProfileSettings({
                 <div className="flex justify-end gap-3 pt-4 border-t border-stone-100">
                   <button
                     type="button"
-                    onClick={onBackToMain}
+                    onClick={() => navigate(-1)}
                     className="bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold py-2.5 px-6 rounded-xl text-xs transition border-0 cursor-pointer"
                   >
                     العودة للرئيسية
@@ -1361,7 +1353,7 @@ export default function ProfileSettings({
 
                   <button
                     type="button"
-                    onClick={() => onTriggerToast('✓ تم تأمين وحفظ كافة تفضيلات الإشعارات والتنبيهات في السجل السحابي!')}
+                    onClick={() => displayToast('✓ تم تأمين وحفظ كافة تفضيلات الإشعارات والتنبيهات في السجل السحابي!')}
                     className="bg-orange-700 hover:bg-orange-800 text-amber-50 font-black py-2.5 px-6 rounded-xl text-xs shadow-sm transition border-0 cursor-pointer flex items-center gap-1.5"
                   >
                     <Save className="w-4 h-4" />

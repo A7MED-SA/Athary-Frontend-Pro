@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Course, ViewType } from '../../types';
+import { useParams, useNavigate } from 'react-router-dom';
 import { COURSES } from '../../data';
+import { useAppContext } from '../../providers/AppProvider';
 import { 
   ArrowRight, 
   Star, 
@@ -30,23 +31,11 @@ import {
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface CourseDetailsProps {
-  courseId: string;
-  onAddToCart: (course: Course) => void;
-  cartItems: Course[];
-  setActiveView: (view: ViewType) => void;
-  onTriggerToast: (msg: string) => void;
-  onViewInstructorProfile?: (name: string) => void;
-}
-
-export default function CourseDetails({
-  courseId,
-  onAddToCart,
-  cartItems,
-  setActiveView,
-  onTriggerToast,
-  onViewInstructorProfile
-}: CourseDetailsProps) {
+export default function CourseDetails() {
+  const { courseId: paramCourseId } = useParams();
+  const courseId = paramCourseId || 'course_1';
+  const navigate = useNavigate();
+  const { cartItems, handleAddToCart, displayToast } = useAppContext();
   const [favorite, setFavorite] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
 
@@ -218,7 +207,7 @@ export default function CourseDetails({
       localStorage.setItem(`athari_completed_lessons_${course.id}`, JSON.stringify(updated));
       return updated;
     });
-    onTriggerToast('🎯 تم تحديث حالة تقدم الدرس في الفصل بنجاح!');
+    displayToast('🎯 تم تحديث حالة تقدم الدرس في الفصل بنجاح!');
   };
 
   // Mock course reviews (very high fidelity)
@@ -273,22 +262,22 @@ export default function CourseDetails({
     setIsReviewDialogOpen(false);
     setNewReviewComment('');
     setNewReviewRating(5);
-    onTriggerToast('تم استلام تقييمكم المبارك للمجلس الأكاديمي وصكّه بنجاح! 📜✨');
+    displayToast('تم استلام تقييمكم المبارك للمجلس الأكاديمي وصكّه بنجاح! 📜✨');
   };
 
   const handleToggleFavorite = () => {
     setFavorite(!favorite);
-    onTriggerToast(!favorite ? 'أضيفت الدورة إلى قائمة محفوظاتك التراثية بنجاح!' : 'تمت الإزالة من قائمتك المرجعية.');
+    displayToast(!favorite ? 'أضيفت الدورة إلى قائمة محفوظاتك التراثية بنجاح!' : 'تمت الإزالة من قائمتك المرجعية.');
   };
 
   const handleShareCourse = () => {
     const shareText = `بحمد الله، أثبتُّ رغبتي بتعلم مسار (${course.title}) لدى منصة آثاري الراقية للتراث. انضموا إلينا! 🕊️📜`;
     navigator.clipboard.writeText(shareText);
-    onTriggerToast('📋 تم نسخ رابط الإجازة والمعايرة لملف مشاركتك الشخصي! جاهز للمشاركة.');
+    displayToast('📋 تم نسخ رابط الإجازة والمعايرة لملف مشاركتك الشخصي! جاهز للمشاركة.');
   };
 
   const handleAddToCartLocal = () => {
-    onAddToCart(course);
+    handleAddToCart(course);
   };
 
   return (
@@ -314,7 +303,7 @@ export default function CourseDetails({
             {/* Navigation back and Category */}
             <div className="flex flex-wrap items-center gap-2.5 text-xs">
               <button 
-                onClick={() => setActiveView('catalog')}
+                onClick={() => navigate('/catalog')}
                 className="text-amber-500 hover:text-amber-300 font-bold transition flex items-center gap-1 cursor-pointer bg-transparent border-0"
               >
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -463,7 +452,7 @@ export default function CourseDetails({
 
                 {inCart && (
                   <button
-                    onClick={() => setActiveView('cart-checkout')}
+                    onClick={() => navigate('/checkout')}
                     className="w-full bg-teal-700 bg-teal-700 hover:bg-teal-800 text-amber-50 py-3.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border-0 shadow-sm"
                   >
                     <span>الذهاب لإتمام حجز المقاعد والتحصين</span>
@@ -767,7 +756,7 @@ export default function CourseDetails({
                     <h3 className="font-black text-stone-950 text-base">{course.instructorName}</h3>
                     <button
                       type="button"
-                      onClick={() => onViewInstructorProfile && onViewInstructorProfile(course.instructorName)}
+                      onClick={() => navigate('/instructor/' + encodeURIComponent(course.instructorName))}
                       className="bg-orange-700 hover:bg-orange-800 text-amber-50 text-[10px] sm:text-xs font-black py-1 px-3 rounded-lg border-0 cursor-pointer shadow-xs transition"
                     >
                       عرض الملف الشخصي العام ←
