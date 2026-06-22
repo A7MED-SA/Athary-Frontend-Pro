@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منصة آثاري الأكاديمية</title>
+    <script id="fetch-sandbox-patch">
+      (function() {
+        try {
+          var originalFetch = window.fetch;
+          var currentFetch = originalFetch;
+          var patch = function(obj) {
+            if (!obj) return;
+            try {
+              var desc = Object.getOwnPropertyDescriptor(obj, 'fetch');
+              if (!desc || desc.configurable) {
+                Object.defineProperty(obj, 'fetch', {
+                  get: function() { return currentFetch; },
+                  set: function(v) { currentFetch = v; },
+                  configurable: true,
+                  enumerable: true
+                });
+              }
+            } catch (e) {
+              try {
+                var proto = Object.getPrototypeOf(obj);
+                if (proto) {
+                  var pDesc = Object.getOwnPropertyDescriptor(proto, 'fetch');
+                  if (!pDesc || pDesc.configurable) {
+                    Object.defineProperty(proto, 'fetch', {
+                      get: function() { return currentFetch; },
+                      set: function(v) { currentFetch = v; },
+                      configurable: true,
+                      enumerable: true
+                    });
+                  }
+                }
+              } catch (pe) {}
+            }
+          };
+          patch(window);
+          patch(globalThis);
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            patch(Window.prototype);
+          }
+        } catch (err) {
+          console.warn("Fetch sandbox patch failed:", err);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

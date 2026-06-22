@@ -1,0 +1,6 @@
+{
+  "name": "Athary E-Learning Platform",
+  "description": "منصة آثاري للتعليم الإلكتروني - دمج التراث العربي مع الحداثة والتقنية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1528 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap');
+@import "tailwindcss";
+
+/* @theme {
+  --font-sans: "Cairo", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-white: var(--color-card, #ffffff);
+  
+  --color-stone-50: var(--color-stone-50-val);
+  --color-stone-100: var(--color-stone-100-val);
+  --color-stone-200: var(--color-stone-200-val);
+  --color-stone-300: var(--color-stone-300-val);
+  --color-stone-400: var(--color-stone-400-val);
+  --color-stone-500: var(--color-stone-500-val);
+  --color-stone-600: var(--color-stone-600-val);
+  --color-stone-700: var(--color-stone-700-val);
+  --color-stone-800: var(--color-stone-800-val);
+  --color-stone-900: var(--color-stone-900-val);
+  --color-stone-950: var(--color-stone-950-val);
+
+  --color-orange-50: var(--color-brand-orange-50);
+  --color-orange-100: var(--color-brand-orange-100);
+  --color-orange-200: var(--color-brand-orange-100);
+  --color-orange-300: var(--color-brand-orange-100);
+  --color-orange-400: var(--color-brand-orange-600);
+  --color-orange-500: var(--color-brand-orange-600);
+  --color-orange-600: var(--color-brand-orange-600);
+  --color-orange-700: var(--color-brand-orange-700);
+  --color-orange-750: var(--color-brand-orange-750);
+  --color-orange-800: var(--color-brand-orange-850);
+  --color-orange-850: var(--color-brand-orange-850);
+  --color-orange-900: var(--color-brand-orange-950);
+  --color-orange-950: var(--color-brand-orange-950);
+
+  --color-amber-50: var(--color-brand-amber-50);
+  --color-amber-100: var(--color-brand-amber-100);
+  --color-amber-200: var(--color-brand-amber-200);
+  --color-amber-300: var(--color-brand-amber-200);
+  --color-amber-400: var(--color-brand-amber-400);
+  --color-amber-500: var(--color-brand-amber-500);
+  --color-amber-600: var(--color-brand-amber-600);
+  --color-amber-700: var(--color-brand-amber-600);
+  --color-amber-800: var(--color-brand-amber-400);
+  --color-amber-900: var(--color-brand-amber-600);
+  --color-amber-950: var(--color-brand-amber-600);
+
+  --color-border: var(--color-border-val);
+  --color-background: var(--color-background-val);
+  --color-foreground: var(--color-foreground-val);
+
+  --color-footer-bg: var(--color-footer-bg-val);
+  --color-footer-text: var(--color-footer-text-val);
+  --color-footer-heading: var(--color-footer-heading-val);
+  --color-footer-muted: var(--color-footer-muted-val);
+  --color-footer-border: var(--color-footer-border-val);
+  --color-footer-input-bg: var(--color-footer-input-bg-val);
+  --color-footer-input-text: var(--color-footer-input-text-val);
+  --color-footer-input-placeholder: var(--color-footer-input-placeholder-val);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background-val, #FDFBF7);
+  color: var(--color-foreground-val, #1c1917);
+  direction: rtl;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+:root {
+  --color-brand-orange-50: #fff7ed;
+  --color-brand-orange-100: #ffedd5;
+  --color-brand-orange-600: #ea580c;
+  --color-brand-orange-700: #962d15; 
+  --color-brand-orange-750: #962d15;
+  --color-brand-orange-850: #80220e;
+  --color-brand-orange-950: #451a03;
+
+  --color-brand-amber-50: #faf4e1;
+  --color-brand-amber-100: #faf0d5;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #FDFBF7;
+  --color-foreground-val: #1c1917;
+  --color-background: #FDFBF7;
+  --color-foreground: #1c1917;
+  --color-card: #ffffff;
+  --color-card-foreground: #1c1917;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1c1917;
+  --color-primary: #C5A565;
+  --color-primary-foreground: #121E31;
+  --color-secondary: #f5f0e6;
+  --color-secondary-foreground: #1c1917;
+  --color-muted: #f5f0e6;
+  --color-muted-foreground: #6c6c70;
+  --color-accent: #f5f0e6;
+  --color-accent-foreground: #161620;
+  --color-destructive: #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border: #e5e7eb;
+  --color-border-val: #e5e7eb;
+  --color-input: #f5f0e6;
+  --color-ring: #C5A565;
+
+  --color-stone-50-val: #FDFBF7;
+  --color-stone-100-val: #F5F0E6;
+  --color-stone-200-val: #e5e7eb;
+  --color-stone-300-val: #d6d3d1;
+  --color-stone-400-val: #a8a29e;
+  --color-stone-500-val: #78716c;
+  --color-stone-600-val: #57534e;
+  --color-stone-700-val: #44403c;
+  --color-stone-800-val: #292524;
+  --color-stone-900-val: #1c1917;
+  --color-stone-950-val: #0c0a09;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #B8945F;
+  --color-light-gold: #F5EBD0;
+  --color-select-gold: #B09050;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #B8945F;
+  --color-shadow-gold: rgba(197, 165, 101, 0.2);
+
+  --color-navy: #121E31;
+  --color-navy-light: #1A2A40;
+  --color-navy-lighter: #243450;
+  --color-navy-dark: #0B1120;
+
+  --color-beige: #FDFBF7;
+  --color-beige-darker: #F5F0E6;
+
+  --color-contrast: #121E31;
+  --color-contrast-foreground: #ffffff;
+  --color-contrast-muted: #9ca3af;
+  --color-contrast-border: #334155;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+.dark {
+  --color-brand-orange-50: #122137;
+  --color-brand-orange-100: #1C304B;
+  --color-brand-orange-600: #f97316;
+  --color-brand-orange-700: #ea580c;
+  --color-brand-orange-750: #C5A565;
+  --color-brand-orange-850: #E5C585;
+  --color-brand-orange-950: #ef4444;
+
+  --color-brand-amber-50: #122137;
+  --color-brand-amber-100: #1E314C;
+  --color-brand-amber-200: #1E3A5F;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #0B1120;
+  --color-foreground-val: #f3f4f6;
+  --color-background: #0B1120;
+  --color-foreground: #f3f4f6;
+  --color-card: #121E31;
+  --color-card-foreground: #f3f4f6;
+  --color-popover: #1A2A40;
+  --color-popover-foreground: #f3f4f6;
+  --color-primary: #C5A565;
+  --color-primary-foreground: #121E31;
+  --color-secondary: #1A2A40;
+  --color-secondary-foreground: #f3f4f6;
+  --color-muted: #1A2A40;
+  --color-muted-foreground: #9ca3af;
+  --color-accent: #1A2A40;
+  --color-accent-foreground: #f3f4f6;
+  --color-destructive: #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border: #1F2E45;
+  --color-border-val: #1F2E45;
+  --color-input: #1A2A40;
+  --color-ring: #C5A565;
+
+  --color-stone-50-val: #0f172a;
+  --color-stone-100-val: #1e293b;
+  --color-stone-200-val: #1f2e45;
+  --color-stone-300-val: #334155;
+  --color-stone-400-val: #64748b;
+  --color-stone-500-val: #94a3b8;
+  --color-stone-600-val: #94a3b8;
+  --color-stone-700-val: #cbd5e1;
+  --color-stone-800-val: #e2e8f0;
+  --color-stone-900-val: #f3f4f6;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #B8945F;
+  --color-light-gold: #2d2a26;
+  --color-select-gold: #B09050;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #B8945F;
+  --color-shadow-gold: rgba(197, 165, 101, 0.25);
+
+  --color-beige: #0B1120;
+  --color-beige-darker: #121E31;
+
+  --color-contrast: #0a0e18;
+  --color-contrast-foreground: #f3f4f6;
+  --color-contrast-muted: #9ca3af;
+  --color-contrast-border: #334155;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+
+  --color-footer-bg-val: #1c1917;
+  --color-footer-text-val: #d6d3d1;
+  --color-footer-heading-val: #faf4e1;
+  --color-footer-muted-val: #a8a29e;
+  --color-footer-border-val: #44403c;
+  --color-footer-input-bg-val: #292524;
+  --color-footer-input-text-val: #f5f5f4;
+  --color-footer-input-placeholder-val: #78716c;
+}
+
+
+:root.theme-gold {
+  --color-brand-orange-50: #fefbeb;
+  --color-brand-orange-100: #fef3c7;
+  --color-brand-orange-600: #d97706;
+  --color-brand-orange-700: #b45309; 
+  --color-brand-orange-750: #d97706;
+  --color-brand-orange-850: #92400e;
+  --color-brand-orange-950: #78350f;
+
+  --color-brand-amber-50: #fffbeb;
+  --color-brand-amber-100: #fef3c7;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565; 
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #F8F2E2;
+  --color-foreground-val: #2d1e0f;
+  --color-background: #F8F2E2; 
+  --color-foreground: #2d1e0f;
+  --color-card: #ffffff;
+  --color-card-foreground: #2d1e0f;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #2d1e0f;
+  --color-muted: #f7eed2;
+  --color-muted-foreground: #7c6244;
+  --color-border: #e6dfc6;
+  --color-border-val: #e6dfc6;
+  --color-input: #fbf5df;
+  --color-ring: #c5a565;
+
+  --color-stone-50-val: #F8F2E2;
+  --color-stone-100-val: #F5EBD0;
+  --color-stone-200-val: #e6dfc6;
+  --color-stone-300-val: #cdb9a0;
+  --color-stone-400-val: #b89c7d;
+  --color-stone-500-val: #927555;
+  --color-stone-600-val: #7c6244;
+  --color-stone-700-val: #5a422d;
+  --color-stone-800-val: #422d1a;
+  --color-stone-900-val: #2d1e0f;
+  --color-stone-950-val: #1a1005;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #b8945f;
+  --color-light-gold: #fdf2d0;
+  --color-select-gold: #a68449;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #b8945f;
+  --color-shadow-gold: rgba(197, 165, 101, 0.25);
+  --color-primary: #c5a565;
+  --color-primary-foreground: #1c1917;
+
+  --color-contrast: #241407;
+  --color-contrast-foreground: #fef7e7;
+  --color-contrast-muted: #cdb9a0;
+  --color-contrast-border: #442a12;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-gold.dark {
+  --color-brand-orange-50: #201810;
+  --color-brand-orange-100: #2d2216;
+  --color-brand-orange-600: #fbbf24;
+  --color-brand-orange-700: #f59e0b;
+  --color-brand-orange-750: #f59e0b;
+  --color-brand-orange-850: #fde68a;
+  --color-brand-orange-950: #d97706;
+
+  --color-brand-amber-50: #201810;
+  --color-brand-amber-100: #2d2417;
+  --color-brand-amber-200: #3d2f20;
+  --color-brand-amber-400: #d4af37; 
+  --color-brand-amber-500: #fbbf24;
+  --color-brand-amber-600: #f59e0b;
+
+  --color-background-val: #140f09;
+  --color-foreground-val: #fef5e7;
+  --color-background: #140f09; 
+  --color-foreground: #fef5e7;
+  --color-card: #201810;
+  --color-card-foreground: #fef5e7;
+  --color-popover: #2d2216;
+  --color-popover-foreground: #fef5e7;
+  --color-muted: #2d2216;
+  --color-muted-foreground: #ad9a82;
+  --color-border: #3d2f20;
+  --color-border-val: #3d2f20;
+  --color-input: #2d2216;
+  --color-ring: #d4af37;
+
+  --color-stone-50-val: #1a130c;
+  --color-stone-100-val: #251b11;
+  --color-stone-200-val: #3d2f20;
+  --color-stone-300-val: #52402d;
+  --color-stone-400-val: #826e57;
+  --color-stone-500-val: #ad9a82;
+  --color-stone-600-val: #ad9a82;
+  --color-stone-700-val: #e7dfd1;
+  --color-stone-800-val: #f2ebd9;
+  --color-stone-900-val: #fef5e7;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #f59e0b;
+  --color-light-gold: #2d2216;
+  --color-select-gold: #c5a565;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #fbbf24;
+  --color-shadow-gold: rgba(212, 175, 55, 0.3);
+  --color-primary: #d4af37;
+  --color-primary-foreground: #140f09;
+
+  --color-contrast: #0b0704;
+  --color-contrast-foreground: #fbf5df;
+  --color-contrast-muted: #ad9a82;
+  --color-contrast-border: #201810;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+
+:root.theme-forest {
+  --color-brand-orange-50: #f0fdf4;
+  --color-brand-orange-100: #dcfce7;
+  --color-brand-orange-600: #16a34a;
+  --color-brand-orange-700: #15803d; 
+  --color-brand-orange-750: #166534;
+  --color-brand-orange-850: #14532d;
+  --color-brand-orange-950: #052e16;
+
+  --color-brand-amber-50: #f0fdf4;
+  --color-brand-amber-100: #dcfce7;
+  --color-brand-amber-200: #bbf7d0;
+  --color-brand-amber-400: #6b9e72;
+  --color-brand-amber-500: #22c55e;
+  --color-brand-amber-600: #16a34a;
+
+  --color-background-val: #f0f5f0;
+  --color-foreground-val: #101a10;
+  --color-background: #f0f5f0;
+  --color-foreground: #101a10;
+  --color-card: #ffffff;
+  --color-card-foreground: #101a10;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #101a10;
+  --color-muted: #e6f0e6;
+  --color-muted-foreground: #5a6b5a;
+  --color-border: #d0e0d0;
+  --color-border-val: #d0e0d0;
+  --color-input: #e6f0e6;
+  --color-ring: #6b9e72;
+
+  --color-stone-50-val: #f0f5f0;
+  --color-stone-100-val: #e6f0e6;
+  --color-stone-200-val: #d0e0d0;
+  --color-stone-300-val: #b8c8b8;
+  --color-stone-400-val: #9cb09c;
+  --color-stone-500-val: #7c927c;
+  --color-stone-600-val: #5a6b5a;
+  --color-stone-700-val: #334d33;
+  --color-stone-800-val: #203020;
+  --color-stone-900-val: #101a10;
+  --color-stone-950-val: #050805;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #7ab882;
+  --color-light-gold: #d4ead6;
+  --color-select-gold: #4a7250;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #7ab882;
+  --color-shadow-gold: rgba(107, 158, 114, 0.2);
+  --color-primary: #6b9e72;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #0e1a0e;
+  --color-contrast-foreground: #e0f0e0;
+  --color-contrast-muted: #8aa88a;
+  --color-contrast-border: #2a3a2a;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-forest.dark {
+  --color-brand-orange-50: #101a10;
+  --color-brand-orange-100: #1a2a1a;
+  --color-brand-orange-600: #22c55e;
+  --color-brand-orange-700: #4ade80; 
+  --color-brand-orange-750: #22c55e;
+  --color-brand-orange-850: #86efac;
+  --color-brand-orange-950: #15803d;
+
+  --color-brand-amber-50: #101a10;
+  --color-brand-amber-100: #1a2a1a;
+  --color-brand-amber-200: #283828;
+  --color-brand-amber-400: #4ade80;
+  --color-brand-amber-500: #86efac;
+  --color-brand-amber-600: #22c55e;
+
+  --color-background-val: #0a0e0a;
+  --color-foreground-val: #e8f0e8;
+  --color-background: #0a0e0a;
+  --color-foreground: #e8f0e8;
+  --color-card: #101a10;
+  --color-card-foreground: #e8f0e8;
+  --color-popover: #1a2a1a;
+  --color-popover-foreground: #e8f0e8;
+  --color-muted: #1a2a1a;
+  --color-muted-foreground: #8a9a8a;
+  --color-border: #283828;
+  --color-border-val: #283828;
+  --color-input: #1a2a1a;
+  --color-ring: #6b9e72;
+
+  --color-stone-50-val: #0f160f;
+  --color-stone-100-val: #152215;
+  --color-stone-200-val: #283828;
+  --color-stone-300-val: #3c523c;
+  --color-stone-400-val: #607a60;
+  --color-stone-500-val: #8a9a8a;
+  --color-stone-600-val: #8a9a8a;
+  --color-stone-700-val: #c8d8c8;
+  --color-stone-800-val: #dceada;
+  --color-stone-900-val: #e8f0e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #74a87c;
+  --color-light-gold: #1a2a1a;
+  --color-select-gold: #3e6044;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #74a87c;
+  --color-shadow-gold: rgba(92, 140, 99, 0.25);
+  --color-primary: #6b9e72;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #060d06;
+  --color-contrast-foreground: #d8e8d8;
+  --color-contrast-muted: #7a987a;
+  --color-contrast-border: #1a2a1a;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}
+
+
+:root.theme-graphite {
+  --color-brand-orange-50: #f3f4f6;
+  --color-brand-orange-100: #e5e7eb;
+  --color-brand-orange-600: #4b5563;
+  --color-brand-orange-700: #374151; 
+  --color-brand-orange-750: #1f2937;
+  --color-brand-orange-850: #111827;
+  --color-brand-orange-950: #030712;
+
+  --color-brand-amber-50: #f9fafb;
+  --color-brand-amber-100: #f3f4f6;
+  --color-brand-amber-200: #e5e7eb;
+  --color-brand-amber-400: #707070; 
+  --color-brand-amber-500: #6b7280;
+  --color-brand-amber-600: #4b5563;
+
+  --color-background-val: #f2f2f2;
+  --color-foreground-val: #141414;
+  --color-background: #f2f2f2;
+  --color-foreground: #141414;
+  --color-card: #ffffff;
+  --color-card-foreground: #141414;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #141414;
+  --color-muted: #e0e0e0;
+  --color-muted-foreground: #5a5a5a;
+  --color-border: #cccccc;
+  --color-border-val: #cccccc;
+  --color-input: #e0e0e0;
+  --color-ring: #707070;
+
+  --color-stone-50-val: #f2f2f2;
+  --color-stone-100-val: #e0e0e0;
+  --color-stone-200-val: #cccccc;
+  --color-stone-300-val: #b0b0b0;
+  --color-stone-400-val: #909090;
+  --color-stone-500-val: #707070;
+  --color-stone-600-val: #5a5a5a;
+  --color-stone-700-val: #4c4c4c;
+  --color-stone-800-val: #2b2b2b;
+  --color-stone-900-val: #141414;
+  --color-stone-950-val: #080808;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #888888;
+  --color-light-gold: #e0e0e0;
+  --color-select-gold: #484848;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #888888;
+  --color-shadow-gold: rgba(112, 112, 112, 0.18);
+  --color-primary: #707070;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #141414;
+  --color-contrast-foreground: #f0f0f0;
+  --color-contrast-muted: #909090;
+  --color-contrast-border: #303030;
+  --color-contrast-subtle: rgba(255,255,255,0.08);
+}
+
+:root.theme-graphite.dark {
+  --color-brand-orange-50: #141414;
+  --color-brand-orange-100: #222222;
+  --color-brand-orange-600: #9ca3af;
+  --color-brand-orange-700: #cbd5e1; 
+  --color-brand-orange-750: #cbd5e1;
+  --color-brand-orange-850: #e2e8f0;
+  --color-brand-orange-950: #4b5563;
+
+  --color-brand-amber-50: #141414;
+  --color-brand-amber-100: #222222;
+  --color-brand-amber-200: #303030;
+  --color-brand-amber-400: #9ca3af;
+  --color-brand-amber-500: #e5e7eb;
+  --color-brand-amber-600: #cbd5e1;
+
+  --color-background-val: #0c0c0c;
+  --color-foreground-val: #e8e8e8;
+  --color-background: #0c0c0c;
+  --color-foreground: #e8e8e8;
+  --color-card: #141414;
+  --color-card-foreground: #e8e8e8;
+  --color-popover: #222222;
+  --color-popover-foreground: #e8e8e8;
+  --color-muted: #222222;
+  --color-muted-foreground: #888888;
+  --color-border: #303030;
+  --color-border-val: #303030;
+  --color-input: #222222;
+  --color-ring: #707070;
+
+  --color-stone-50-val: #0e0e0e;
+  --color-stone-100-val: #1c1c1c;
+  --color-stone-200-val: #303030;
+  --color-stone-300-val: #484848;
+  --color-stone-400-val: #686868;
+  --color-stone-500-val: #888888;
+  --color-stone-600-val: #888888;
+  --color-stone-700-val: #c0c0c0;
+  --color-stone-800-val: #dbdbdb;
+  --color-stone-900-val: #e8e8e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold: var(--color-brand-amber-400);
+  --color-vivid-gold: #787878;
+  --color-light-gold: #222222;
+  --color-select-gold: #404040;
+  --color-submit-gold-1: var(--color-brand-amber-400);
+  --color-submit-gold-2: #787878;
+  --color-shadow-gold: rgba(96, 96, 96, 0.25);
+  --color-primary: #707070;
+  --color-primary-foreground: #ffffff;
+
+  --color-contrast: #080808;
+  --color-contrast-foreground: #e8e8e8;
+  --color-contrast-muted: #808080;
+  --color-contrast-border: #202020;
+  --color-contrast-subtle: rgba(255,255,255,0.06);
+}  */
+
+/*
+ * ============================================================
+ * THEME COLOR SYSTEM — CORRECTED & HARMONIZED
+ * ============================================================
+ * PRINCIPLE: Each theme has a fixed hue identity.
+ * Light mode  → light background + mid-range accent
+ * Dark mode   → very dark background (same hue family) + lighter accent
+ * The hue NEVER changes between light/dark — only luminance shifts.
+ *
+ * Themes:
+ *   default    → Terracotta / Terracotta (hue ~20°)
+ *   theme-gold → Gold / Amber           (hue ~40°)
+ *   theme-forest → Forest Green         (hue ~135°)
+ *   theme-graphite → Pure Graphite      (hue ~0° / neutral)
+ * ============================================================
+ */
+
+/*
+ * ============================================================
+ * THEME COLOR SYSTEM — CORRECTED & HARMONIZED
+ * ============================================================
+ * PRINCIPLE: Each theme has a fixed hue identity.
+ * Light mode  → light background + mid-range accent
+ * Dark mode   → very dark background (same hue family) + lighter accent
+ * The hue NEVER changes between light/dark — only luminance shifts.
+ *
+ * Themes:
+ *   default    → Terracotta / Terracotta (hue ~20°)
+ *   theme-gold → Gold / Amber           (hue ~40°)
+ *   theme-forest → Forest Green         (hue ~135°)
+ *   theme-graphite → Pure Graphite      (hue ~0° / neutral)
+ * ============================================================
+ */
+
+@theme {
+  --font-sans: "Cairo", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-white: var(--color-card, #ffffff);
+
+  --color-stone-50:  var(--color-stone-50-val);
+  --color-stone-100: var(--color-stone-100-val);
+  --color-stone-200: var(--color-stone-200-val);
+  --color-stone-300: var(--color-stone-300-val);
+  --color-stone-400: var(--color-stone-400-val);
+  --color-stone-500: var(--color-stone-500-val);
+  --color-stone-600: var(--color-stone-600-val);
+  --color-stone-700: var(--color-stone-700-val);
+  --color-stone-800: var(--color-stone-800-val);
+  --color-stone-900: var(--color-stone-900-val);
+  --color-stone-950: var(--color-stone-950-val);
+
+  --color-orange-50:  var(--color-brand-orange-50);
+  --color-orange-100: var(--color-brand-orange-100);
+  --color-orange-200: var(--color-brand-orange-100);
+  --color-orange-300: var(--color-brand-orange-100);
+  --color-orange-400: var(--color-brand-orange-600);
+  --color-orange-500: var(--color-brand-orange-600);
+  --color-orange-600: var(--color-brand-orange-600);
+  --color-orange-700: var(--color-brand-orange-700);
+  --color-orange-750: var(--color-brand-orange-750);
+  --color-orange-800: var(--color-brand-orange-850);
+  --color-orange-850: var(--color-brand-orange-850);
+  --color-orange-900: var(--color-brand-orange-950);
+  --color-orange-950: var(--color-brand-orange-950);
+
+  --color-amber-50:  var(--color-brand-amber-50);
+  --color-amber-100: var(--color-brand-amber-100);
+  --color-amber-200: var(--color-brand-amber-200);
+  --color-amber-300: var(--color-brand-amber-200);
+  --color-amber-400: var(--color-brand-amber-400);
+  --color-amber-500: var(--color-brand-amber-500);
+  --color-amber-600: var(--color-brand-amber-600);
+  --color-amber-700: var(--color-brand-amber-600);
+  --color-amber-800: var(--color-brand-amber-400);
+  --color-amber-900: var(--color-brand-amber-600);
+  --color-amber-950: var(--color-brand-amber-600);
+
+  --color-border:     var(--color-border-val);
+  --color-background: var(--color-background-val);
+  --color-foreground: var(--color-foreground-val);
+
+  --color-footer-bg:               var(--color-footer-bg-val);
+  --color-footer-text:             var(--color-footer-text-val);
+  --color-footer-heading:          var(--color-footer-heading-val);
+  --color-footer-muted:            var(--color-footer-muted-val);
+  --color-footer-border:           var(--color-footer-border-val);
+  --color-footer-input-bg:         var(--color-footer-input-bg-val);
+  --color-footer-input-text:       var(--color-footer-input-text-val);
+  --color-footer-input-placeholder:var(--color-footer-input-placeholder-val);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background-val, #FDFBF7);
+  color: var(--color-foreground-val, #1c1917);
+  direction: rtl;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+
+/* ============================================================
+   DEFAULT THEME — Terracotta (طوبي)
+   Hue: ~20° (orange-red). Light bg: warm off-white. Dark bg: navy.
+   ============================================================ */
+
+:root {
+  /* Brand tokens — all stay in the orange/terracotta hue family */
+  --color-brand-orange-50:  #fff7ed;
+  --color-brand-orange-100: #ffedd5;
+  --color-brand-orange-600: #ea580c;   /* primary terracotta */
+  --color-brand-orange-700: #c2410c;
+  --color-brand-orange-750: #9a3412;
+  --color-brand-orange-850: #7c2d12;
+  --color-brand-orange-950: #431407;
+
+  /* Amber — secondary warm accent, used for gold highlights */
+  --color-brand-amber-50:  #faf4e1;
+  --color-brand-amber-100: #faf0d5;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  /* Semantic surface colors */
+  --color-background-val: #FDFBF7;
+  --color-foreground-val: #1c1917;
+  --color-background:     #FDFBF7;
+  --color-foreground:     #1c1917;
+  --color-card:           #ffffff;
+  --color-card-foreground:#1c1917;
+  --color-popover:        #ffffff;
+  --color-popover-foreground: #1c1917;
+
+  --color-primary:            #ea580c;    /* terracotta */
+  --color-primary-foreground: #ffffff;
+  --color-secondary:          #f5f0e6;
+  --color-secondary-foreground:#1c1917;
+  --color-muted:              #f5f0e6;
+  --color-muted-foreground:   #6c6c70;
+  --color-accent:             #f5f0e6;
+  --color-accent-foreground:  #161620;
+  --color-destructive:        #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border:    #e5e7eb;
+  --color-border-val:#e5e7eb;
+  --color-input:     #f5f0e6;
+  --color-ring:      #ea580c;
+
+  /* Panel surface tokens */
+  --color-panel:             #fdfaf5;
+  --color-panel-foreground:  #1c1917;
+  --color-panel-border:      #e5ddd0;
+  --color-panel-shadow:      rgba(28, 25, 23, 0.10);
+
+  /* Stone scale — warm neutral */
+  --color-stone-50-val:  #FDFBF7;
+  --color-stone-100-val: #F5F0E6;
+  --color-stone-200-val: #e5e7eb;
+  --color-stone-300-val: #d6d3d1;
+  --color-stone-400-val: #a8a29e;
+  --color-stone-500-val: #78716c;
+  --color-stone-600-val: #57534e;
+  --color-stone-700-val: #44403c;
+  --color-stone-800-val: #292524;
+  --color-stone-900-val: #1c1917;
+  --color-stone-950-val: #0c0a09;
+
+  /* Accent helpers */
+  --color-accent-gold:    #c5a565;
+  --color-vivid-gold:     #ea580c;
+  --color-light-gold:     #ffedd5;
+  --color-select-gold:    #9a3412;
+  --color-submit-gold-1:  #ea580c;
+  --color-submit-gold-2:  #c2410c;
+  --color-shadow-gold:    rgba(234, 88, 12, 0.2);
+
+  /* Navy used as contrast surface (e.g. dark headers) */
+  --color-navy:        #1a1412;
+  --color-navy-light:  #2d2016;
+  --color-navy-lighter:#3d2d1f;
+  --color-navy-dark:   #0f0b09;
+
+  --color-beige:        #FDFBF7;
+  --color-beige-darker: #F5F0E6;
+
+  --color-contrast:            #1a0c06;
+  --color-contrast-foreground: #ffffff;
+  --color-contrast-muted:      #9a7a6a;
+  --color-contrast-border:     #5a3020;
+  --color-contrast-subtle:     rgba(255,255,255,0.08);
+
+  /* Footer (uses a warm dark terracotta) */
+  --color-footer-bg-val:              #1c1008;
+  --color-footer-text-val:            #d6c4b8;
+  --color-footer-heading-val:         #fff0e5;
+  --color-footer-muted-val:           #a8887a;
+  --color-footer-border-val:          #3d2010;
+  --color-footer-input-bg-val:        #2d1a0e;
+  --color-footer-input-text-val:      #f5e8e0;
+  --color-footer-input-placeholder-val:#78584a;
+}
+
+/* --- DEFAULT DARK --- */
+/*
+ * Dark mode keeps the terracotta hue for brand tokens.
+ * Background → very dark warm-brown (not navy-blue!).
+ * Accents get slightly lighter within the same hue range.
+ */
+.dark {
+  --color-brand-orange-50:  #1a0e08;
+  --color-brand-orange-100: #2d1a0e;
+  --color-brand-orange-600: #f97316;   /* slightly lighter in dark for contrast */
+  --color-brand-orange-700: #ea580c;   /* primary terracotta */
+  --color-brand-orange-750: #fb923c;   /* was #C5A565 (wrong: gold!) → terracotta light */
+  --color-brand-orange-850: #fdba74;   /* highlight/text on dark */
+  --color-brand-orange-950: #c2410c;   /* was #ef4444 (wrong: red!) → darker terracotta */
+
+  --color-brand-amber-50:  #1a0e08;
+  --color-brand-amber-100: #2d1a10;
+  --color-brand-amber-200: #3d2416;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #120a05;
+  --color-foreground-val: #f3ece6;
+  --color-background:     #120a05;
+  --color-foreground:     #f3ece6;
+  --color-card:           #1e110a;
+  --color-card-foreground:#f3ece6;
+  --color-popover:        #2d1a0e;
+  --color-popover-foreground: #f3ece6;
+
+  --color-primary:            #f97316;
+  --color-primary-foreground: #1a0e08;
+  --color-secondary:          #2d1a0e;
+  --color-secondary-foreground:#f3ece6;
+  --color-muted:              #2d1a0e;
+  --color-muted-foreground:   #a8887a;
+  --color-accent:             #2d1a0e;
+  --color-accent-foreground:  #f3ece6;
+  --color-destructive:        #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border:    #3d2416;
+  --color-border-val:#3d2416;
+  --color-input:     #2d1a0e;
+  --color-ring:      #f97316;
+
+  /* Card/Panel — dark warm-brown, NOT white */
+  --color-card:              #1e110a;
+  --color-card-foreground:   #f3ece6;
+  --color-popover:           #2d1a0e;
+  --color-popover-foreground:#f3ece6;
+  --color-panel:             #2a1810;
+  --color-panel-foreground:  #f3ece6;
+  --color-panel-border:      #4a2e1e;
+  --color-panel-shadow:      rgba(0, 0, 0, 0.40);
+
+  --color-stone-50-val:  #120a05;
+  --color-stone-100-val: #1e110a;
+  --color-stone-200-val: #3d2416;
+  --color-stone-300-val: #5a3820;
+  --color-stone-400-val: #8a6050;
+  --color-stone-500-val: #a88070;
+  --color-stone-600-val: #a88070;
+  --color-stone-700-val: #d4b0a0;
+  --color-stone-800-val: #e8cfc0;
+  --color-stone-900-val: #f3ece6;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold:    #fb923c;
+  --color-vivid-gold:     #f97316;
+  --color-light-gold:     #2d1a0e;
+  --color-select-gold:    #ea580c;
+  --color-submit-gold-1:  #f97316;
+  --color-submit-gold-2:  #fb923c;
+  --color-shadow-gold:    rgba(249, 115, 22, 0.25);
+
+  --color-contrast:            #0a0503;
+  --color-contrast-foreground: #f3ece6;
+  --color-contrast-muted:      #9a7060;
+  --color-contrast-border:     #3d2416;
+  --color-contrast-subtle:     rgba(255,255,255,0.06);
+
+  --color-footer-bg-val:              #0a0503;
+  --color-footer-text-val:            #c4a898;
+  --color-footer-heading-val:         #fdeee5;
+  --color-footer-muted-val:           #8a6858;
+  --color-footer-border-val:          #3d2416;
+  --color-footer-input-bg-val:        #1e110a;
+  --color-footer-input-text-val:      #f3ece6;
+  --color-footer-input-placeholder-val:#78584a;
+}
+
+
+/* ============================================================
+   THEME: GOLD (ذهبي / Amber)
+   Hue: ~40° (amber-gold). Light bg: warm cream. Dark bg: very dark amber-brown.
+   ============================================================ */
+
+:root.theme-gold {
+  --color-brand-orange-50:  #fffbeb;
+  --color-brand-orange-100: #fef3c7;
+  --color-brand-orange-600: #d97706;   /* primary gold/amber */
+  --color-brand-orange-700: #b45309;
+  --color-brand-orange-750: #92400e;
+  --color-brand-orange-850: #78350f;
+  --color-brand-orange-950: #451a03;
+
+  --color-brand-amber-50:  #fffbeb;
+  --color-brand-amber-100: #fef3c7;
+  --color-brand-amber-200: #fde68a;
+  --color-brand-amber-400: #c5a565;
+  --color-brand-amber-500: #f59e0b;
+  --color-brand-amber-600: #d97706;
+
+  --color-background-val: #F8F2E2;
+  --color-foreground-val: #2d1e0f;
+  --color-background:     #F8F2E2;
+  --color-foreground:     #2d1e0f;
+  --color-card:           #ffffff;
+  --color-card-foreground:#2d1e0f;
+  --color-popover:        #ffffff;
+  --color-popover-foreground: #2d1e0f;
+
+  --color-primary:            #d97706;
+  --color-primary-foreground: #ffffff;
+  --color-secondary:          #fef3c7;
+  --color-secondary-foreground:#2d1e0f;
+  --color-muted:              #f7eed2;
+  --color-muted-foreground:   #7c6244;
+  --color-accent:             #fef3c7;
+  --color-accent-foreground:  #2d1e0f;
+  --color-destructive:        #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border:    #e6dfc6;
+  --color-border-val:#e6dfc6;
+  --color-input:     #fbf5df;
+  --color-ring:      #d97706;
+
+  /* Panel surface tokens */
+  --color-panel:             #fdf8ee;
+  --color-panel-foreground:  #2d1e0f;
+  --color-panel-border:      #e0d4b0;
+  --color-panel-shadow:      rgba(45, 30, 15, 0.10);
+
+  --color-stone-50-val:  #F8F2E2;
+  --color-stone-100-val: #F5EBD0;
+  --color-stone-200-val: #e6dfc6;
+  --color-stone-300-val: #cdb9a0;
+  --color-stone-400-val: #b89c7d;
+  --color-stone-500-val: #927555;
+  --color-stone-600-val: #7c6244;
+  --color-stone-700-val: #5a422d;
+  --color-stone-800-val: #422d1a;
+  --color-stone-900-val: #2d1e0f;
+  --color-stone-950-val: #1a1005;
+
+  --color-accent-gold:    #c5a565;
+  --color-vivid-gold:     #d97706;
+  --color-light-gold:     #fdf2d0;
+  --color-select-gold:    #b45309;
+  --color-submit-gold-1:  #d97706;
+  --color-submit-gold-2:  #b45309;
+  --color-shadow-gold:    rgba(217, 119, 6, 0.25);
+
+  --color-contrast:            #241407;
+  --color-contrast-foreground: #fef7e7;
+  --color-contrast-muted:      #cdb9a0;
+  --color-contrast-border:     #442a12;
+  --color-contrast-subtle:     rgba(255,255,255,0.08);
+
+  --color-footer-bg-val:               #1c1208;
+  --color-footer-text-val:             #d6c4a0;
+  --color-footer-heading-val:          #fdf2d0;
+  --color-footer-muted-val:            #a8906a;
+  --color-footer-border-val:           #442a12;
+  --color-footer-input-bg-val:         #2d1e0f;
+  --color-footer-input-text-val:       #fef3c7;
+  --color-footer-input-placeholder-val:#78644a;
+}
+
+/* --- GOLD DARK --- */
+/*
+ * All brand-orange vars stay amber/gold — no hue shift to blue/purple.
+ * Background: very dark amber-brown. Accents: brighter amber.
+ */
+:root.theme-gold.dark {
+  --color-brand-orange-50:  #1a1006;
+  --color-brand-orange-100: #2d1f0e;
+  --color-brand-orange-600: #fbbf24;   /* brighter amber for dark */
+  --color-brand-orange-700: #f59e0b;
+  --color-brand-orange-750: #fde68a;   /* was #f59e0b — slightly lighter */
+  --color-brand-orange-850: #fef3c7;   /* highlight text */
+  --color-brand-orange-950: #d97706;   /* was #d97706, correct */
+
+  --color-brand-amber-50:  #1a1006;
+  --color-brand-amber-100: #2d1f0e;
+  --color-brand-amber-200: #3d2f18;
+  --color-brand-amber-400: #fbbf24;
+  --color-brand-amber-500: #fde68a;
+  --color-brand-amber-600: #f59e0b;
+
+  --color-background-val: #0f0902;
+  --color-foreground-val: #fef9ec;
+  --color-background:     #0f0902;
+  --color-foreground:     #fef9ec;
+  --color-card:           #1a1006;
+  --color-card-foreground:#fef9ec;
+  --color-popover:        #2d1f0e;
+  --color-popover-foreground: #fef9ec;
+
+  --color-primary:            #fbbf24;
+  --color-primary-foreground: #0f0902;
+  --color-secondary:          #2d1f0e;
+  --color-secondary-foreground:#fef9ec;
+  --color-muted:              #2d1f0e;
+  --color-muted-foreground:   #ad9a72;
+  --color-accent:             #2d1f0e;
+  --color-accent-foreground:  #fef9ec;
+  --color-destructive:        #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border:    #3d2f18;
+  --color-border-val:#3d2f18;
+  --color-input:     #2d1f0e;
+  --color-ring:      #fbbf24;
+
+  /* Card/Panel — dark amber-brown, NOT white */
+  --color-card:              #1f1408;
+  --color-card-foreground:   #fef9ec;
+  --color-popover:           #2d1f0e;
+  --color-popover-foreground:#fef9ec;
+  --color-panel:             #281a0a;
+  --color-panel-foreground:  #fef9ec;
+  --color-panel-border:      #4a3418;
+  --color-panel-shadow:      rgba(0, 0, 0, 0.45);
+
+  --color-stone-50-val:  #0f0902;
+  --color-stone-100-val: #1a1006;
+  --color-stone-200-val: #3d2f18;
+  --color-stone-300-val: #5a4428;
+  --color-stone-400-val: #8a7050;
+  --color-stone-500-val: #ad9a72;
+  --color-stone-600-val: #ad9a72;
+  --color-stone-700-val: #e0d0a8;
+  --color-stone-800-val: #f2e8cc;
+  --color-stone-900-val: #fef9ec;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold:    #fbbf24;
+  --color-vivid-gold:     #f59e0b;
+  --color-light-gold:     #2d1f0e;
+  --color-select-gold:    #d97706;
+  --color-submit-gold-1:  #fbbf24;
+  --color-submit-gold-2:  #fde68a;
+  --color-shadow-gold:    rgba(251, 191, 36, 0.3);
+
+  --color-contrast:            #080500;
+  --color-contrast-foreground: #fef9ec;
+  --color-contrast-muted:      #ad9a72;
+  --color-contrast-border:     #2d1f0e;
+  --color-contrast-subtle:     rgba(255,255,255,0.06);
+
+  --color-footer-bg-val:               #080500;
+  --color-footer-text-val:             #c4a870;
+  --color-footer-heading-val:          #fef3c7;
+  --color-footer-muted-val:            #907040;
+  --color-footer-border-val:           #3d2f18;
+  --color-footer-input-bg-val:         #1a1006;
+  --color-footer-input-text-val:       #fef9ec;
+  --color-footer-input-placeholder-val:#786040;
+}
+
+
+/* ============================================================
+   THEME: FOREST (أخضر)
+   Hue: ~135° (green). Light bg: pale green-white. Dark bg: very dark green.
+   ============================================================ */
+
+:root.theme-forest {
+  --color-brand-orange-50:  #f0fdf4;
+  --color-brand-orange-100: #dcfce7;
+  --color-brand-orange-600: #16a34a;   /* primary green */
+  --color-brand-orange-700: #15803d;
+  --color-brand-orange-750: #166534;
+  --color-brand-orange-850: #14532d;
+  --color-brand-orange-950: #052e16;
+
+  --color-brand-amber-50:  #f0fdf4;
+  --color-brand-amber-100: #dcfce7;
+  --color-brand-amber-200: #bbf7d0;
+  --color-brand-amber-400: #6b9e72;
+  --color-brand-amber-500: #22c55e;
+  --color-brand-amber-600: #16a34a;
+
+  --color-background-val: #f0f5f0;
+  --color-foreground-val: #101a10;
+  --color-background:     #f0f5f0;
+  --color-foreground:     #101a10;
+  --color-card:           #ffffff;
+  --color-card-foreground:#101a10;
+  --color-popover:        #ffffff;
+  --color-popover-foreground: #101a10;
+
+  --color-primary:            #16a34a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary:          #dcfce7;
+  --color-secondary-foreground:#101a10;
+  --color-muted:              #e6f0e6;
+  --color-muted-foreground:   #5a6b5a;
+  --color-accent:             #dcfce7;
+  --color-accent-foreground:  #101a10;
+  --color-destructive:        #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border:    #d0e0d0;
+  --color-border-val:#d0e0d0;
+  --color-input:     #e6f0e6;
+  --color-ring:      #16a34a;
+
+  /* Panel surface tokens */
+  --color-panel:             #f4faf4;
+  --color-panel-foreground:  #101a10;
+  --color-panel-border:      #c0d8c0;
+  --color-panel-shadow:      rgba(16, 26, 16, 0.10);
+
+  --color-stone-50-val:  #f0f5f0;
+  --color-stone-100-val: #e6f0e6;
+  --color-stone-200-val: #d0e0d0;
+  --color-stone-300-val: #b8c8b8;
+  --color-stone-400-val: #9cb09c;
+  --color-stone-500-val: #7c927c;
+  --color-stone-600-val: #5a6b5a;
+  --color-stone-700-val: #334d33;
+  --color-stone-800-val: #203020;
+  --color-stone-900-val: #101a10;
+  --color-stone-950-val: #050805;
+
+  --color-accent-gold:    #6b9e72;
+  --color-vivid-gold:     #16a34a;
+  --color-light-gold:     #d4ead6;
+  --color-select-gold:    #15803d;
+  --color-submit-gold-1:  #16a34a;
+  --color-submit-gold-2:  #15803d;
+  --color-shadow-gold:    rgba(22, 163, 74, 0.2);
+
+  --color-contrast:            #0e1a0e;
+  --color-contrast-foreground: #e0f0e0;
+  --color-contrast-muted:      #8aa88a;
+  --color-contrast-border:     #2a3a2a;
+  --color-contrast-subtle:     rgba(255,255,255,0.08);
+
+  --color-footer-bg-val:               #0a1a0a;
+  --color-footer-text-val:             #b8d0b8;
+  --color-footer-heading-val:          #e0f0e0;
+  --color-footer-muted-val:            #7a9a7a;
+  --color-footer-border-val:           #2a3a2a;
+  --color-footer-input-bg-val:         #152015;
+  --color-footer-input-text-val:       #dcfce7;
+  --color-footer-input-placeholder-val:#5a7a5a;
+}
+
+/* --- FOREST DARK --- */
+/*
+ * Everything stays in the green hue family.
+ * orange-750 was #22c55e (bright — ok), 950 was #15803d (darker — ok, adjusted slightly).
+ * The key fix: no stray non-green colors.
+ */
+:root.theme-forest.dark {
+  --color-brand-orange-50:  #081008;
+  --color-brand-orange-100: #122012;
+  --color-brand-orange-600: #4ade80;   /* brighter green for dark accent */
+  --color-brand-orange-700: #22c55e;
+  --color-brand-orange-750: #86efac;   /* was #22c55e — step up for dark highlights */
+  --color-brand-orange-850: #bbf7d0;   /* lightest green for text on dark */
+  --color-brand-orange-950: #16a34a;
+
+  --color-brand-amber-50:  #081008;
+  --color-brand-amber-100: #122012;
+  --color-brand-amber-200: #1e3020;
+  --color-brand-amber-400: #4ade80;
+  --color-brand-amber-500: #86efac;
+  --color-brand-amber-600: #22c55e;
+
+  --color-background-val: #050c05;
+  --color-foreground-val: #e8f5e8;
+  --color-background:     #050c05;
+  --color-foreground:     #e8f5e8;
+  --color-card:           #0d180d;
+  --color-card-foreground:#e8f5e8;
+  --color-popover:        #122012;
+  --color-popover-foreground: #e8f5e8;
+
+  --color-primary:            #4ade80;
+  --color-primary-foreground: #050c05;
+  --color-secondary:          #122012;
+  --color-secondary-foreground:#e8f5e8;
+  --color-muted:              #122012;
+  --color-muted-foreground:   #7a9a7a;
+  --color-accent:             #122012;
+  --color-accent-foreground:  #e8f5e8;
+  --color-destructive:        #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border:    #1e3020;
+  --color-border-val:#1e3020;
+  --color-input:     #122012;
+  --color-ring:      #4ade80;
+
+  /* Card/Panel — dark green surface, NOT white */
+  --color-card:              #0d180d;
+  --color-card-foreground:   #e8f5e8;
+  --color-popover:           #122012;
+  --color-popover-foreground:#e8f5e8;
+  --color-panel:             #162816;
+  --color-panel-foreground:  #e8f5e8;
+  --color-panel-border:      #2e4830;
+  --color-panel-shadow:      rgba(0, 0, 0, 0.45);
+
+  --color-stone-50-val:  #070e07;
+  --color-stone-100-val: #0d180d;
+  --color-stone-200-val: #1e3020;
+  --color-stone-300-val: #2e4830;
+  --color-stone-400-val: #507855;
+  --color-stone-500-val: #7a9a7a;
+  --color-stone-600-val: #7a9a7a;
+  --color-stone-700-val: #b8d8b8;
+  --color-stone-800-val: #d0ecd0;
+  --color-stone-900-val: #e8f5e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold:    #4ade80;
+  --color-vivid-gold:     #22c55e;
+  --color-light-gold:     #122012;
+  --color-select-gold:    #16a34a;
+  --color-submit-gold-1:  #4ade80;
+  --color-submit-gold-2:  #86efac;
+  --color-shadow-gold:    rgba(74, 222, 128, 0.25);
+
+  --color-contrast:            #020602;
+  --color-contrast-foreground: #e8f5e8;
+  --color-contrast-muted:      #7a9a7a;
+  --color-contrast-border:     #122012;
+  --color-contrast-subtle:     rgba(255,255,255,0.06);
+
+  --color-footer-bg-val:               #020602;
+  --color-footer-text-val:             #90b890;
+  --color-footer-heading-val:          #d0ecd0;
+  --color-footer-muted-val:            #608060;
+  --color-footer-border-val:           #1e3020;
+  --color-footer-input-bg-val:         #0d180d;
+  --color-footer-input-text-val:       #e8f5e8;
+  --color-footer-input-placeholder-val:#507855;
+}
+
+
+/* ============================================================
+   THEME: GRAPHITE (رمادي)
+   Hue: ~0° / neutral gray. No color cast.
+   Light bg: near-white gray. Dark bg: near-black gray.
+   ============================================================ */
+
+:root.theme-graphite {
+  --color-brand-orange-50:  #f9fafb;
+  --color-brand-orange-100: #f3f4f6;
+  --color-brand-orange-600: #6b7280;   /* primary mid-gray */
+  --color-brand-orange-700: #4b5563;
+  --color-brand-orange-750: #374151;
+  --color-brand-orange-850: #1f2937;
+  --color-brand-orange-950: #111827;
+
+  --color-brand-amber-50:  #f9fafb;
+  --color-brand-amber-100: #f3f4f6;
+  --color-brand-amber-200: #e5e7eb;
+  --color-brand-amber-400: #707070;
+  --color-brand-amber-500: #6b7280;
+  --color-brand-amber-600: #4b5563;
+
+  --color-background-val: #f2f2f2;
+  --color-foreground-val: #141414;
+  --color-background:     #f2f2f2;
+  --color-foreground:     #141414;
+  --color-card:           #ffffff;
+  --color-card-foreground:#141414;
+  --color-popover:        #ffffff;
+  --color-popover-foreground: #141414;
+
+  --color-primary:            #4b5563;
+  --color-primary-foreground: #ffffff;
+  --color-secondary:          #e5e7eb;
+  --color-secondary-foreground:#141414;
+  --color-muted:              #e0e0e0;
+  --color-muted-foreground:   #5a5a5a;
+  --color-accent:             #e5e7eb;
+  --color-accent-foreground:  #141414;
+  --color-destructive:        #fee2e2;
+  --color-destructive-foreground: #991b1b;
+  --color-border:    #cccccc;
+  --color-border-val:#cccccc;
+  --color-input:     #e0e0e0;
+  --color-ring:      #6b7280;
+
+  /* Panel surface tokens */
+  --color-panel:             #f8f8f8;
+  --color-panel-foreground:  #141414;
+  --color-panel-border:      #d4d4d4;
+  --color-panel-shadow:      rgba(20, 20, 20, 0.10);
+
+  --color-stone-50-val:  #f2f2f2;
+  --color-stone-100-val: #e0e0e0;
+  --color-stone-200-val: #cccccc;
+  --color-stone-300-val: #b0b0b0;
+  --color-stone-400-val: #909090;
+  --color-stone-500-val: #707070;
+  --color-stone-600-val: #5a5a5a;
+  --color-stone-700-val: #4c4c4c;
+  --color-stone-800-val: #2b2b2b;
+  --color-stone-900-val: #141414;
+  --color-stone-950-val: #080808;
+
+  --color-accent-gold:    #707070;
+  --color-vivid-gold:     #6b7280;
+  --color-light-gold:     #e0e0e0;
+  --color-select-gold:    #4b5563;
+  --color-submit-gold-1:  #6b7280;
+  --color-submit-gold-2:  #4b5563;
+  --color-shadow-gold:    rgba(107, 114, 128, 0.18);
+
+  --color-contrast:            #141414;
+  --color-contrast-foreground: #f0f0f0;
+  --color-contrast-muted:      #909090;
+  --color-contrast-border:     #303030;
+  --color-contrast-subtle:     rgba(255,255,255,0.08);
+
+  --color-footer-bg-val:               #1c1c1c;
+  --color-footer-text-val:             #c0c0c0;
+  --color-footer-heading-val:          #f0f0f0;
+  --color-footer-muted-val:            #909090;
+  --color-footer-border-val:           #383838;
+  --color-footer-input-bg-val:         #282828;
+  --color-footer-input-text-val:       #f0f0f0;
+  --color-footer-input-placeholder-val:#707070;
+}
+
+/* --- GRAPHITE DARK --- */
+/*
+ * Stays purely neutral gray — no blue/slate bleed.
+ * orange-700 was #cbd5e1 (slate-blue!) → corrected to pure gray #c0c0c0.
+ * orange-750 was #cbd5e1 → corrected to #d0d0d0.
+ */
+:root.theme-graphite.dark {
+  --color-brand-orange-50:  #141414;
+  --color-brand-orange-100: #222222;
+  --color-brand-orange-600: #9ca3af;   /* lighter gray for dark accent */
+  --color-brand-orange-700: #c0c0c0;   /* was #cbd5e1 (blue-tinted!) → pure gray */
+  --color-brand-orange-750: #d0d0d0;   /* was #cbd5e1 → pure gray */
+  --color-brand-orange-850: #e8e8e8;
+  --color-brand-orange-950: #6b7280;   /* was #4b5563, slightly lighter */
+
+  --color-brand-amber-50:  #141414;
+  --color-brand-amber-100: #222222;
+  --color-brand-amber-200: #303030;
+  --color-brand-amber-400: #9ca3af;
+  --color-brand-amber-500: #d0d0d0;
+  --color-brand-amber-600: #b0b0b0;
+
+  --color-background-val: #0c0c0c;
+  --color-foreground-val: #e8e8e8;
+  --color-background:     #0c0c0c;
+  --color-foreground:     #e8e8e8;
+  --color-card:           #141414;
+  --color-card-foreground:#e8e8e8;
+  --color-popover:        #222222;
+  --color-popover-foreground: #e8e8e8;
+
+  --color-primary:            #9ca3af;
+  --color-primary-foreground: #0c0c0c;
+  --color-secondary:          #222222;
+  --color-secondary-foreground:#e8e8e8;
+  --color-muted:              #222222;
+  --color-muted-foreground:   #888888;
+  --color-accent:             #222222;
+  --color-accent-foreground:  #e8e8e8;
+  --color-destructive:        #7f1d1d;
+  --color-destructive-foreground: #fca5a5;
+  --color-border:    #303030;
+  --color-border-val:#303030;
+  --color-input:     #222222;
+  --color-ring:      #9ca3af;
+
+  /* Card/Panel — pure dark gray, zero hue */
+  --color-card:              #141414;
+  --color-card-foreground:   #e8e8e8;
+  --color-popover:           #222222;
+  --color-popover-foreground:#e8e8e8;
+  --color-panel:             #1e1e1e;
+  --color-panel-foreground:  #e8e8e8;
+  --color-panel-border:      #383838;
+  --color-panel-shadow:      rgba(0, 0, 0, 0.45);
+
+  --color-stone-50-val:  #0c0c0c;
+  --color-stone-100-val: #141414;
+  --color-stone-200-val: #303030;
+  --color-stone-300-val: #484848;
+  --color-stone-400-val: #686868;
+  --color-stone-500-val: #888888;
+  --color-stone-600-val: #888888;
+  --color-stone-700-val: #c0c0c0;
+  --color-stone-800-val: #d8d8d8;
+  --color-stone-900-val: #e8e8e8;
+  --color-stone-950-val: #ffffff;
+
+  --color-accent-gold:    #9ca3af;
+  --color-vivid-gold:     #888888;
+  --color-light-gold:     #222222;
+  --color-select-gold:    #606060;
+  --color-submit-gold-1:  #9ca3af;
+  --color-submit-gold-2:  #c0c0c0;
+  --color-shadow-gold:    rgba(156, 163, 175, 0.25);
+
+  --color-contrast:            #080808;
+  --color-contrast-foreground: #e8e8e8;
+  --color-contrast-muted:      #808080;
+  --color-contrast-border:     #202020;
+  --color-contrast-subtle:     rgba(255,255,255,0.06);
+
+  --color-footer-bg-val:               #080808;
+  --color-footer-text-val:             #a0a0a0;
+  --color-footer-heading-val:          #e0e0e0;
+  --color-footer-muted-val:            #707070;
+  --color-footer-border-val:           #282828;
+  --color-footer-input-bg-val:         #141414;
+  --color-footer-input-text-val:       #e8e8e8;
+  --color-footer-input-placeholder-val:#606060;
+}
+
+
+/* ============================================================
+   TAILWIND UTILITY CLASSES FOR PANEL TOKENS
+   Add these to your global CSS or use via tailwind.config.js
+   ============================================================ */
+
+.bg-panel {
+  background-color: var(--color-panel);
+}
+.text-panel-foreground {
+  color: var(--color-panel-foreground);
+}
+.border-panel {
+  border-color: var(--color-panel-border);
+}
+.shadow-panel {
+  box-shadow: 0 4px 24px var(--color-panel-shadow);
+}
+
+/* bg-card now respects dark mode properly */
+.bg-card {
+  background-color: var(--color-card);
+}
+.text-card-foreground {
+  color: var(--color-card-foreground);
+}
+
+/*
+ * Quick override: if any component still has bg-white hardcoded
+ * and you can't change the JSX, add this to neutralize it:
+ *
+ *   .your-panel-wrapper .bg-white {
+ *     background-color: var(--color-panel) !important;
+ *     color: var(--color-panel-foreground) !important;
+ *   }
+ */
+/* Theme-aware scrollbar using CSS variables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-primary), black 20%);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-muted);
+}
+
+/* Low-opacity Islamic geometric art background placeholder classes */
+.bg-heritage-pattern {
+  background-image: radial-gradient(#d97706 0.75px, transparent 0.75px), radial-gradient(#d97706 0.75px, #fffbeb 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  opacity: 0.12;
+}
+
+.bg-heritage-pattern-dark {
+  background-image: radial-gradient(#c2410c 0.75px, transparent 0.75px), radial-gradient(#c2410c 0.75px, #451a03 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  opacity: 0.08;
+}
+
+/* Decorative stars style */
+.heritage-star {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+/* Custom premium print layout */
+@media print {
+  #preview-floating-deck,
+  nav,
+  footer,
+  button,
+  .no-print,
+  #copy-deeplink-btn,
+  #qrcode-modal-overlay,
+  .button-group-deck-controls,
+  .global-toast-container {
+    display: none !important;
+  }
+  
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: serif !important;
+    direction: rtl !important;
+  }
+  
+  main, .print-container, .max-w-6xl {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
