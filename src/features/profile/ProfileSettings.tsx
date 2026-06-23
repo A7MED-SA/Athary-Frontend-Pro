@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAppContext } from '../../providers/AppProvider';
+import { useAuth } from '../common/hooks/useAuth';
 import { 
   User, 
   Phone, 
@@ -263,11 +265,8 @@ export default function ProfileSettings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Auth sessions
-  const [sessions, setSessions] = useState<AuthSession[]>([
-    { id: 'sess-1', device: 'Windows PC', browser: 'Chrome 125.0', location: 'الرياض، السعودية', lastActive: 'نشط الآن', isCurrent: true },
-    { id: 'sess-2', device: 'iPhone 15 Pro', browser: 'Safari 17.2', location: 'مكة المكرمة، السعودية', lastActive: 'منذ ٣ ساعات', isCurrent: false }
-  ]);
+  // Auth sessions — real data from API
+  const { sessions: apiSessions, revokeSession } = useAuth();
 
   // Handle picture change via MinIO 2-Step Upload simulation
   const handlePictureUploadSimulation = () => {
@@ -442,8 +441,14 @@ export default function ProfileSettings() {
 
   // Terminate session
   const handleTerminateSession = (sessId: string) => {
-    setSessions(sessions.filter(s => s.id !== sessId));
-    displayToast('✓ تم إلغاء توقيع تفويض الجهاز المختار.');
+    revokeSession(sessId, {
+      onSuccess: () => {
+        toast.success('تم إنهاء الجلسة بنجاح');
+      },
+      onError: () => {
+        toast.error('فشل إنهاء الجلسة');
+      },
+    });
   };
 
   return (
@@ -1200,32 +1205,32 @@ export default function ProfileSettings() {
                   </h3>
 
                   <div className="space-y-2.5">
-                    {sessions.map((sess) => (
+                    {apiSessions?.map((sess) => (
                       <div 
                         key={sess.id} 
                         className={`p-4 rounded-2xl border flex items-center justify-between text-right ${
-                          sess.isCurrent ? 'border-orange-500 bg-orange-50/10' : 'border-stone-200 bg-white'
+                          sess.isActive ? 'border-orange-500 bg-orange-50/10' : 'border-stone-200 bg-white'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-xl ${sess.isCurrent ? 'bg-orange-100 text-orange-950' : 'bg-stone-100 text-stone-500'}`}>
-                            {sess.device.includes('iPhone') ? <Smartphone className="w-4.5 h-4.5" /> : <Laptop className="w-4.5 h-4.5" />}
+                          <div className={`p-2.5 rounded-xl ${sess.isActive ? 'bg-orange-100 text-orange-950' : 'bg-stone-100 text-stone-500'}`}>
+                            {sess.userAgent?.includes('iPhone') ? <Smartphone className="w-4.5 h-4.5" /> : <Laptop className="w-4.5 h-4.5" />}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-xs text-stone-900">{sess.device}</span>
-                              {sess.isCurrent && (
+                              <span className="font-extrabold text-xs text-stone-900">{sess.userAgent || 'جهاز غير معروف'}</span>
+                              {sess.isActive && (
                                 <span className="text-[8px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded">
                                   الجلسة الحالية
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-stone-500 font-light block mt-0.5">{sess.browser} • بموقع: {sess.location}</span>
-                            <span className="text-[9px] text-stone-400 font-sans block">{sess.lastActive}</span>
+                            <span className="text-[10px] text-stone-500 font-light block mt-0.5">IP: {sess.ipAddress}</span>
+                            <span className="text-[9px] text-stone-400 font-sans block">{sess.lastUsed ? `آخر نشاط: ${new Date(sess.lastUsed).toLocaleDateString('ar-SA')}` : `أنشئت: ${new Date(sess.createdAt).toLocaleDateString('ar-SA')}`}</span>
                           </div>
                         </div>
 
-                        {!sess.isCurrent && (
+                        {!sess.isActive && (
                           <button
                             type="button"
                             onClick={() => handleTerminateSession(sess.id)}
@@ -1236,6 +1241,9 @@ export default function ProfileSettings() {
                         )}
                       </div>
                     ))}
+                    {(!apiSessions || apiSessions.length === 0) && (
+                      <p className="text-xs text-stone-500 text-center py-4">لا توجد جلسات نشطة</p>
+                    )}
                   </div>
                 </div>
 

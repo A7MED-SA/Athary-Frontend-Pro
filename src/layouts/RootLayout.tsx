@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import CartDrawer from '../components/layout/CartDrawer';
@@ -8,7 +9,7 @@ import AppProvider, { useAppContext } from '../providers/AppProvider';
 
 function LayoutContent() {
   const { pathname } = useLocation();
-  const { globalToast, cartOpen } = useAppContext();
+  const { cartOpen, setCartOpen } = useAppContext();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -38,13 +39,7 @@ function LayoutContent() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-foreground)] relative antialiased transition-colors duration-250 selection:bg-[var(--color-muted)] selection:text-[var(--color-foreground)]" dir="rtl">
-
-        {globalToast && (
-          <div className="fixed top-24 left-6 z-50 bg-stone-900 text-amber-50 px-5 py-4 rounded-2xl shadow-xl max-w-sm flex items-center gap-3 animate-slide-in border-r-4 border-amber-500">
-            <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <p className="text-xs font-semibold leading-tight">{globalToast}</p>
-          </div>
-        )}
+        <Toaster position="top-right" dir="rtl" richColors />
 
         <Navbar />
 
@@ -54,7 +49,7 @@ function LayoutContent() {
 
         <Footer />
 
-        {cartOpen && <CartDrawer />}
+        <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       </div>
     </ErrorBoundary>
   );

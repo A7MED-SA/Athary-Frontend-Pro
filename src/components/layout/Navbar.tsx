@@ -6,6 +6,7 @@ import { useNotificationStore } from '../../stores/notificationStore';
 import ThemeSettingsPopover from '../../features/theme/ThemeSettingsPopover';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppContext } from '../../providers/AppProvider';
+import CartDrawer from './CartDrawer';
 
 export default function Navbar() {
   const navigate = useNavigate();

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { CATEGORIES, COURSES } from '../../data';
-import { Course } from '../../types';
+import { useLanding } from '../common/hooks/useLanding';
+import { useCart } from '../common/hooks/useCart';
+import { Skeleton } from '@/components/shared/Skeleton';
 import { 
   BookOpen, 
   PenTool, 
@@ -19,29 +20,30 @@ import {
   MapPin, 
   Clock 
 } from 'lucide-react';
-import { useAppContext } from '../../providers/AppProvider';
+import { toast } from 'sonner';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { cartItems, handleAddToCart } = useAppContext();
+  const { addItem, cart } = useCart();
+  const { data, isLoading, error } = useLanding();
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
-  // Filter 3 courses to display as featured
-  const featuredCourses = COURSES.slice(0, 3);
+  const landingData = data?.data;
+  const featuredCourses = landingData?.featuredCourses?.slice(0, 3) || [];
+  const categories: Array<{ id: string; name: string; slug: string; iconName: string; courseCount: number }> = [];
 
   const handleCategoryClick = (slug: string) => {
     navigate('/catalog', { state: { initialCategory: slug } });
   };
 
-  const handleAddToCartLocal = (course: Course) => {
-    handleAddToCart(course);
+  const handleAddToCartLocal = (course: { id: string; title: string }) => {
+    addItem(course.id);
     setSuccessToast(course.title);
     setTimeout(() => {
       setSuccessToast(null);
     }, 3000);
   };
 
-  // Helper to map icon name to Lucide Icon
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'BookOpen':
@@ -56,6 +58,28 @@ export default function LandingPage() {
         return <BookOpen className="w-8 h-8 text-orange-700" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Skeleton className="h-12 w-48 mx-auto" />
+          <Skeleton className="h-6 w-32 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-600">حدث خطأ أثناء تحميل البيانات</p>
+          <button onClick={() => window.location.reload()} className="text-orange-700 underline">إعادة المحاولة</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans relative" dir="rtl" id="athary-landing-page">
@@ -74,17 +98,14 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[var(--color-brand-amber-50)]/35 via-[var(--color-background)] to-[var(--color-beige-darker)] pt-16 pb-24 md:py-32" id="hero-section">
-        {/* Subtle geometric overlay */}
         <div className="absolute inset-0 bg-heritage-pattern opacity-10 pointer-events-none" />
         
-        {/* Decorative architectural arch in background */}
         <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/3 w-[500px] h-[500px] bg-orange-700/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/4 right-0 -translate-y-1/2 translate-x-1/3 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Right Side: Welcome Typography, Headline */}
             <div className="lg:col-span-7 space-y-8 text-right">
               <div className="inline-flex items-center gap-2 bg-[var(--color-brand-orange-50)] border border-[var(--color-brand-orange-100)] py-1.5 px-4 rounded-full text-xs font-semibold text-[var(--color-brand-orange-700)] shadow-sm">
                 <Sparkles className="w-4 h-4 text-[var(--color-brand-amber-500)] animate-spin-slow" />
@@ -120,7 +141,6 @@ export default function LandingPage() {
                 </a>
               </div>
 
-              {/* Trusted Indicators */}
               <div className="pt-6 flex items-center gap-6 border-t border-[var(--color-border)] max-w-lg">
                 <div>
                   <p className="text-2xl font-black text-[var(--color-brand-orange-700)]">+٩٨٪</p>
@@ -139,19 +159,15 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Left Side: Illustration Panel with modern frame + background */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-[420px] lg:max-w-none">
                 
-                {/* Visual back decoration */}
                 <div className="absolute -top-6 -right-6 w-full h-full bg-[var(--color-brand-amber-200)]/80 rounded-3xl -rotate-3 z-0" />
                 <div className="absolute -bottom-4 -left-4 w-full h-full bg-teal-50 dark:bg-teal-950/20 rounded-3xl rotate-2 z-0 opacity-80" />
                 
-                {/* Main Hero Card */}
                 <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-4 shadow-xl z-10 overflow-hidden group">
                   <div className="relative h-96 sm:h-[450px] bg-[var(--color-muted)] rounded-2xl overflow-hidden shadow-inner flex flex-col justify-end">
                     
-                    {/* Unsplash beautiful decorative architecture picture (Arabic dome representation) */}
                     <img 
                       src="https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800" 
                       alt="عمارة إسلامية وتصميم تراثي عريق" 
@@ -161,7 +177,6 @@ export default function LandingPage() {
                     
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-900/90 via-stone-900/40 to-transparent" />
                     
-                    {/* Floating quote label */}
                     <div className="absolute top-4 right-4 bg-[var(--color-brand-orange-700)]/90 backdrop-blur-md text-amber-50 p-4 rounded-2xl max-w-[280px] border border-[var(--color-brand-orange-600)] shadow-lg" dir="rtl">
                       <p className="text-xs font-serif leading-relaxed italic">
                         "العِلْمُ صَيْدٌ وَالْكِتَابَةُ قَيْدُهُ، قَيِّدْ صُيُودَكَ بِالْحِبَالِ الْوَاثِقَةِ"
@@ -169,7 +184,6 @@ export default function LandingPage() {
                       <span className="block text-[10px] text-[var(--color-brand-amber-200)] mt-2 text-left">— الإمام الشافعي</span>
                     </div>
 
-                    {/* Student Counter Floating Block */}
                     <div className="absolute bottom-24 left-4 bg-[var(--color-card)]/95 backdrop-blur shadow-md py-2.5 px-4 rounded-xl flex items-center gap-3 border border-[var(--color-border)]">
                       <div className="flex -space-x-2 space-x-reverse">
                         <img className="w-8 h-8 rounded-full border-2 border-[var(--color-card)]" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50" alt="طالب" referrerPolicy="no-referrer" />
@@ -182,7 +196,6 @@ export default function LandingPage() {
                       </p>
                     </div>
 
-                    {/* Glassy badge on the course banner */}
                     <div className="relative p-6 text-right text-amber-50">
                       <span className="inline-block bg-teal-700 text-teal-50 text-[10px] font-bold px-3 py-1 rounded-full mb-2">الدورة الأكثر رواجاً</span>
                       <h4 className="font-extrabold text-lg leading-snug">فلسفة وتاريخ النقوش وعلم الخط العربي العريق</h4>
@@ -207,7 +220,6 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-[var(--color-border)]">
             
-            {/* Stat Item 1 */}
             <div className="text-center p-4">
               <div className="inline-flex p-3 bg-[var(--color-brand-orange-50)] rounded-2xl text-[var(--color-brand-orange-700)] mb-3">
                 <Users className="w-6 h-6 stroke-[2]" />
@@ -216,7 +228,6 @@ export default function LandingPage() {
               <p className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-1">طالب مسجل من شتى البلدان</p>
             </div>
 
-            {/* Stat Item 2 */}
             <div className="text-center p-4">
               <div className="inline-flex p-3 bg-[var(--color-brand-amber-100)] dark:bg-[var(--color-brand-orange-50)]/30 rounded-2xl text-amber-700 dark:text-amber-500 mb-3">
                 <BookOpenCheck className="w-6 h-6 stroke-[2]" />
@@ -225,7 +236,6 @@ export default function LandingPage() {
               <p className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-1">ساعة دورة مسجلة وحيّة معتمدة</p>
             </div>
 
-            {/* Stat Item 3 */}
             <div className="text-center p-4">
               <div className="inline-flex p-3 bg-teal-100 dark:bg-teal-950/30 rounded-2xl text-teal-700 dark:text-teal-400 mb-3">
                 <Award className="w-6 h-6 stroke-[2]" />
@@ -234,7 +244,6 @@ export default function LandingPage() {
               <p className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-1">مدرب خبير وأكاديمي مُحقّق</p>
             </div>
 
-            {/* Stat Item 4 */}
             <div className="text-center p-4">
               <div className="inline-flex p-3 bg-stone-100 dark:bg-stone-800 rounded-2xl text-stone-700 dark:text-stone-300 mb-3">
                 <Clock className="w-6 h-6 stroke-[2]" />
@@ -260,14 +269,13 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.slug)}
                 className="group relative bg-[var(--color-card)] hover:bg-[var(--color-secondary)]/10 text-right p-8 rounded-2xl border border-[var(--color-border)] shadow-sm hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-orange-700)] block w-full transform hover:-translate-y-1"
                 id={`cat-card-${category.id}`}
               >
-                {/* Decorative gold background on hover */}
                 <span className="absolute top-0 right-0 h-1.5 w-0 bg-[var(--color-brand-orange-700)] group-hover:w-full transition-all duration-300 rounded-t-2xl" />
                 
                 <div className="inline-flex p-4 bg-[var(--color-brand-orange-50)] group-hover:bg-[var(--color-brand-amber-100)] transition-all rounded-2xl mb-6">
@@ -315,10 +323,9 @@ export default function LandingPage() {
             </button>
           </div>
 
-          {/* Courses grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredCourses.map((course) => {
-              const inCart = cartItems.some(i => i.id === course.id);
+              const inCart = cart?.items?.some(i => i.courseId === course.id);
               return (
                 <div 
                   key={course.id}
@@ -326,57 +333,36 @@ export default function LandingPage() {
                   id={`course-card-${course.id}`}
                 >
                   
-                  {/* Thumbnail */}
                   <div 
                     onClick={() => navigate('/course/' + course.id)}
                     className="relative h-56 overflow-hidden cursor-pointer"
                   >
                     <img 
-                      src={course.thumbnail} 
+                      src={course.courseImageUrl} 
                       alt={course.title}
                       className="w-full h-full object-cover transform duration-500 ease-out group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 to-transparent" />
                     
-                    {/* Category Badge */}
-                    <span className="absolute top-4 right-4 bg-orange-700 text-amber-50 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md">
-                      {course.category}
-                    </span>
-                    
-                    {/* Duration badge */}
-                    <span className="absolute bottom-4 right-4 text-xs font-medium text-amber-100 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-                      {course.duration}
-                    </span>
+                    {course.isFree && (
+                      <span className="absolute top-4 right-4 bg-teal-700 text-amber-50 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md">
+                        مجاناً
+                      </span>
+                    )}
                   </div>
 
-                  {/* Body Info */}
                   <div className="p-6 flex-1 flex flex-col justify-between text-right">
                     
                     <div>
-                      {/* Instructor and rating row */}
                       <div className="flex items-center justify-between mb-3 text-xs text-stone-500 dark:text-stone-400">
-                        <button
-                          type="button"
-                          onClick={() => navigate('/instructor/' + encodeURIComponent(course.instructorName))}
-                          className="flex items-center gap-2 hover:text-orange-800 font-semibold text-[var(--color-foreground)] bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
-                          title={`عرض الملف الشخصي لـ ${course.instructorName}`}
-                        >
-                          <img 
-                            src={course.instructorAvatar} 
-                            alt={course.instructorName}
-                            className="w-6 h-6 rounded-full border border-[var(--color-border)]"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span>{course.instructorName}</span>
-                        </button>
+                        <span>{course.instructorName}</span>
                         <div className="flex items-center gap-1 text-amber-600 font-bold">
-                          <span>{course.rating.toFixed(1)}</span>
+                          <span>{course.averageRating?.toFixed(1) || '٠'}</span>
                           <Star className="w-3.5 h-3.5 fill-current" />
                         </div>
                       </div>
 
-                      {/* Title */}
                       <h3 
                         onClick={() => navigate('/course/' + course.id)}
                         className="font-bold text-[var(--color-foreground)] text-base sm:text-base leading-snug line-clamp-2 hover:text-[var(--color-brand-orange-700)] transition-all cursor-pointer"
@@ -384,26 +370,19 @@ export default function LandingPage() {
                         {course.title}
                       </h3>
 
-                      {/* Stat summary */}
                       <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-2 flex items-center gap-2">
-                        <span>{course.lessonsCount} درساً فصلياً</span>
-                        <span>•</span>
-                        <span>{course.studentsCount.toLocaleString()} طالباً متعلم</span>
+                        <span>{course.enrollmentCount?.toLocaleString() || '٠'} طالباً متعلم</span>
                       </p>
                     </div>
 
-                    {/* Pricing and Cart add row */}
                     <div className="pt-5 mt-6 border-t border-[var(--color-border)] flex items-center justify-between">
                       <div className="text-right">
                         <span className="text-[10px] block text-stone-500 dark:text-stone-400">الاستثمار المقابل</span>
-                        {course.price === 0 ? (
+                        {course.isFree ? (
                           <span className="text-xl font-black text-teal-700 dark:text-teal-400">مجاناً بالكامل</span>
                         ) : (
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-xl font-black text-[var(--color-brand-orange-700)]">{course.price} ر.س</span>
-                            {course.originalPrice && (
-                              <span className="text-xs text-stone-400 line-through">{course.originalPrice} ر.س</span>
-                            )}
                           </div>
                         )}
                       </div>
@@ -447,10 +426,8 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
             
-            {/* Visual connector lines for desktop */}
             <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-orange-300 via-amber-300 to-teal-300 z-0 opacity-40" />
 
-            {/* Step 1 */}
             <div className="relative bg-[var(--color-card)] p-8 rounded-2xl border border-[var(--color-border)] text-center z-10 shadow-sm hover:shadow-md transition-all">
               <span className="absolute -top-5 right-1/2 translate-x-1/2 w-10 h-10 bg-[var(--color-brand-orange-700)] rounded-full text-amber-50 font-bold flex items-center justify-center border-4 border-[var(--color-card)] shadow-md">١</span>
               <div className="w-16 h-16 mx-auto bg-[var(--color-brand-orange-50)] text-[var(--color-brand-orange-700)] rounded-2xl flex items-center justify-center mb-6">
@@ -462,7 +439,6 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Step 2 */}
             <div className="relative bg-[var(--color-card)] p-8 rounded-2xl border border-[var(--color-border)] text-center z-10 shadow-sm hover:shadow-md transition-all">
               <span className="absolute -top-5 right-1/2 translate-x-1/2 w-10 h-10 bg-[var(--color-brand-amber-500)] rounded-full text-amber-50 font-bold flex items-center justify-center border-4 border-[var(--color-card)] shadow-md">٢</span>
               <div className="w-16 h-16 mx-auto bg-[var(--color-brand-amber-100)] dark:bg-[var(--color-brand-orange-50)]/30 text-amber-700 dark:text-amber-500 rounded-2xl flex items-center justify-center mb-6">
@@ -474,7 +450,6 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Step 3 */}
             <div className="relative bg-[var(--color-card)] p-8 rounded-2xl border border-[var(--color-border)] text-center z-10 shadow-sm hover:shadow-md transition-all">
               <span className="absolute -top-5 right-1/2 translate-x-1/2 w-10 h-10 bg-teal-700 rounded-full text-amber-50 font-bold flex items-center justify-center border-4 border-[var(--color-card)] shadow-md">٣</span>
               <div className="w-16 h-16 mx-auto bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400 rounded-2xl flex items-center justify-center mb-6">
@@ -499,7 +474,6 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Review Card 1 */}
             <div className="bg-[var(--color-card)] p-8 rounded-3xl border border-[var(--color-border)] flex flex-col justify-between" dir="rtl">
               <p className="text-stone-700 dark:text-stone-300 text-sm leading-relaxed italic">
                 "كان حلمي دائماً فهم وتدبر تاريخ عمارة المساجد التراثية بأسلوب علمي رصين لا مجرد مشاهدة صور. دورات منصة آثاري رائعة وسلسة ومليئة بالدروس المفصلة والمعلومات الدقيقة."
@@ -513,7 +487,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Review Card 2 */}
             <div className="bg-[var(--color-card)] p-8 rounded-3xl border border-[var(--color-border)] flex flex-col justify-between" dir="rtl">
               <p className="text-stone-700 dark:text-stone-300 text-sm leading-relaxed italic">
                 "بصفتي مهندساً ومحباً للتراث، أبهرتني الجودة العالية للمادة العلمية. دورة الخط الديواني مع الأستاذ معاذ من أكثر البرامج نضجاً وتنظيماً على الإنترنت العربي بالكامل."
