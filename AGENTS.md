@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `specs/002-auth-courses-cart-integration/plan.md`.
+at `specs/003-dashboards-secondary-features/plan.md`.
 <!-- SPECKIT END -->

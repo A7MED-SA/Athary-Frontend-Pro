@@ -25,5 +25,11 @@ export function useDashboard() {
     isStudentLoading: studentOverviewQuery.isLoading,
     isInstructorLoading: instructorOverviewQuery.isLoading,
     isAdminLoading: adminOverviewQuery.isLoading,
+    isStudentError: studentOverviewQuery.isError,
+    isInstructorError: instructorOverviewQuery.isError,
+    isAdminError: adminOverviewQuery.isError,
+    refetchStudent: studentOverviewQuery.refetch,
+    refetchInstructor: instructorOverviewQuery.refetch,
+    refetchAdmin: adminOverviewQuery.refetch,
   };
 }

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, 
-  BarChart2, 
-  BookOpen, 
-  Award, 
-  DollarSign, 
-  CheckCircle, 
-  XCircle, 
-  FileText, 
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  ShieldCheck,
+  BarChart2,
+  BookOpen,
+  Award,
+  DollarSign,
+  CheckCircle,
+  XCircle,
+  FileText,
   Users, 
   Settings, 
   Search, 
@@ -41,6 +42,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../../providers/AppProvider';
+import { useDashboard } from '../common/hooks/useDashboard';
+import { DashboardSkeleton } from '../../components/shared/Skeleton';
+import { useAdminCoupons, useAdminPaymentMethods, useAdminRefunds, useAdminInstructorRequests, useAdminUsers } from '../admin/hooks/useAdmin';
 
 // Import Phase 7 Components
 import ReviewsModeration from './ReviewsModeration';
@@ -125,12 +129,22 @@ interface SignalRNotification {
 
 export default function AdminDashboard() {
   const { userName, handleLogout, displayToast } = useAppContext();
-  // Tabs for the Admin Workbench
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'teachers' | 'orders-refunds' | 'categories' | 'settings' | 'reviews' | 'announcements' | 'media' | 'system-logs'>('overview');
+  const { adminOverview, isAdminLoading } = useDashboard();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  type AdminTab = 'overview' | 'courses' | 'teachers' | 'orders-refunds' | 'categories' | 'coupons' | 'payment-methods' | 'users' | 'settings' | 'reviews' | 'announcements' | 'media' | 'system-logs';
+  const activeTab = (searchParams.get('tab') as AdminTab) || 'overview';
+  const setActiveTab = (tab: AdminTab) => setSearchParams({ tab });
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Sub-tab inside Orders & Refunds page
   const [financialSubTab, setFinancialSubTab] = useState<'orders' | 'refunds'>('orders');
+
+  const { coupons, isLoading: isCouponsLoading, create: createCoupon, toggle: toggleCoupon, deleteCoupon } = useAdminCoupons();
+  const { methods: paymentMethods, isLoading: isPaymentMethodsLoading, toggle: togglePaymentMethod } = useAdminPaymentMethods();
+  const { refunds: adminRefunds, isLoading: isRefundsLoading, approve: approveRefund, reject: rejectRefund } = useAdminRefunds();
+  const { requests: instructorRequests, isLoading: isInstructorRequestsLoading, approve: approveInstructorRequest, reject: rejectInstructorRequest } = useAdminInstructorRequests();
+  const { users: adminUsers, isLoading: isUsersLoading, toggleBlock: toggleUserBlock } = useAdminUsers();
 
   // --- MODEL STATES (Seeded with beautiful historic Arabian context) ---
   const [courses, setCourses] = useState<CourseReview[]>([
@@ -873,6 +887,42 @@ export default function AdminDashboard() {
                   </button>
 
                   <button
+                    onClick={() => setActiveTab('coupons')}
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${
+                      activeTab === 'coupons' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Percent className="w-4 h-4 text-orange-500" />
+                      <span>الكوبونات والخصومات</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('payment-methods')}
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${
+                      activeTab === 'payment-methods' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <CreditCard className="w-4 h-4 text-orange-500" />
+                      <span>طرق الدفع</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('users')}
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${
+                      activeTab === 'users' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Users className="w-4 h-4 text-orange-500" />
+                      <span>إدارة المستخدمين</span>
+                    </div>
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('reviews')}
                     className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${
                       activeTab === 'reviews' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'
@@ -1023,85 +1073,77 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Stats Card Grid Row - Inspired by Shadcn UI */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
-                
-                {/* 1. Revenue Stat */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <span className="text-[11px] text-stone-500 font-bold block">صافي الإيرادات المكتسبة</span>
-                      <span className="text-lg font-mono font-black text-stone-900 leading-none">{(statsDoneIncome).toLocaleString('ar-SA')} ر.س</span>
+              {/* Stats Card Grid Row - Using Real API Data */}
+              {isAdminLoading ? (
+                <DashboardSkeleton />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[11px] text-stone-500 font-bold block">صافي الإيرادات المكتسبة</span>
+                        <span className="text-lg font-mono font-black text-stone-900 leading-none">{adminOverview?.totalRevenue?.toLocaleString('ar-SA') ?? '0'} ر.س</span>
+                      </div>
+                      <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+                        <DollarSign className="w-4.5 h-4.5" />
+                      </div>
                     </div>
-                    <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
-                      <DollarSign className="w-4.5 h-4.5" />
+                    <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50/50 py-1 px-2.5 rounded-lg w-fit">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>الإيراد الشهري: {adminOverview?.monthlyRevenue?.toLocaleString('ar-SA') ?? '0'} ر.س</span>
                     </div>
+                    <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
                   </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50/50 py-1 px-2.5 rounded-lg w-fit">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span>ارتفاع مقداره ١٦٪ هذا الشهر</span>
-                  </div>
-                  <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
-                </div>
 
-                {/* 2. Total active verified courses */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <span className="text-[11px] text-stone-500 font-bold block">المقررات المعتمدة بالدليل</span>
-                      <span className="text-lg font-mono font-black text-stone-900 leading-none">
-                        {courses.filter(c => c.status === 'Approved').length} حقائب منشورة
-                      </span>
+                  <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[11px] text-stone-500 font-bold block">إجمالي المقررات</span>
+                        <span className="text-lg font-mono font-black text-stone-900 leading-none">{adminOverview?.totalCourses ?? 0} مقرر</span>
+                      </div>
+                      <div className="p-2.5 bg-amber-50 text-amber-900 rounded-xl border border-amber-100">
+                        <BookOpen className="w-4.5 h-4.5 text-amber-700" />
+                      </div>
                     </div>
-                    <div className="p-2.5 bg-amber-50 text-amber-900 rounded-xl border border-amber-100">
-                      <BookOpen className="w-4.5 h-4.5 text-amber-700" />
+                    <div className="text-[10px] text-amber-700 flex items-center gap-1">
+                      <span>{adminOverview?.pendingApprovals ?? 0} مقررات قيد المراجعة</span>
                     </div>
+                    <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
                   </div>
-                  <div className="text-[10px] text-amber-700 flex items-center gap-1">
-                    <span>• {courses.filter(c => c.status === 'Pending').length} مقررات قيد المراجعة</span>
-                  </div>
-                  <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
-                </div>
 
-                {/* 3. Approved Instructors */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <span className="text-[11px] text-stone-500 font-bold block">الأعضاء والمدربون المرخصون</span>
-                      <span className="text-lg font-mono font-black text-stone-900 leading-none">
-                        {teachers.filter(t => t.status === 'Approved').length + 4} علماء وباحثين
-                      </span>
+                  <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[11px] text-stone-500 font-bold block">المدربون المرخصون</span>
+                        <span className="text-lg font-mono font-black text-stone-900 leading-none">{adminOverview?.totalInstructors ?? 0} مدرّب</span>
+                      </div>
+                      <div className="p-2.5 bg-orange-50 text-orange-950 rounded-xl border border-orange-100">
+                        <Award className="w-4.5 h-4.5 text-orange-700" />
+                      </div>
                     </div>
-                    <div className="p-2.5 bg-orange-50 text-orange-950 rounded-xl border border-orange-100">
-                      <Award className="w-4.5 h-4.5 text-orange-700" />
+                    <div className="text-[10px] text-orange-800 bg-orange-50 border border-orange-100 py-0.5 px-2 rounded-md w-fit font-mono font-bold">
+                      {adminOverview?.totalStudents ?? 0} طالب مسجّل
                     </div>
+                    <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-orange-400 to-red-500" />
                   </div>
-                  <div className="text-[10px] text-orange-800 bg-orange-50 border border-orange-100 py-0.5 px-2 rounded-md w-fit font-mono font-bold">
-                    ترخيص معتمد بلائحة الوزارة
-                  </div>
-                  <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-orange-400 to-red-500" />
-                </div>
 
-                {/* 4. Active enrollments */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <span className="text-[11px] text-stone-500 font-bold block">مرتجعات الرسوم المعلقة</span>
-                      <span className="text-lg font-mono font-black text-red-800 leading-none">
-                        {refunds.filter(r => r.status === 'Pending').length} طلبات تسوية
-                      </span>
+                  <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-xs flex flex-col justify-between space-y-3 relative overflow-hidden group">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[11px] text-stone-500 font-bold block">المستخدمون الجدد هذا الشهر</span>
+                        <span className="text-lg font-mono font-black text-blue-800 leading-none">{adminOverview?.newUsersThisMonth ?? 0} مستخدم جديد</span>
+                      </div>
+                      <div className="p-2.5 bg-blue-50 text-blue-800 rounded-xl border border-blue-100">
+                        <Users className="w-4.5 h-4.5" />
+                      </div>
                     </div>
-                    <div className="p-2.5 bg-red-50 text-red-800 rounded-xl border border-red-100">
-                      <CreditCard className="w-4.5 h-4.5" />
+                    <div className="text-[10px] text-blue-700 flex items-center gap-1 font-bold">
+                      <span>إجمالي المستخدمين: {adminOverview?.totalUsers ?? '0'}</span>
                     </div>
+                    <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
                   </div>
-                  <div className="text-[10px] text-red-700 flex items-center gap-1 font-bold">
-                    <span>تبلغ قيمتها: {refunds.filter(r => r.status === 'Pending').reduce((a, b) => a + b.amount, 0)} ر.س</span>
-                  </div>
-                  <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-red-400 to-rose-600" />
                 </div>
-
-              </div>
+              )}
             </div>
 
             {/* 📈 ADVANCED ANALYTICS DASHBOARD WITH RECHARTS (Phase 8 Requirement) */}
@@ -2183,6 +2225,160 @@ export default function AdminDashboard() {
         {activeTab === 'system-logs' && (
           <div className="space-y-6 animate-fade-in" id="system-activity-settings-workbench">
             <SystemActivitySettings onTriggerToast={displayToast} />
+          </div>
+        )}
+
+        {/* =========================================================================
+            11. TAB COUPONS - Coupon Management
+            ========================================================================= */}
+        {activeTab === 'coupons' && (
+          <div className="space-y-6 animate-fade-in" id="coupons-workbench-tab">
+            <div className="text-right border-b border-amber-100 pb-4">
+              <span className="text-[10px] text-amber-600 font-black block">إدارة كوبونات الخصم والعروض</span>
+              <h2 className="text-sm md:text-base font-black text-stone-900 font-serif mt-1">الكوبونات والخصومات</h2>
+              <p className="text-[11px] text-stone-500 font-light mt-1">إنشاء وإدارة كوبونات الخصم والتحكم في صلاحياتها.</p>
+            </div>
+
+            {isCouponsLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <div className="bg-white rounded-3xl border border-amber-200/80 p-6 shadow-sm space-y-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs">
+                    <thead>
+                      <tr className="border-b border-amber-100 text-stone-500 font-bold">
+                        <th className="pb-3 pr-2">الكود</th>
+                        <th className="pb-3">النوع</th>
+                        <th className="pb-3">القيمة</th>
+                        <th className="pb-3">الاستخدامات</th>
+                        <th className="pb-3">الحالة</th>
+                        <th className="pb-3 pl-2">الإجراء</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-amber-50">
+                      {(coupons ?? []).length === 0 ? (
+                        <tr><td colSpan={6} className="py-8 text-center text-stone-400">لا توجد كوبونات بعد</td></tr>
+                      ) : (
+                        (coupons ?? []).map((coupon) => (
+                          <tr key={coupon.id} className="hover:bg-amber-50/20 transition-colors">
+                            <td className="py-3 pr-2 font-mono font-bold text-stone-900">{coupon.code}</td>
+                            <td className="py-3">{coupon.discountType}</td>
+                            <td className="py-3 font-mono">{coupon.discountValue}{coupon.discountType === 'Percentage' ? '%' : ' ر.س'}</td>
+                            <td className="py-3 font-mono">{coupon.currentUses}{coupon.maxUses ? `/${coupon.maxUses}` : ''}</td>
+                            <td className="py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${coupon.isActive ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-stone-100 text-stone-600 border border-stone-200'}`}>
+                                {coupon.isActive ? 'نشط' : 'معطّل'}
+                              </span>
+                            </td>
+                            <td className="py-3 pl-2">
+                              <button onClick={() => { toggleCoupon(coupon.id); displayToast('تم تبديل حالة الكوبون'); }} className="text-[10px] text-orange-700 hover:underline font-bold bg-transparent border-0 cursor-pointer">تبديل</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =========================================================================
+            12. TAB PAYMENT METHODS
+            ========================================================================= */}
+        {activeTab === 'payment-methods' && (
+          <div className="space-y-6 animate-fade-in" id="payment-methods-workbench-tab">
+            <div className="text-right border-b border-amber-100 pb-4">
+              <span className="text-[10px] text-amber-600 font-black block">إدارة طرق الدفع المتاحة</span>
+              <h2 className="text-sm md:text-base font-black text-stone-900 font-serif mt-1">طرق الدفع</h2>
+              <p className="text-[11px] text-stone-500 font-light mt-1">تفعيل وتعطيل طرق الدفع المدعومة.</p>
+            </div>
+
+            {isPaymentMethodsLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <div className="bg-white rounded-3xl border border-amber-200/80 p-6 shadow-sm space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(paymentMethods ?? []).length === 0 ? (
+                    <div className="col-span-3 text-center py-8 text-stone-400 text-xs">لا توجد طرق دفع</div>
+                  ) : (
+                    (paymentMethods ?? []).map((method) => (
+                      <div key={method.id} className="bg-stone-50 border border-stone-200 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-extrabold text-xs text-stone-900">{method.name}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${method.isEnabled ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-stone-100 text-stone-600 border border-stone-200'}`}>
+                            {method.isEnabled ? 'مفعّل' : 'معطّل'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-stone-500">{method.type}</p>
+                        <button onClick={() => { togglePaymentMethod(method.id); displayToast('تم تبديل حالة طريقة الدفع'); }} className="w-full text-center bg-orange-700 hover:bg-orange-800 text-amber-50 text-[10px] font-bold py-2 rounded-xl border-0 cursor-pointer transition">
+                          {method.isEnabled ? 'تعطيل' : 'تفعيل'}
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =========================================================================
+            13. TAB USERS - User Management
+            ========================================================================= */}
+        {activeTab === 'users' && (
+          <div className="space-y-6 animate-fade-in" id="users-workbench-tab">
+            <div className="text-right border-b border-amber-100 pb-4">
+              <span className="text-[10px] text-amber-600 font-black block">إدارة حسابات المستخدمين</span>
+              <h2 className="text-sm md:text-base font-black text-stone-900 font-serif mt-1">المستخدمون</h2>
+              <p className="text-[11px] text-stone-500 font-light mt-1">عرض وإدارة حسابات المستخدمين وحظر/فك حظر الحسابات.</p>
+            </div>
+
+            {isUsersLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <div className="bg-white rounded-3xl border border-amber-200/80 p-6 shadow-sm space-y-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs">
+                    <thead>
+                      <tr className="border-b border-amber-100 text-stone-500 font-bold">
+                        <th className="pb-3 pr-2">الاسم</th>
+                        <th className="pb-3">البريد الإلكتروني</th>
+                        <th className="pb-3">الدور</th>
+                        <th className="pb-3">الحالة</th>
+                        <th className="pb-3 pl-2">الإجراء</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-amber-50">
+                      {(adminUsers ?? []).length === 0 ? (
+                        <tr><td colSpan={5} className="py-8 text-center text-stone-400">لا يوجد مستخدمون</td></tr>
+                      ) : (
+                        (adminUsers ?? []).map((user) => (
+                          <tr key={user.id} className="hover:bg-amber-50/20 transition-colors">
+                            <td className="py-3 pr-2 font-bold text-stone-900">{user.firstName} {user.lastName}</td>
+                            <td className="py-3 text-stone-600">{user.email}</td>
+                            <td className="py-3">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">{user.role}</span>
+                            </td>
+                            <td className="py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${user.isBlocked ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                                {user.isBlocked ? 'محظور' : 'نشط'}
+                              </span>
+                            </td>
+                            <td className="py-3 pl-2">
+                              <button onClick={() => { toggleUserBlock(user.id); displayToast('تم تبديل حالة المستخدم'); }} className="text-[10px] text-orange-700 hover:underline font-bold bg-transparent border-0 cursor-pointer">
+                                {user.isBlocked ? 'فك الحظر' : 'حظر'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
