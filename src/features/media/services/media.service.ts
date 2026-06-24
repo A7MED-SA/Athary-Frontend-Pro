@@ -34,18 +34,18 @@ export const mediaService = {
       })
       .then((r) => r.data),
 
-  uploadFile: async (file: File): Promise<MediaFileDto> => {
+  uploadFile: async (file: File, fileType: number = 0): Promise<MediaFileDto> => {
     const contentType = file.type || 'application/octet-stream';
 
-    // Step 1: Get pre-signed URL from backend
     console.log('[MediaUpload] Step 1: Requesting pre-signed URL...', {
       fileName: file.name,
       contentType,
       fileSizeBytes: file.size,
+      fileType,
     });
 
     const uploadData = await mediaService.getUploadUrl({
-      fileType: 0,
+      fileType,
       fileName: file.name,
       contentType,
       fileSizeBytes: file.size,

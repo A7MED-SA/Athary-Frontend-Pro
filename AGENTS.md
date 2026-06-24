@@ -211,3 +211,44 @@ import ProtectedRoute from './components/ProtectedRoute';
 - **Always wrap protected routes** with `<ProtectedRoute>` in `router.tsx`
 - **Backend is the source of truth** for roles — frontend just enforces UI access
 - **Profile fields sent to backend** must match `UpdateProfileRequest` type exactly
+ttps://react.dev/link/react-devtools
+:5000/api/notifications:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/unread-count:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/preferences:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/unread-count:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/preferences:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/unread-count:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/notifications/preferences:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)
+:5000/api/auth/login:1  Failed to load resource: the server responded with a status of 403 (Forbidden)
+api.ts:97 API Error [403]: Invalid email or password
+(anonymous) @ api.ts:97
+@microsoft_signalr.js?v=168a81c3:299 [2026-06-24T19:47:40.257Z] Information: Normalizing 'wss://atharyapi.runasp.net/hubs/notifications?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo' to 'wss://atharyapi.runasp.net/hubs/notifications?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo'.
+@microsoft_signalr.js?v=168a81c3:299 [2026-06-24T19:47:40.349Z] Information: Normalizing 'wss://atharyapi.runasp.net/hubs/messaging?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo' to 'wss://atharyapi.runasp.net/hubs/messaging?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo'.
+requests.js:1 Fetch API cannot load wss://atharyapi.runasp.net/hubs/notifications/negotiate?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo&negotiateVersion=1. URL scheme "wss" is not supported.
+s.fetch @ requests.js:1
+requests.js:1 Fetch API cannot load wss://atharyapi.runasp.net/hubs/messaging/negotiate?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOGRlZDE3Ny1lZGQ3LWExZTUtYTAyYi1iODRhYzhlOTAwMDAiLCJlbWFpbCI6ImFhYWFhYUBnZ2dnLmNvbSIsImp0aSI6ImFhYTIyNzhmLTZjYzctNGNhNC05ZDViLTdlZTMyZmEzYzQwMyIsInNpZCI6IjA4ZGVkMjI5LTcyOTYtNmZmMi1hMDJiLWI4NGE0OWMwMDAwMCIsIkZ1bGxOYW1lIjoiQWhtZWQgc2F5ZWQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdHVkZW50IiwiZXhwIjoxNzgyMzM0MDU5LCJpc3MiOiJBdGhhcnkiLCJhdWQiOiJBdGhhcnlDbGllbnQifQ.5317nCblRS3RL9HAD-9o9E2DE3IewL8t8sH3GAMlrWo&negotiateVersion=1. URL scheme "wss" is not supported.
+s.fetch @ requests.js:1
+@microsoft_signalr.js?v=168a81c3:296 [2026-06-24T19:47:40.657Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ @microsoft_signalr.js?v=168a81c3:296
+@microsoft_signalr.js?v=168a81c3:296 [2026-06-24T19:47:40.658Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ @microsoft_signalr.js?v=168a81c3:296
+@microsoft_signalr.js?v=168a81c3:293 [2026-06-24T19:47:40.660Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ @microsoft_signalr.js?v=168a81c3:293
+@microsoft_signalr.js?v=168a81c3:293 [2026-06-24T19:47:40.671Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ @microsoft_signalr.js?v=168a81c3:293
+@microsoft_signalr.js?v=168a81c3:293 [2026-06-24T19:47:40.672Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ @microsoft_signalr.js?v=168a81c3:293
+@microsoft_signalr.js?v=168a81c3:293 [2026-06-24T19:47:40.674Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ @microsoft_signalr.js?v=168a81c3:293
+useSignalR.ts:58 SignalR connection error: FailedToNegotiateWithServerError: Failed to complete negotiation with the server: TypeError: Failed to fetch
+    at HttpConnection._getNegotiationResponse (@microsoft_signalr.js?v=168a81c3:2344:29)
+    at async HttpConnection._startInternal (@microsoft_signalr.js?v=168a81c3:2271:31)
+    at async HttpConnection.start (@microsoft_signalr.js?v=168a81c3:2199:5)
+    at async _HubConnection._startInternal (@microsoft_signalr.js?v=168a81c3:988:5)
+    at async _HubConnection._startWithStateTransitions (@microsoft_signalr.js?v=168a81c3:968:7)
+    at async Promise.all (index 0)
+    at async useSignalR.ts:52:7
+(anonymous) @ useSignalR.ts:58
+Node cannot be found in the current page.

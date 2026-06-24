@@ -48,7 +48,9 @@ export default function InstructorApply() {
     else setCertFile(initial);
 
     try {
-      const result = await mediaService.uploadFile(file);
+      const isPdf = file.type === 'application/pdf';
+      const fileType = type === 'cv' ? 2 : isPdf ? 4 : 0;
+      const result = await mediaService.uploadFile(file, fileType);
       const done: UploadedFile = { name: file.name, size: formattedSize, uploadStep: 'done', fileId: result.id };
       if (type === 'cv') setCvFile(done);
       else setCertFile(done);

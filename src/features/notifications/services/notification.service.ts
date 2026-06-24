@@ -9,7 +9,7 @@ import type {
 export const notificationService = {
   getMyNotifications: () =>
     api
-      .get<ApiResponse<NotificationDto[]>>('/notifications/my-notifications')
+      .get<ApiResponse<PagedList<NotificationDto>>>('/notifications')
       .then((r) => r.data),
 
   getNotifications: (params?: Record<string, unknown>) =>
@@ -23,10 +23,10 @@ export const notificationService = {
       .then((r) => r.data),
 
   markAsRead: (id: string) =>
-    api.put<ApiResponse>(`/notifications/${id}/read`).then((r) => r.data),
+    api.patch<ApiResponse>(`/notifications/${id}/read`).then((r) => r.data),
 
   markAllAsRead: () =>
-    api.put<ApiResponse>('/notifications/mark-all-read').then((r) => r.data),
+    api.post<ApiResponse>('/notifications/mark-all-read').then((r) => r.data),
 
   deleteNotification: (id: string) =>
     api.delete<ApiResponse>(`/notifications/${id}`).then((r) => r.data),

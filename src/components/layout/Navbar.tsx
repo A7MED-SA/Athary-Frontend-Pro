@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, ShoppingBag, Menu, X, Landmark, User, Bookmark, LogIn, Award, Bell, Trash2, CheckCheck, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNotificationStore } from '../../stores/notificationStore';
+import { useNotifications } from '@/features/common/hooks/useNotifications';
+import { useSignalR } from '@/features/common/hooks/useSignalR';
+import { tokenStorage } from '@/lib/token-storage';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 import ThemeSettingsPopover from '../../features/theme/ThemeSettingsPopover';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppContext } from '../../providers/AppProvider';
@@ -14,14 +18,50 @@ export default function Navbar() {
   const { cartItems, isLoggedIn, userName, handleLogout, cartOpen, setCartOpen } = useAppContext();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { themeMode, toggleThemeMode } = useTheme();
 
-  const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotificationStore();
-  const unreadCount = useNotificationStore((state) => state.unreadCount());
+  const queryClient = useQueryClient();
+  const {
+    notifications = [],
+    unreadCount = 0,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications(isLoggedIn);
+
+  const token = isLoggedIn ? tokenStorage.getAccessToken() : undefined;
+  useSignalR({
+    token: token || undefined,
+    onNotification: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+    },
+  });
 
   const handleMarkAsRead = (id: string) => { markAsRead(id); };
   const handleMarkAllAsRead = () => { markAllAsRead(); };
   const handleDeleteNotif = (id: string) => { deleteNotification(id); };
+
+  const formatRelativeTime = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'الآن';
+      if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+      if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+      if (diffDays === 1) return 'أمس';
+      if (diffDays < 7) return `منذ ${diffDays} أيام`;
+      return date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr || '';
+    }
+  };
 
   const navLinks = [
     { label: 'الرئيسية', path: '/' },
@@ -40,10 +80,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
 
-          <div className="flex items-center">
+          <div className="flex items-center h-full">
             <button
               onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-              className="flex items-center gap-3 group focus:outline-none"
+              className="flex items-center gap-3 group focus:outline-none h-full"
               id="brand-logo-btn"
             >
               <div className="relative w-12 h-12 bg-orange-700 rounded-xl flex items-center justify-center text-amber-100 shadow-md transform transition-all duration-300 group-hover:scale-105 group-hover:bg-orange-800">
@@ -67,12 +107,12 @@ export default function Navbar() {
               </div>
             </button>
 
-            <div className="hidden md:flex mr-10 space-x-reverse space-x-8">
+            <div className="hidden md:flex mr-10 space-x-reverse space-x-8 h-full">
               {navLinks.map((link) => (
                 <button
                   key={link.path}
                   onClick={() => { navigate(link.path); setMobileMenuOpen(false); }}
-                  className={`relative text-base font-medium px-1 py-2 transition-all duration-200 focus:outline-none ${
+                  className={`relative text-base font-medium px-1 h-full transition-all duration-200 focus:outline-none flex items-center ${
                     isActive(link.path)
                       ? 'text-orange-700 font-bold'
                       : 'text-stone-700 hover:text-orange-700'
@@ -81,7 +121,7 @@ export default function Navbar() {
                 >
                   {link.label}
                   {isActive(link.path) && (
-                    <span className="absolute bottom-0 inset-x-0 h-0.5 bg-orange-700 rounded-full" />
+                    <span className="absolute bottom-0 inset-x-0 h-1 bg-orange-700 rounded-t-full" />
                   )}
                 </button>
               ))}
@@ -148,16 +188,16 @@ export default function Navbar() {
                               key={notif.id}
                               onClick={() => handleMarkAsRead(notif.id)}
                               className={`p-4 transition duration-150 cursor-pointer flex flex-col justify-between gap-1.5 relative ${
-                                notif.read
+                                notif.isRead
                                   ? 'bg-white dark:bg-stone-900 hover:bg-stone-50/50 dark:hover:bg-stone-800/30'
                                   : 'bg-orange-50/30 dark:bg-orange-950/15 hover:bg-orange-50/50 dark:hover:bg-orange-950/35'
                               }`}
                             >
-                              {!notif.read && (
+                              {!notif.isRead && (
                                 <div className="absolute top-0 right-0 bottom-0 w-1 bg-orange-700" />
                               )}
                               <div className="flex justify-between items-start gap-2">
-                                <h4 className={`text-xs font-bold leading-snug ${notif.read ? 'text-stone-800 dark:text-stone-200' : 'text-stone-950 dark:text-stone-50 font-black'}`}>
+                                <h4 className={`text-xs font-bold leading-snug ${notif.isRead ? 'text-stone-800 dark:text-stone-200' : 'text-stone-950 dark:text-stone-50 font-black'}`}>
                                   {notif.title}
                                 </h4>
                                 <button
@@ -168,8 +208,8 @@ export default function Navbar() {
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                              <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed font-light">{notif.content}</p>
-                              <span className="text-[9px] text-stone-400 dark:text-stone-500 block self-start">{notif.date}</span>
+                              <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed font-light">{notif.message}</p>
+                              <span className="text-[9px] text-stone-400 dark:text-stone-500 block self-start">{formatRelativeTime(notif.createdAt)}</span>
                             </div>
                           ))
                         )}
@@ -191,7 +231,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setCartOpen(true)}
-              className="relative p-2.5 text-stone-700 hover:text-orange-700 hover:bg-orange-50 rounded-full transition-all duration-200 focus:outline-none"
+              className="relative p-2.5 text-stone-700 dark:text-stone-300 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-stone-900 rounded-full transition-all duration-200 focus:outline-none cursor-pointer"
               title="حقيبة الدورات"
               id="cart-btn"
             >
@@ -205,36 +245,70 @@ export default function Navbar() {
 
             <div className="hidden sm:flex items-center gap-3">
               {isLoggedIn ? (
-                <div className="flex items-center gap-2" id="verified-user-menu">
+                <div className="relative" id="verified-user-menu">
                   <button
-                    onClick={() => navigate('/dashboard')}
-                    className="flex items-center gap-2 bg-orange-50 shadow-sm border border-orange-100 hover:bg-orange-100/70 px-4 py-2 rounded-xl transition-all duration-200 text-stone-800"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 bg-orange-50 dark:bg-stone-900 shadow-sm border border-orange-100 dark:border-stone-800 hover:bg-orange-100/70 dark:hover:bg-stone-800 px-4 py-2 rounded-xl transition-all duration-200 text-stone-800 dark:text-stone-200 cursor-pointer"
+                    id="user-menu-trigger"
                   >
                     <div className="w-8 h-8 rounded-full bg-orange-700 text-amber-50 flex items-center justify-center font-bold text-sm">
                       {userName.charAt(0)}
                     </div>
                     <div className="text-right text-xs">
-                      <p className="font-semibold text-stone-900">{userName}</p>
-                      <p className="text-[10px] text-amber-700">بوابة الطالب</p>
+                      <p className="font-semibold text-stone-900 dark:text-stone-100">{userName}</p>
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400">بوابة الطالب</p>
                     </div>
                   </button>
 
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="p-2 text-stone-600 hover:text-orange-700 hover:bg-orange-50 border border-stone-200 hover:border-orange-200 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                    title="إعدادات الحساب والملف الشخصي"
-                  >
-                    <User className="w-4 h-4 text-orange-700" />
-                    <span className="text-xs font-bold leading-none px-1">الملف الشخصي</span>
-                  </button>
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-35" onClick={() => setUserMenuOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                          className="absolute left-0 mt-2 w-56 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-stone-800 rounded-2xl shadow-xl z-40 text-right overflow-hidden origin-top-left"
+                          id="user-menu-popover-panel"
+                        >
+                          <div className="px-4 py-3 bg-amber-50/50 dark:bg-stone-950 border-b border-amber-100 dark:border-stone-800">
+                            <p className="font-bold text-xs text-stone-900 dark:text-stone-100">{userName}</p>
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">بوابة الطالب</p>
+                          </div>
 
-                  <button
-                    onClick={handleLogout}
-                    className="text-xs text-stone-500 hover:text-red-700 py-1 px-2 border border-stone-200 hover:border-red-200 rounded-lg transition-all"
-                    id="logout-btn"
-                  >
-                    خروج
-                  </button>
+                          <div className="p-2 space-y-1">
+                            <button
+                              onClick={() => { navigate('/dashboard'); setUserMenuOpen(false); }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-orange-50 dark:hover:bg-stone-800 text-xs font-bold transition-all duration-150 cursor-pointer text-right border-0 bg-transparent"
+                            >
+                              <BookOpen className="w-4.5 h-4.5 text-orange-700 dark:text-orange-400" />
+                              <span>لوحة التحكم (بوابة الطالب)</span>
+                            </button>
+
+                            <button
+                              onClick={() => { navigate('/profile'); setUserMenuOpen(false); }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-orange-50 dark:hover:bg-stone-800 text-xs font-bold transition-all duration-150 cursor-pointer text-right border-0 bg-transparent"
+                            >
+                              <User className="w-4.5 h-4.5 text-orange-700 dark:text-orange-400" />
+                              <span>الملف الشخصي والإعدادات</span>
+                            </button>
+
+                            <div className="h-px bg-stone-100 dark:bg-stone-800 my-1" />
+
+                            <button
+                              onClick={() => { handleLogout(); setUserMenuOpen(false); }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-all duration-150 cursor-pointer text-right border-0 bg-transparent"
+                              id="logout-btn"
+                            >
+                              <LogIn className="w-4.5 h-4.5 rotate-180 text-red-600 dark:text-red-400" />
+                              <span>تسجيل الخروج</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <div className="flex items-center gap-3" id="guest-menu">

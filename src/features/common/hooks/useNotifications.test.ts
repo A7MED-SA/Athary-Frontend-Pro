@@ -38,13 +38,13 @@ describe('useNotifications', () => {
     const { result } = renderHook(() => useNotifications(), { wrapper: createWrapper() });
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.notifications).toBeUndefined();
+    expect(result.current.notifications).toEqual([]);
     expect(result.current.unreadCount).toBe(0);
   });
 
   it('should fetch notifications and unread count', async () => {
     const mockNotifications = [{ id: '1', title: 'Test', isRead: false }];
-    mockedNotificationService.getMyNotifications.mockResolvedValue({ success: true, data: mockNotifications } as any);
+    mockedNotificationService.getMyNotifications.mockResolvedValue({ success: true, data: { items: mockNotifications } } as any);
     mockedNotificationService.getUnreadCount.mockResolvedValue({ success: true, data: 5 } as any);
     mockedNotificationService.getPreferences.mockResolvedValue({ success: true, data: { emailEnabled: true } } as any);
 
