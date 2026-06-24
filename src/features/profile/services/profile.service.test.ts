@@ -55,7 +55,7 @@ describe('profileService', () => {
 
       const result = await profileService.addPhone({ phoneNumber: '+1234567890', type: 'Primary' });
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/profile/phones', { phoneNumber: '+1234567890', type: 'Primary' });
+      expect(mockedApi.post).toHaveBeenCalledWith('/profile/phones', { PhoneNumber: '+1234567890', Type: 'Primary' });
       expect(result.data.phoneNumber).toBe('+1234567890');
     });
   });

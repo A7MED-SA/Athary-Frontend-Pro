@@ -128,7 +128,7 @@ export default function ProfileSettings() {
 
   const [isAddingPhone, setIsAddingPhone] = useState(false);
   const [newPhone, setNewPhone] = useState('');
-  const [newPhoneLabel, setNewPhoneLabel] = useState('');
+  const [newPhoneType, setNewPhoneType] = useState<'Primary' | 'Secondary'>('Primary');
 
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
@@ -328,13 +328,14 @@ export default function ProfileSettings() {
     
     addPhone({
       phoneNumber: newPhone,
-      type: 'Primary'
+      type: newPhoneType,
+      isDefault: false,
     }, {
       onSuccess: () => {
         setNewPhone('');
-        setNewPhoneLabel('');
+        setNewPhoneType('Primary');
         setIsAddingPhone(false);
-        displayToast('✓ تم إضافة رقم الهاتف الجديد وسيتلقى إشعار تأكيد SMS.');
+        displayToast('✓ تم إضافة رقم الهاتف الجديد.');
       },
       onError: () => displayToast('❌ فشل إضافة الرقم')
     });
@@ -871,7 +872,7 @@ export default function ProfileSettings() {
                   <form onSubmit={handleAddPhoneSubmit} className="p-4 bg-stone-50 border border-amber-200/50 rounded-2xl space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-stone-700 block">رقم الهاتف الشريف</label>
+                        <label className="text-[10px] font-bold text-stone-700 block">رقم الهاتف</label>
                         <input 
                           type="text" 
                           required
@@ -887,14 +888,15 @@ export default function ProfileSettings() {
                         )}
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-stone-700 block">وصف الرقم</label>
-                        <input 
-                          type="text" 
-                          value={newPhoneLabel}
-                          onChange={(e) => setNewPhoneLabel(e.target.value)}
-                          placeholder="مثال: رقم الطوارئ أو المنزل"
+                        <label className="text-[10px] font-bold text-stone-700 block">نوع الهاتف</label>
+                        <select 
+                          value={newPhoneType}
+                          onChange={(e) => setNewPhoneType(e.target.value as 'Primary' | 'Secondary')}
                           className="w-full bg-white text-stone-950 text-xs py-2 px-3 rounded-lg border border-stone-200 focus:outline-none"
-                        />
+                        >
+                          <option value="Primary">رئيسي</option>
+                          <option value="Secondary">ثانوي</option>
+                        </select>
                       </div>
                     </div>
                     <div className="flex justify-end pt-1">
@@ -902,7 +904,7 @@ export default function ProfileSettings() {
                         type="submit"
                         className="bg-orange-700 hover:bg-orange-850 text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer border-0"
                       >
-                        حفظ هاتف المراسلة
+                        حفظ رقم الهاتف
                       </button>
                     </div>
                   </form>

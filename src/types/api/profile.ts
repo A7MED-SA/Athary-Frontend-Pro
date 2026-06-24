@@ -59,6 +59,7 @@ export interface UpdateProfileRequest {
 export interface CreatePhoneRequest {
   phoneNumber: string;
   type: PhoneType;
+  isDefault?: boolean;
 }
 
 export interface CreateAddressRequest {
@@ -70,4 +71,5 @@ export interface CreateAddressRequest {
   postalCode: string;
   country: string;
   contactPhone?: string;
+  isDefault?: boolean;
 }

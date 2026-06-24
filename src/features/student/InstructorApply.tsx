@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useInstructorRequest } from '../instructorRequests/hooks/useInstructorRequest';
+import { mediaService } from '@/features/media/services/media.service';
 import { DashboardSkeleton } from '../../components/shared/Skeleton';
+import type { InstructorRequestDocumentDto } from '@/types/api/instructorRequest';
 import {
   GraduationCap,
   Upload,
@@ -9,18 +11,19 @@ import {
   Send,
   Trash2,
   Clock,
-  ArrowLeftRight,
+  AlertCircle,
 } from 'lucide-react';
 
 interface UploadedFile {
   name: string;
   size: string;
-  uploadStep: 'idle' | 'presigned' | 'minio' | 'confirm' | 'done';
-  minioUrl?: string;
+  uploadStep: 'idle' | 'presigned' | 'minio' | 'confirm' | 'done' | 'error';
+  fileId?: string;
+  error?: string;
 }
 
 export default function InstructorApply() {
-  const { status, isLoading, submit, isSubmitPending } = useInstructorRequest();
+  const { latestRequest, isLoading, submit, isSubmitPending } = useInstructorRequest();
 
   const [experienceText, setExperienceText] = useState('');
   const [proposedCategory, setProposedCategory] = useState('');
@@ -29,9 +32,9 @@ export default function InstructorApply() {
   const [cvFile, setCvFile] = useState<UploadedFile | null>(null);
   const [certFile, setCertFile] = useState<UploadedFile | null>(null);
 
-  const hasSubmitted = status?.status === 'Pending' || status?.status === 'Approved' || status?.status === 'Rejected';
+  const hasSubmitted = latestRequest?.status === 'Pending' || latestRequest?.status === 'Approved' || latestRequest?.status === 'Rejected';
 
-  const handleSimulatedFileUpload = (
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     type: 'cv' | 'cert'
   ) => {
@@ -44,23 +47,17 @@ export default function InstructorApply() {
     if (type === 'cv') setCvFile(initial);
     else setCertFile(initial);
 
-    setTimeout(() => {
-      const step2 = { ...initial, uploadStep: 'minio' as const };
-      if (type === 'cv') setCvFile(step2);
-      else setCertFile(step2);
-
-      setTimeout(() => {
-        const step3 = { ...step2, uploadStep: 'confirm' as const };
-        if (type === 'cv') setCvFile(step3);
-        else setCertFile(step3);
-
-        setTimeout(() => {
-          const done = { ...step3, uploadStep: 'done' as const, minioUrl: `https://minio.athary.edu.sa/documents/${type}/${Date.now()}_${file.name}` };
-          if (type === 'cv') setCvFile(done);
-          else setCertFile(done);
-        }, 1200);
-      }, 1000);
-    }, 800);
+    try {
+      const result = await mediaService.uploadFile(file);
+      const done: UploadedFile = { name: file.name, size: formattedSize, uploadStep: 'done', fileId: result.id };
+      if (type === 'cv') setCvFile(done);
+      else setCertFile(done);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'فشل رفع الملف';
+      const errorState: UploadedFile = { name: file.name, size: formattedSize, uploadStep: 'error', error: msg };
+      if (type === 'cv') setCvFile(errorState);
+      else setCertFile(errorState);
+    }
   };
 
   const handleRemoveFile = (type: 'cv' | 'cert') => {
@@ -74,10 +71,17 @@ export default function InstructorApply() {
     if (!cvFile || cvFile.uploadStep !== 'done') return;
     if (!agreedToTerms) return;
 
+    const documents: InstructorRequestDocumentDto[] = [
+      { documentType: 'CV', fileId: cvFile.fileId },
+    ];
+
+    if (certFile && certFile.uploadStep === 'done' && certFile.fileId) {
+      documents.push({ documentType: 'Certificate', fileId: certFile.fileId });
+    }
+
     submit({
-      qualifications: proposedCategory,
-      experience: experienceText,
-      motivation: `طلب انضمام كمدرّس في مجال: ${proposedCategory}`,
+      message: `مجال التدريس: ${proposedCategory}\n\nالخبرات: ${experienceText}`,
+      documents,
     });
   };
 
@@ -106,15 +110,15 @@ export default function InstructorApply() {
 
           <div className="space-y-2">
             <h3 className="font-extrabold text-stone-950 text-base sm:text-lg">
-              {status?.status === 'Approved' && 'تم قبول طلبك!'}
-              {status?.status === 'Pending' && 'طلبك قيد المراجعة'}
-              {status?.status === 'Rejected' && 'تم رفض طلبك'}
+              {latestRequest?.status === 'Approved' && 'تم قبول طلبك!'}
+              {latestRequest?.status === 'Pending' && 'طلبك قيد المراجعة'}
+              {latestRequest?.status === 'Rejected' && 'تم رفض طلبك'}
             </h3>
             <p className="text-xs text-stone-500 leading-relaxed max-w-md mx-auto">
-              {status?.status === 'Pending' && 'جاري مراجعة طلبك من قبل الهيئة الاستشارية. سيتم التواصل معك قريباً.'}
-              {status?.status === 'Approved' && 'تهانينا! تم قبول طلبك. يمكنك الآن البدء بالتدريس على المنصة.'}
-              {status?.status === 'Rejected' && status.rejectionReason
-                ? `سبب الرفض: ${status.rejectionReason}`
+              {latestRequest?.status === 'Pending' && 'جاري مراجعة طلبك من قبل الهيئة الاستشارية. سيتم التواصل معك قريباً.'}
+              {latestRequest?.status === 'Approved' && 'تهانينا! تم قبول طلبك. يمكنك الآن البدء بالتدريس على المنصة.'}
+              {latestRequest?.status === 'Rejected' && latestRequest.message
+                ? `سبب الرفض: ${latestRequest.message}`
                 : 'لم يتم قبول طلبك في هذه المرة.'}
             </p>
           </div>
@@ -182,21 +186,15 @@ export default function InstructorApply() {
                         <h5 className="font-extrabold text-xs text-stone-900 truncate">{cvFile.name}</h5>
                         <p className="text-[10px] text-stone-500">{cvFile.size}</p>
                         {cvFile.uploadStep === 'presigned' && (
-                          <div className="text-[9px] text-blue-700 font-bold flex items-center gap-1">
-                            <Clock className="w-3 h-3 animate-spin" />
-                            <span>[1/3] طلب رابط الرفع...</span>
-                          </div>
-                        )}
-                        {cvFile.uploadStep === 'minio' && (
                           <div className="text-[9px] text-amber-700 font-bold flex items-center gap-1">
-                            <Upload className="w-3 h-3 animate-bounce" />
-                            <span>[2/3] جاري الرفع...</span>
+                            <Clock className="w-3 h-3 animate-spin" />
+                            <span>جاري رفع الملف...</span>
                           </div>
                         )}
-                        {cvFile.uploadStep === 'confirm' && (
-                          <div className="text-[9px] text-[#962D15] font-bold flex items-center gap-1">
-                            <ArrowLeftRight className="w-3 h-3 animate-pulse" />
-                            <span>[3/3] تأكيد الرفع...</span>
+                        {cvFile.uploadStep === 'error' && (
+                          <div className="text-[9px] text-red-700 font-bold flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>{cvFile.error || 'فشل الرفع'}</span>
                           </div>
                         )}
                         {cvFile.uploadStep === 'done' && (
@@ -215,7 +213,7 @@ export default function InstructorApply() {
                   </div>
                 ) : (
                   <div className="border border-dashed border-amber-300 rounded-2xl bg-white p-5 text-center hover:border-orange-700 transition flex flex-col justify-center items-center gap-3 min-h-[140px] relative">
-                    <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => handleSimulatedFileUpload(e, 'cv')} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                    <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => handleFileUpload(e, 'cv')} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                     <Upload className="w-8 h-8 text-amber-600 shrink-0" />
                     <div className="space-y-1">
                       <span className="font-extrabold text-[11px] text-stone-900 block">اسحب أو انقر لرفع السيرة الذاتية</span>
@@ -237,7 +235,12 @@ export default function InstructorApply() {
                       <div className="space-y-1 min-w-0">
                         <h5 className="font-extrabold text-xs text-stone-900 truncate">{certFile.name}</h5>
                         <p className="text-[10px] text-stone-500">{certFile.size}</p>
-                        {certFile.uploadStep === 'done' ? (
+                        {certFile.uploadStep === 'error' ? (
+                          <div className="text-[9px] text-red-700 font-bold flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>{certFile.error || 'فشل الرفع'}</span>
+                          </div>
+                        ) : certFile.uploadStep === 'done' ? (
                           <div className="text-[9px] text-emerald-800 font-black flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded w-fit border border-emerald-100">
                             <Check className="w-3 h-3" />
                             <span>مرفوع بنجاح</span>
@@ -258,7 +261,7 @@ export default function InstructorApply() {
                   </div>
                 ) : (
                   <div className="border border-dashed border-amber-300 rounded-2xl bg-white p-5 text-center hover:border-orange-700 transition flex flex-col justify-center items-center gap-3 min-h-[140px] relative">
-                    <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => handleSimulatedFileUpload(e, 'cert')} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => handleFileUpload(e, 'cert')} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                     <Upload className="w-8 h-8 text-amber-600 shrink-0" />
                     <div className="space-y-1">
                       <span className="font-extrabold text-[11px] text-stone-900 block">اسحب أو انقر لرفع المؤهلات</span>
@@ -290,7 +293,7 @@ export default function InstructorApply() {
           <div className="pt-2 flex justify-center sm:justify-end">
             <button
               type="submit"
-              disabled={isSubmitPending || !agreedToTerms || !cvFile || cvFile.uploadStep !== 'done'}
+              disabled={isSubmitPending || !agreedToTerms || !cvFile || cvFile.uploadStep !== 'done' || !cvFile.fileId}
               className="w-full sm:w-auto bg-orange-700 hover:bg-orange-800 text-white font-black py-4 px-10 rounded-xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2.5 border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitPending ? (

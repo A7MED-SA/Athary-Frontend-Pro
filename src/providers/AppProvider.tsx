@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { tokenStorage } from '@/lib/token-storage';
+import { setAuthFailureHandler } from '@/lib/api';
 import type { UserInfoDto } from '@/types/api/auth';
 
 type Role = 'Admin' | 'Instructor' | 'Student';
@@ -28,6 +30,7 @@ interface AppContextType {
   displayToast: (msg: string) => void;
   handleLogout: () => void;
   handleLoginSuccess: (user: UserInfoDto) => void;
+  authInitialized: boolean;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -39,13 +42,23 @@ export function useAppContext() {
 }
 
 export default function AppProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
   const [userRoles, setUserRoles] = useState<Role[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
+    setAuthFailureHandler(() => {
+      setIsLoggedIn(false);
+      setUserName('');
+      setUserRoles([]);
+      setUserId(null);
+      navigate('/auth');
+    });
+
     const token = tokenStorage.getAccessToken();
     if (token) {
       const userInfo = tokenStorage.getUserInfo();
@@ -56,7 +69,8 @@ export default function AppProvider({ children }: { children: ReactNode }) {
         setUserId(userInfo.id);
       }
     }
-  }, []);
+    setAuthInitialized(true);
+  }, [navigate]);
 
   const handleLogout = useCallback(() => {
     tokenStorage.clearTokens();
@@ -101,6 +115,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     displayToast: () => {},
     handleLogout,
     handleLoginSuccess,
+    authInitialized,
   };
 
   return (

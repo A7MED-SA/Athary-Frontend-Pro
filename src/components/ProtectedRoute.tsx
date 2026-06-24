@@ -9,8 +9,12 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isLoggedIn, userRoles } = useAppContext();
+  const { isLoggedIn, userRoles, authInitialized } = useAppContext();
   const location = useLocation();
+
+  if (!authInitialized) {
+    return null;
+  }
 
   if (!isLoggedIn) {
     return <Navigate to="/auth" state={{ from: location }} replace />;

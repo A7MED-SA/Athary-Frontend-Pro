@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/types/api/envelope';
 import type {
   MediaFileDto,
   UploadUrlRequestDto,
+  UploadUrlResponseDto,
   MediaConfirmUploadRequest,
   MediaFileUrlResponse,
 } from '@/types/api/media';
@@ -10,7 +11,7 @@ import type {
 export const mediaService = {
   getUploadUrl: (data: UploadUrlRequestDto) =>
     api
-      .post<ApiResponse<MediaFileDto>>('/media/upload-url', data)
+      .post<ApiResponse<UploadUrlResponseDto>>('/media/upload-url', data)
       .then((r) => r.data),
 
   confirmUpload: (data: MediaConfirmUploadRequest) =>
@@ -54,9 +55,9 @@ export const mediaService = {
     console.log('[MediaUpload] Step 1 done:', uploadData.data);
 
     // Step 2: Upload file directly to MinIO/S3
-    console.log('[MediaUpload] Step 2: Uploading to MinIO...', uploadData.data.fileUrl);
+    console.log('[MediaUpload] Step 2: Uploading to MinIO...', uploadData.data.uploadUrl);
 
-    const uploadResponse = await fetch(uploadData.data.fileUrl, {
+    const uploadResponse = await fetch(uploadData.data.uploadUrl, {
       method: 'PUT',
       body: file,
       headers: { 'Content-Type': contentType },
@@ -72,15 +73,15 @@ export const mediaService = {
 
     // Step 3: Confirm upload with backend
     console.log('[MediaUpload] Step 3: Confirming upload...', {
-      fileId: uploadData.data.id,
+      fileId: uploadData.data.fileId,
       objectKey: uploadData.data.objectKey,
       bucket: uploadData.data.bucket,
     });
 
     const confirmed = await mediaService.confirmUpload({
-      fileId: uploadData.data.id,
+      fileId: uploadData.data.fileId,
       objectKey: uploadData.data.objectKey,
-      bucket: uploadData.data.bucket || '',
+      bucket: uploadData.data.bucket,
     });
 
     console.log('[MediaUpload] Step 3 done:', confirmed.data);

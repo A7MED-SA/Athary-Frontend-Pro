@@ -6,15 +6,20 @@ export interface UploadUrlRequestDto {
   visibility: number;
 }
 
-export interface MediaFileDto {
-  id: string;
-  fileName: string;
-  fileUrl: string;
+export interface UploadUrlResponseDto {
+  fileId: string;
+  uploadUrl: string;
   objectKey: string;
   bucket: string;
-  contentType: string;
-  fileSizeBytes: number;
-  createdAt: string;
+  expiresAt: string;
+}
+
+export interface MediaFileDto {
+  id: string;
+  originalName: string;
+  filePath: string;
+  bucket: string;
+  fileType: string;
 }
 
 export interface MediaConfirmUploadRequest {

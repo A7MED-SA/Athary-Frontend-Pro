@@ -2,6 +2,12 @@ import axios, { type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import { env } from './env';
 import { tokenStorage } from './token-storage';
 
+let onAuthFailure: (() => void) | null = null;
+
+export function setAuthFailureHandler(handler: () => void) {
+  onAuthFailure = handler;
+}
+
 const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
   timeout: 15000,
@@ -55,10 +61,8 @@ api.interceptors.response.use(
       if (!refreshToken) {
         tokenStorage.clearTokens();
         processQueue(error);
-        if (window.location.pathname !== '/auth') {
-          window.location.href = '/auth';
-        }
         isRefreshing = false;
+        if (onAuthFailure) onAuthFailure();
         return Promise.reject(error);
       }
 
@@ -78,9 +82,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         tokenStorage.clearTokens();
         processQueue(refreshError);
-        if (window.location.pathname !== '/auth') {
-          window.location.href = '/auth';
-        }
+        if (onAuthFailure) onAuthFailure();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

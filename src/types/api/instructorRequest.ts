@@ -1,30 +1,26 @@
-export type InstructorRequestStatus = 'Pending' | 'Approved' | 'Rejected';
+export type InstructorRequestStatus = 'Pending' | 'Approved' | 'Rejected' | 'RequiresMoreInfo';
+
+export type DocumentType = 'CV' | 'Certificate' | 'IDCard' | 'Degree' | 'PortfolioLink' | 'Transcript' | 'Other';
+
+export interface InstructorRequestDocumentDto {
+  documentType: DocumentType;
+  fileId?: string;
+  urlValue?: string;
+}
 
 export interface InstructorRequestDto {
   id: string;
-  userId: string;
   userName: string;
-  email: string;
+  userEmail: string;
   status: InstructorRequestStatus;
-  qualifications?: string;
-  experience?: string;
-  motivation?: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
-  rejectionReason?: string;
-  createdAt: string;
+  message?: string;
+  submittedAt: string;
+  processedAt?: string;
+  processedByUserName?: string;
+  documentsCount: number;
 }
 
 export interface SubmitInstructorRequestDto {
-  qualifications?: string;
-  experience?: string;
-  motivation?: string;
-}
-
-export interface InstructorRequestResponseDto {
-  id: string;
-  status: InstructorRequestStatus;
-  submittedAt: string;
-  reviewedAt?: string;
-  rejectionReason?: string;
+  message: string;
+  documents: InstructorRequestDocumentDto[];
 }
