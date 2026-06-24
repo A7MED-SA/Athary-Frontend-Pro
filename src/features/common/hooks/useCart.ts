@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cartService } from '@/features/cart/services/cart.service';
 import { queryKeys } from '@/lib/query-keys';
+import { tokenStorage } from '@/lib/token-storage';
 
 export function useCart() {
   const queryClient = useQueryClient();
@@ -8,6 +9,7 @@ export function useCart() {
   const query = useQuery({
     queryKey: queryKeys.cart.all,
     queryFn: () => cartService.getCart(),
+    enabled: !!tokenStorage.getAccessToken(),
   });
 
   const addItemMutation = useMutation({

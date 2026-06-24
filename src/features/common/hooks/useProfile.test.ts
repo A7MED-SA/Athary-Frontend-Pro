@@ -15,6 +15,8 @@ vi.mock('@/features/profile/services/profile.service', () => ({
     addAddress: vi.fn(),
     setDefaultAddress: vi.fn(),
     deleteAddress: vi.fn(),
+    setProfilePicture: vi.fn(),
+    deleteProfilePicture: vi.fn(),
   },
 }));
 

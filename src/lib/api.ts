@@ -1,5 +1,6 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import { env } from './env';
+import { tokenStorage } from './token-storage';
 
 const api = axios.create({
   baseURL: env.VITE_API_BASE_URL,
@@ -26,6 +27,10 @@ const processQueue = (error: unknown) => {
 };
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = tokenStorage.getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -46,13 +51,36 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (!refreshToken) {
+        tokenStorage.clearTokens();
+        processQueue(error);
+        if (window.location.pathname !== '/auth') {
+          window.location.href = '/auth';
+        }
+        isRefreshing = false;
+        return Promise.reject(error);
+      }
+
       try {
-        await api.post('/auth/refresh');
+        const { data } = await axios.post(
+          `${env.VITE_API_BASE_URL}/auth/refresh`,
+          { refreshToken },
+          { headers: { 'Content-Type': 'application/json' } },
+        );
+        const newAccessToken = data?.data?.accessToken;
+        const newRefreshToken = data?.data?.refreshToken;
+        if (newAccessToken && newRefreshToken) {
+          tokenStorage.setTokens(newAccessToken, newRefreshToken);
+        }
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
+        tokenStorage.clearTokens();
         processQueue(refreshError);
-        window.location.href = '/auth';
+        if (window.location.pathname !== '/auth') {
+          window.location.href = '/auth';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

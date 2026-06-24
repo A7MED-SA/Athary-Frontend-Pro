@@ -48,7 +48,8 @@ export interface PublicProfileDto {
 }
 
 export interface UpdateProfileRequest {
-  fullName?: string;
+  firstName?: string;
+  lastName?: string;
   bio?: string;
   gender?: Gender;
   dateOfBirth?: string;

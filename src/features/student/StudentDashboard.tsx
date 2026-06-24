@@ -64,7 +64,7 @@ export default function StudentDashboard() {
 
   const [sharingCert, setSharingCert] = useState<{ id: string; title: string } | null>(null);
 
-  const { studentOverview, isStudentLoading, isStudentError, refetchStudent } = useDashboard();
+  const { studentOverview, isStudentLoading, isStudentError, refetchStudent } = useDashboard({ enableStudent: true });
   const { enrollments, isLoading: isEnrollmentsLoading } = useEnrollments();
   const { certificates, isLoading: isCertificatesLoading } = useCertificates();
   const { upcomingStudent, isLoading: isLiveLoading } = useLiveSession();

@@ -60,6 +60,28 @@ export function useProfile() {
     },
   });
 
+  const updateAddressMutation = useMutation({
+    mutationFn: ({ addressId, data }: { addressId: string; data: Partial<CreateAddressRequest> }) =>
+      profileService.updateAddress(addressId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profiles.current() });
+    },
+  });
+
+  const setProfilePictureMutation = useMutation({
+    mutationFn: (fileId: string) => profileService.setProfilePicture(fileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profiles.current() });
+    },
+  });
+
+  const deleteProfilePictureMutation = useMutation({
+    mutationFn: () => profileService.deleteProfilePicture(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profiles.current() });
+    },
+  });
+
   return {
     profile: query.data?.data,
     isLoading: query.isLoading,
@@ -72,5 +94,8 @@ export function useProfile() {
     addAddress: addAddressMutation.mutate,
     setDefaultAddress: setDefaultAddressMutation.mutate,
     deleteAddress: deleteAddressMutation.mutate,
+    updateAddress: updateAddressMutation.mutate,
+    setProfilePicture: setProfilePictureMutation.mutate,
+    deleteProfilePicture: deleteProfilePictureMutation.mutate,
   };
 }

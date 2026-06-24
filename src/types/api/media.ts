@@ -1,7 +1,9 @@
 export interface UploadUrlRequestDto {
+  fileType: number;
   fileName: string;
   contentType: string;
-  fileSize: number;
+  fileSizeBytes: number;
+  visibility: number;
 }
 
 export interface MediaFileDto {
@@ -9,16 +11,16 @@ export interface MediaFileDto {
   fileName: string;
   fileUrl: string;
   objectKey: string;
+  bucket: string;
   contentType: string;
-  fileSize: number;
+  fileSizeBytes: number;
   createdAt: string;
 }
 
 export interface MediaConfirmUploadRequest {
+  fileId: string;
   objectKey: string;
-  fileName: string;
-  contentType: string;
-  fileSize: number;
+  bucket: string;
 }
 
 export interface MediaFileUrlResponse {

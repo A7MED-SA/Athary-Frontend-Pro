@@ -34,24 +34,56 @@ export const mediaService = {
       .then((r) => r.data),
 
   uploadFile: async (file: File): Promise<MediaFileDto> => {
-    const uploadData = await mediaService.getUploadUrl({
+    const contentType = file.type || 'application/octet-stream';
+
+    // Step 1: Get pre-signed URL from backend
+    console.log('[MediaUpload] Step 1: Requesting pre-signed URL...', {
       fileName: file.name,
-      contentType: file.type,
-      fileSize: file.size,
+      contentType,
+      fileSizeBytes: file.size,
     });
 
-    await fetch(uploadData.data.fileUrl, {
+    const uploadData = await mediaService.getUploadUrl({
+      fileType: 0,
+      fileName: file.name,
+      contentType,
+      fileSizeBytes: file.size,
+      visibility: 0,
+    });
+
+    console.log('[MediaUpload] Step 1 done:', uploadData.data);
+
+    // Step 2: Upload file directly to MinIO/S3
+    console.log('[MediaUpload] Step 2: Uploading to MinIO...', uploadData.data.fileUrl);
+
+    const uploadResponse = await fetch(uploadData.data.fileUrl, {
       method: 'PUT',
       body: file,
-      headers: { 'Content-Type': file.type },
+      headers: { 'Content-Type': contentType },
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error('[MediaUpload] Step 2 FAILED:', uploadResponse.status, errorText);
+      throw new Error(`MinIO upload failed: ${uploadResponse.status} ${errorText}`);
+    }
+
+    console.log('[MediaUpload] Step 2 done: File uploaded to MinIO');
+
+    // Step 3: Confirm upload with backend
+    console.log('[MediaUpload] Step 3: Confirming upload...', {
+      fileId: uploadData.data.id,
+      objectKey: uploadData.data.objectKey,
+      bucket: uploadData.data.bucket,
     });
 
     const confirmed = await mediaService.confirmUpload({
+      fileId: uploadData.data.id,
       objectKey: uploadData.data.objectKey,
-      fileName: file.name,
-      contentType: file.type,
-      fileSize: file.size,
+      bucket: uploadData.data.bucket || '',
     });
+
+    console.log('[MediaUpload] Step 3 done:', confirmed.data);
 
     return confirmed.data;
   },

@@ -29,7 +29,7 @@ describe('profileService', () => {
 
       const result = await profileService.getProfile();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/profiles');
+      expect(mockedApi.get).toHaveBeenCalledWith('/profile/me');
       expect(result.data.fullName).toBe('Test User');
     });
   });
@@ -40,9 +40,9 @@ describe('profileService', () => {
         data: { success: true, data: { id: '1', fullName: 'Updated Name', email: 'test@test.com', phones: [], addresses: [] } },
       });
 
-      const result = await profileService.updateProfile({ fullName: 'Updated Name' });
+      const result = await profileService.updateProfile({ firstName: 'Updated' });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/profiles', { fullName: 'Updated Name' });
+      expect(mockedApi.put).toHaveBeenCalledWith('/profile', { firstName: 'Updated' });
       expect(result.data.fullName).toBe('Updated Name');
     });
   });
@@ -55,7 +55,7 @@ describe('profileService', () => {
 
       const result = await profileService.addPhone({ phoneNumber: '+1234567890', type: 'Primary' });
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/profiles/phones', { phoneNumber: '+1234567890', type: 'Primary' });
+      expect(mockedApi.post).toHaveBeenCalledWith('/profile/phones', { phoneNumber: '+1234567890', type: 'Primary' });
       expect(result.data.phoneNumber).toBe('+1234567890');
     });
   });

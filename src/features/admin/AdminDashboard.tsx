@@ -129,7 +129,7 @@ interface SignalRNotification {
 
 export default function AdminDashboard() {
   const { userName, handleLogout, displayToast } = useAppContext();
-  const { adminOverview, isAdminLoading } = useDashboard();
+  const { adminOverview, isAdminLoading } = useDashboard({ enableAdmin: true });
   const [searchParams, setSearchParams] = useSearchParams();
 
   type AdminTab = 'overview' | 'courses' | 'teachers' | 'orders-refunds' | 'categories' | 'coupons' | 'payment-methods' | 'users' | 'settings' | 'reviews' | 'announcements' | 'media' | 'system-logs';

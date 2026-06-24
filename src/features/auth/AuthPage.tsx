@@ -5,7 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useAuth } from '../common/hooks/useAuth';
+import { authService } from '@/features/auth/services/auth.service';
+import { useAppContext } from '@/providers/AppProvider';
 import { env } from '@/lib/env';
+import { tokenStorage } from '@/lib/token-storage';
 import {
   Mail,
   Lock,
@@ -52,6 +55,7 @@ const forgotPasswordSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
+  code: z.string().min(6, 'رمز التحقق يجب أن يكون ٦ أرقام على الأقل').max(10, 'الرمز غير صحيح'),
   newPassword: z.string().min(8, 'كلمة المرور يجب أن تكون ٨ أحرف على الأقل'),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -64,19 +68,20 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-type AuthSubView = 'login' | 'register' | 'forgot' | 'verify' | 'reset' | 'success';
+type AuthSubView = 'login' | 'register' | 'forgot' | 'verify' | 'reset' | 'success' | 'otp';
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { handleLoginSuccess } = useAppContext();
   const {
-    login,
+    loginAsync,
     isLoginPending,
     loginError,
     register: registerUser,
     isRegisterPending,
     registerError,
-    loginWithOAuth,
+    loginWithOAuthAsync,
     isOAuthPending,
   } = useAuth();
 
@@ -84,6 +89,14 @@ export default function AuthPage() {
   const [registerStep, setRegisterStep] = useState(1);
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  const [emailForVerification, setEmailForVerification] = useState<string>('');
+  const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const otpInputsRef = useRef<HTMLInputElement[]>([]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -128,10 +141,104 @@ export default function AuthPage() {
     if (token && email && mode === 'reset') {
       setSubView('reset');
       resetForm.setValue('newPassword', '');
+      resetForm.setValue('code', token);
+      setEmailForVerification(email);
     } else if (token && email) {
       setSubView('verify');
     }
   }, [searchParams, resetForm]);
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (subView === 'otp' && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (subView === 'otp' && timer === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [subView, timer]);
+
+  const handleOtpChange = (value: string, index: number) => {
+    if (value && isNaN(Number(value))) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Shift focus to next input
+    if (value !== '' && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace') {
+      const newOtp = [...otp];
+      if (otp[index] === '' && index > 0) {
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        otpInputsRef.current[index - 1]?.focus();
+      } else {
+        newOtp[index] = '';
+        setOtp(newOtp);
+      }
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').trim();
+    if (pastedData.length === 6 && /^\d+$/.test(pastedData)) {
+      const newOtp = pastedData.split('');
+      setOtp(newOtp);
+      otpInputsRef.current[5]?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length < 6) {
+      toast.error('يرجى إدخال رمز التحقق كاملاً (٦ أرقام)');
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      await authService.verifyEmail({ email: emailForVerification, token: code });
+      toast.success('تم تفعيل الحساب بنجاح!');
+      setSubView('login');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'فشل تفعيل الحساب';
+      toast.error(msg);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+    setIsResending(true);
+    try {
+      await authService.resendVerification({ email: emailForVerification });
+      toast.success('تم إعادة إرسال رمز التحقق بنجاح');
+      setTimer(60);
+      setCanResend(false);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || 'فشل إعادة إرسال الرمز';
+      toast.error(msg);
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   // Google OAuth initialization
   useEffect(() => {
@@ -143,26 +250,27 @@ export default function AuthPage() {
         clearInterval(checkGoogle);
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: (response: { credential: string }) => {
-            loginWithOAuth(
-              { idToken: response.credential, provider: 'google' },
-              {
-                onSuccess: () => {
-                  toast.success('تم تسجيل الدخول بنجاح عبر Google');
-                  navigate('/dashboard');
-                },
-                onError: () => {
-                  toast.error('فشل تسجيل الدخول عبر Google');
-                },
+          callback: async (response: { credential: string }) => {
+            try {
+              const result = await loginWithOAuthAsync(
+                { idToken: response.credential, provider: 'google' },
+              );
+              if (result?.data) {
+                tokenStorage.setTokens(result.data.accessToken, result.data.refreshToken);
+                handleLoginSuccess(result.data.user);
               }
-            );
+              toast.success('تم تسجيل الدخول بنجاح عبر Google');
+              navigate('/dashboard');
+            } catch {
+              toast.error('فشل تسجيل الدخول عبر Google');
+            }
           },
         });
       }
     }, 200);
 
     return () => clearInterval(checkGoogle);
-  }, [loginWithOAuth, navigate]);
+  }, [loginWithOAuthAsync, navigate]);
 
   const handleGoogleLogin = () => {
     if (window.google?.accounts?.id) {
@@ -197,34 +305,48 @@ export default function AuthPage() {
 
       const response = await msalInstance.loginPopup(loginRequest);
       if (response.idToken) {
-        loginWithOAuth(
-          { idToken: response.idToken, provider: 'microsoft' },
-          {
-            onSuccess: () => {
-              toast.success('تم تسجيل الدخول بنجاح عبر Microsoft');
-              navigate('/dashboard');
-            },
-            onError: () => {
-              toast.error('فشل تسجيل الدخول عبر Microsoft');
-            },
+        try {
+          const result = await loginWithOAuthAsync(
+            { idToken: response.idToken, provider: 'microsoft' },
+          );
+          if (result?.data) {
+            tokenStorage.setTokens(result.data.accessToken, result.data.refreshToken);
+            handleLoginSuccess(result.data.user);
           }
-        );
+          toast.success('تم تسجيل الدخول بنجاح عبر Microsoft');
+          navigate('/dashboard');
+        } catch {
+          toast.error('فشل تسجيل الدخول عبر Microsoft');
+        }
       }
     } catch {
       toast.error('تم إلغاء تسجيل الدخول عبر Microsoft');
     }
   };
 
-  const onLoginSubmit = (data: LoginFormData) => {
-    login(data, {
-      onSuccess: () => {
-        toast.success('تم تسجيل الدخول بنجاح!');
-        navigate('/dashboard');
-      },
-      onError: (error) => {
-        toast.error(error?.message || 'فشل تسجيل الدخول');
-      },
-    });
+  const onLoginSubmit = async (data: LoginFormData) => {
+    try {
+      const response = await loginAsync(data);
+      if (response?.data) {
+        tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
+        handleLoginSuccess(response.data.user);
+      }
+      toast.success('تم تسجيل الدخول بنجاح!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const msg = error?.response?.data?.message || error?.message || 'فشل تسجيل الدخول';
+      if (status === 403) {
+        toast.error('الحساب غير نشط. يرجى تأكيد البريد الإلكتروني.');
+        setEmailForVerification(data.email);
+        setOtp(new Array(6).fill(''));
+        setTimer(60);
+        setCanResend(false);
+        setSubView('otp');
+      } else {
+        toast.error(msg);
+      }
+    }
   };
 
   const onRegisterSubmit = (data: RegisterFormData) => {
@@ -239,42 +361,50 @@ export default function AuthPage() {
 
     registerUser(data, {
       onSuccess: () => {
-        toast.success('تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني.');
-        setSubView('success');
+        toast.success('تم إنشاء الحساب بنجاح! تم إرسال رمز التحقق إلى بريدك الإلكتروني.');
+        setEmailForVerification(data.email);
+        setOtp(new Array(6).fill(''));
+        setTimer(60);
+        setCanResend(false);
+        setSubView('otp');
       },
-      onError: (error) => {
-        toast.error(error?.message || 'فشل إنشاء الحساب');
+      onError: (error: any) => {
+        const msg = error?.response?.data?.message || error?.message || 'فشل إنشاء الحساب';
+        toast.error(msg);
       },
     });
   };
 
   const onForgotSubmit = (data: ForgotPasswordFormData) => {
-    import('@/features/auth/services/auth.service').then(({ authService }) =>
-      authService.forgotPassword({ email: data.email }).then(() => {
-        toast.success('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني');
-        setSubView('login');
-      }).catch(() => {
-        toast.error('فشل إرسال رابط إعادة التعيين');
-      })
-    );
+    authService.forgotPassword({ email: data.email }).then(() => {
+      toast.success('تم إرسال رمز إعادة تعيين كلمة المرور إلى بريدك الإلكتروني');
+      setEmailForVerification(data.email);
+      setSubView('reset');
+    }).catch((error: any) => {
+      const msg = error?.response?.data?.message || error?.message || 'فشل إرسال رمز إعادة التعيين';
+      toast.error(msg);
+    });
   };
 
   const onResetSubmit = (data: ResetPasswordFormData) => {
-    const token = searchParams.get('token');
-    const email = searchParams.get('email');
-    if (!token || !email) {
-      toast.error('رابط إعادة التعيين غير صالح');
+    const email = emailForVerification || searchParams.get('email');
+    if (!email) {
+      toast.error('البريد الإلكتروني غير معروف');
       return;
     }
 
-    import('@/features/auth/services/auth.service').then(({ authService }) =>
-      authService.resetPassword({ email, token, newPassword: data.newPassword }).then(() => {
-        toast.success('تم تغيير كلمة المرور بنجاح!');
-        setSubView('login');
-      }).catch(() => {
-        toast.error('فشل تغيير كلمة المرور');
-      })
-    );
+    authService.resetPassword({
+      email,
+      token: data.code,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
+    }).then(() => {
+      toast.success('تم تغيير كلمة المرور بنجاح!');
+      setSubView('login');
+    }).catch((error: any) => {
+      const msg = error?.response?.data?.message || error?.message || 'فشل تغيير كلمة المرور';
+      toast.error(msg);
+    });
   };
 
   return (
@@ -674,35 +804,88 @@ export default function AuthPage() {
               <div className="space-y-6" id="reset-subview">
                 <div className="text-right">
                   <h2 className="text-xl font-bold text-stone-900">إنشاء كلمة مرور جديدة</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1">يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمات المرور المستخدمة سابقاً.</p>
+                  <p className="text-xs text-stone-500 font-light mt-1 text-right font-sans">
+                    أدخل رمز التحقق (OTP) المرسل إلى بريدك الإلكتروني{' '}
+                    <span className="font-bold text-orange-700 select-all" dir="ltr">{emailForVerification}</span>{' '}
+                    ثم أدخل كلمة المرور الجديدة.
+                  </p>
                 </div>
                 <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
+                  {/* Code Input */}
+                  <div className="space-y-1.5 text-right">
+                    <label className="text-xs font-bold text-stone-700">رمز التحقق (OTP)</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="123456"
+                        {...resetForm.register('code')}
+                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                      />
+                      <KeyRound className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
+                    </div>
+                    {resetForm.formState.errors.code && (
+                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.code.message}</p>
+                    )}
+                  </div>
+
+                  {/* New Password */}
                   <div className="space-y-1.5 text-right">
                     <label className="text-xs font-bold text-stone-700">كلمة المرور الجديدة</label>
                     <div className="relative">
-                      <input type={showPass ? 'text' : 'password'} placeholder="••••••••" {...resetForm.register('newPassword')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none" />
+                      <input
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...resetForm.register('newPassword')}
+                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                      />
                       <Lock className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
                       <button type="button" onClick={() => setShowPass(!showPass)} className="absolute top-4 left-3 text-stone-400">
                         {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    {resetForm.formState.errors.newPassword && <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.newPassword.message}</p>}
+                    {resetForm.formState.errors.newPassword && (
+                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.newPassword.message}</p>
+                    )}
                   </div>
+
+                  {/* Confirm Password */}
                   <div className="space-y-1.5 text-right">
                     <label className="text-xs font-bold text-stone-700">تأكيد كلمة المرور</label>
                     <div className="relative">
-                      <input type={showConfirmPass ? 'text' : 'password'} placeholder="••••••••" {...resetForm.register('confirmPassword')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none" />
+                      <input
+                        type={showConfirmPass ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...resetForm.register('confirmPassword')}
+                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
+                      />
                       <Lock className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
                       <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute top-4 left-3 text-stone-400">
                         {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    {resetForm.formState.errors.confirmPassword && <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.confirmPassword.message}</p>}
+                    {resetForm.formState.errors.confirmPassword && (
+                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.confirmPassword.message}</p>
+                    )}
                   </div>
-                  <button type="submit" className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-3.5 rounded-xl transition text-xs shadow-md">حفظ وتحديث كلمة المرور</button>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-3.5 rounded-xl transition text-xs shadow-md border-0 cursor-pointer"
+                  >
+                    حفظ وتحديث كلمة المرور
+                  </button>
                 </form>
+
+                <div className="pt-4 text-center border-t border-amber-50">
+                  <button
+                    type="button"
+                    onClick={() => setSubView('forgot')}
+                    className="text-stone-500 hover:text-orange-700 flex items-center gap-1.5 mx-auto hover:underline bg-transparent border-0 cursor-pointer text-xs"
+                  >
+                    <ArrowRight className="w-4 h-4 transform rotate-180" />
+                    <span>الرجوع للخطوة السابقة</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -719,6 +902,82 @@ export default function AuthPage() {
                 </div>
                 <div className="pt-6">
                   <button onClick={() => setSubView('login')} className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-4 rounded-xl text-xs transition shadow-md hover:shadow-lg">الذهاب لتسجيل الدخول</button>
+                </div>
+              </div>
+            )}
+
+            {/* OTP VERIFICATION VIEW */}
+            {subView === 'otp' && (
+              <div className="space-y-6" id="otp-subview">
+                <div className="text-right">
+                  <h2 className="text-xl font-bold text-stone-900">رمز تأكيد البريد الإلكتروني</h2>
+                  <p className="text-xs text-stone-500 font-light mt-1 text-right">
+                    أدخل الرمز المكون من 6 أرقام الذي أرسلناه إلى بريدك الإلكتروني{' '}
+                    <span className="font-bold text-orange-700 select-all" dir="ltr">{emailForVerification}</span>
+                  </p>
+                </div>
+
+                <form onSubmit={handleVerifyOtp} className="space-y-6">
+                  <div className="flex justify-between items-center gap-2" dir="ltr">
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        ref={(el) => {
+                          if (el) otpInputsRef.current[idx] = el;
+                        }}
+                        onChange={(e) => handleOtpChange(e.target.value, idx)}
+                        onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                        onPaste={handleOtpPaste}
+                        className="w-12 h-12 text-center text-lg font-bold bg-stone-50 text-stone-950 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent transition-all"
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isVerifying || otp.join('').length < 6}
+                    className="w-full bg-orange-700 hover:bg-orange-800 disabled:bg-stone-300 disabled:cursor-not-allowed text-amber-50 font-bold py-3.5 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs border-0 cursor-pointer"
+                  >
+                    {isVerifying ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'تأكيد البريد الإلكتروني وتفعيل الحساب'
+                    )}
+                  </button>
+                </form>
+
+                <div className="pt-2 text-center text-xs space-y-3">
+                  <div className="text-stone-600">
+                    {canResend ? (
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={isResending}
+                        className="text-orange-700 font-bold hover:underline cursor-pointer bg-transparent border-0 inline-flex items-center gap-1"
+                      >
+                        {isResending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        إعادة إرسال رمز التحقق
+                      </button>
+                    ) : (
+                      <span>
+                        يمكنك إعادة إرسال الرمز خلال{' '}
+                        <span className="font-bold text-orange-700">{timer}</span> ثانية
+                      </span>
+                    )}
+                  </div>
+                  <div className="border-t border-amber-50 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setSubView('login')}
+                      className="text-stone-500 hover:text-orange-700 flex items-center gap-1.5 mx-auto hover:underline bg-transparent border-0 cursor-pointer text-xs"
+                    >
+                      <ArrowRight className="w-4 h-4 transform rotate-180" />
+                      <span>الرجوع إلى تسجيل الدخول</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

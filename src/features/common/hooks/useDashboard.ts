@@ -2,20 +2,27 @@ import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '@/features/dashboards/services/dashboard.service';
 import { queryKeys } from '@/lib/query-keys';
 
-export function useDashboard() {
+export function useDashboard(options?: {
+  enableStudent?: boolean;
+  enableInstructor?: boolean;
+  enableAdmin?: boolean;
+}) {
   const studentOverviewQuery = useQuery({
     queryKey: queryKeys.dashboards.studentOverview(),
     queryFn: () => dashboardService.getStudentOverview(),
+    enabled: !!options?.enableStudent,
   });
 
   const instructorOverviewQuery = useQuery({
     queryKey: queryKeys.dashboards.instructorOverview(),
     queryFn: () => dashboardService.getInstructorOverview(),
+    enabled: !!options?.enableInstructor,
   });
 
   const adminOverviewQuery = useQuery({
     queryKey: queryKeys.dashboards.adminOverview(),
     queryFn: () => dashboardService.getAdminOverview(),
+    enabled: !!options?.enableAdmin,
   });
 
   return {

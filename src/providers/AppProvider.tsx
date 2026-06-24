@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { tokenStorage } from '@/lib/token-storage';
+import type { UserInfoDto } from '@/types/api/auth';
+
+type Role = 'Admin' | 'Instructor' | 'Student';
 
 interface AppContextType {
   cartItems: any[];
@@ -12,12 +16,18 @@ interface AppContextType {
   setIsLoggedIn: (loggedIn: boolean) => void;
   userName: string;
   setUserName: (name: string) => void;
+  userRoles: Role[];
+  setUserRoles: (roles: Role[]) => void;
+  userId: string | null;
+  setUserId: (id: string | null) => void;
+  hasRole: (role: Role) => boolean;
+  hasAnyRole: (roles: Role[]) => boolean;
   coursesList: any[];
   setCoursesList: (courses: any[]) => void;
   globalToast: string | null;
   displayToast: (msg: string) => void;
   handleLogout: () => void;
-  handleLoginSuccess: (name: string) => void;
+  handleLoginSuccess: (user: UserInfoDto) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -31,17 +41,42 @@ export function useAppContext() {
 export default function AppProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
+  const [userRoles, setUserRoles] = useState<Role[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const handleLogout = useCallback(() => {
-    setIsLoggedIn(false);
-    setUserName('');
+  useEffect(() => {
+    const token = tokenStorage.getAccessToken();
+    if (token) {
+      const userInfo = tokenStorage.getUserInfo();
+      if (userInfo) {
+        setIsLoggedIn(true);
+        setUserName(userInfo.fullName);
+        setUserRoles(userInfo.roles as Role[]);
+        setUserId(userInfo.id);
+      }
+    }
   }, []);
 
-  const handleLoginSuccess = useCallback((name: string) => {
-    setIsLoggedIn(true);
-    setUserName(name);
+  const handleLogout = useCallback(() => {
+    tokenStorage.clearTokens();
+    setIsLoggedIn(false);
+    setUserName('');
+    setUserRoles([]);
+    setUserId(null);
   }, []);
+
+  const handleLoginSuccess = useCallback((user: UserInfoDto) => {
+    tokenStorage.setUserInfo(user);
+    setIsLoggedIn(true);
+    setUserName(user.fullName);
+    setUserRoles(user.roles as Role[]);
+    setUserId(user.id);
+  }, []);
+
+  const hasRole = useCallback((role: Role) => userRoles.includes(role), [userRoles]);
+
+  const hasAnyRole = useCallback((roles: Role[]) => roles.some((r) => userRoles.includes(r)), [userRoles]);
 
   const value: AppContextType = {
     cartItems: [],
@@ -54,6 +89,12 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn,
     userName,
     setUserName,
+    userRoles,
+    setUserRoles,
+    userId,
+    setUserId,
+    hasRole,
+    hasAnyRole,
     coursesList: [],
     setCoursesList: () => {},
     globalToast: null,

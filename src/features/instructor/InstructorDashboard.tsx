@@ -79,7 +79,7 @@ export default function InstructorDashboard() {
   const [themeColor, setThemeColor] = useState<'gold' | 'forest' | 'graphite'>(() => (localStorage.getItem('theme-color') as 'gold' | 'forest' | 'graphite') || 'gold');
   const [insightMetric, setInsightMetric] = useState<'revenue' | 'students'>('revenue');
 
-  const { instructorOverview, isInstructorLoading, isInstructorError, refetchInstructor } = useDashboard();
+  const { instructorOverview, isInstructorLoading, isInstructorError, refetchInstructor } = useDashboard({ enableInstructor: true });
   const { instructorCourses, isLoading: isCoursesLoading } = useCourses();
   const [revenueData, setRevenueData] = useState<InstructorRevenueDto | null>(null);
   const [isRevenueLoading, setIsRevenueLoading] = useState(true);

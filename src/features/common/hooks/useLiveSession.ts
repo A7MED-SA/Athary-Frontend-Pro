@@ -3,22 +3,29 @@ import { liveSessionService } from '@/features/liveSessions/services/liveSession
 import { queryKeys } from '@/lib/query-keys';
 import type { CreateLiveSessionRequest, UpdateLiveSessionRequest } from '@/types/api/liveSession';
 
-export function useLiveSession() {
+export function useLiveSession(options?: {
+  enableScheduled?: boolean;
+  enableEnrolledUpcoming?: boolean;
+  enableUpcomingStudent?: boolean;
+}) {
   const queryClient = useQueryClient();
 
   const scheduledQuery = useQuery({
     queryKey: queryKeys.liveSessions.scheduled(),
     queryFn: () => liveSessionService.getScheduledSessions(),
+    enabled: !!options?.enableScheduled,
   });
 
   const enrolledUpcomingQuery = useQuery({
     queryKey: queryKeys.liveSessions.enrolledUpcoming(),
     queryFn: () => liveSessionService.getEnrolledUpcoming(),
+    enabled: !!options?.enableEnrolledUpcoming,
   });
 
   const upcomingStudentQuery = useQuery({
     queryKey: queryKeys.liveSessions.upcomingStudent(),
     queryFn: () => liveSessionService.getUpcomingStudent(),
+    enabled: !!options?.enableUpcomingStudent,
   });
 
   const createMutation = useMutation({

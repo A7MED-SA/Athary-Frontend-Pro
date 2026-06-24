@@ -8,7 +8,7 @@ import type {
 export const certificateService = {
   getMyCertificates: () =>
     api
-      .get<ApiResponse<CertificateResponse[]>>('/certificates/my-certificates')
+      .get<ApiResponse<CertificateResponse[]>>('/certificates/my')
       .then((r) => r.data),
 
   verify: (code: string) =>
@@ -23,7 +23,7 @@ export const certificateService = {
 
   getCertificatePDF: (id: string, format?: string) =>
     api
-      .get(`/certificates/${id}/pdf`, {
+      .get(`/certificates/${id}/download`, {
         params: { format },
         responseType: 'blob',
       })

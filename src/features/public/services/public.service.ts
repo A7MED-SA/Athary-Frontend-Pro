@@ -31,10 +31,10 @@ export const publicService = {
     api.get<ApiResponse<CourseFaqDto[]>>(`/public/courses/${id}/faq`).then((r) => r.data),
 
   getPublicProfile: (slug: string) =>
-    api.get<ApiResponse<PublicProfileDto>>(`/public/profiles/${slug}`).then((r) => r.data),
+    api.get<ApiResponse<PublicProfileDto>>(`/public/instructors/${slug}`).then((r) => r.data),
 
   getPublicProfileById: (id: string) =>
-    api.get<ApiResponse<PublicProfileDto>>(`/public/profiles/id/${id}`).then((r) => r.data),
+    api.get<ApiResponse<PublicProfileDto>>(`/profile/${id}`).then((r) => r.data),
 
   getPublicCourses: (instructorId: string) =>
     api

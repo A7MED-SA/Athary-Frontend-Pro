@@ -14,6 +14,8 @@ import type {
   LoginTwoFactorRequest,
   Enable2faResponse,
   Disable2faRequest,
+  VerifyEmailRequest,
+  ResendVerificationRequest,
 } from '@/types/api/auth';
 
 export const authService = {
@@ -74,4 +76,10 @@ export const authService = {
 
   revokeAllSessions: () =>
     api.delete<ApiResponse>('/auth/revoke-all-sessions').then((r) => r.data),
+
+  verifyEmail: (data: VerifyEmailRequest) =>
+    api.post<ApiResponse>('/auth/verify-email', data).then((r) => r.data),
+
+  resendVerification: (data: ResendVerificationRequest) =>
+    api.post<ApiResponse>('/auth/resend-verification', data).then((r) => r.data),
 };

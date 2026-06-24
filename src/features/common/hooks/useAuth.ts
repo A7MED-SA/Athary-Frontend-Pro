@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/services/auth.service';
 import { queryKeys } from '@/lib/query-keys';
-import type { LoginRequest, RegisterRequest, OAuthLoginRequest } from '@/types/api/auth';
+import { tokenStorage } from '@/lib/token-storage';
+import type { LoginRequest, RegisterRequest, OAuthLoginRequest, ChangePasswordRequest } from '@/types/api/auth';
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -9,6 +10,7 @@ export function useAuth() {
   const sessionsQuery = useQuery({
     queryKey: queryKeys.auth.sessions(),
     queryFn: () => authService.getActiveSessions(),
+    enabled: !!tokenStorage.getAccessToken(),
   });
 
   const loginMutation = useMutation({
@@ -51,6 +53,10 @@ export function useAuth() {
     },
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: (data: ChangePasswordRequest) => authService.changePassword(data),
+  });
+
   return {
     sessions: sessionsQuery.data?.data,
     isSessionsLoading: sessionsQuery.isLoading,
@@ -64,8 +70,10 @@ export function useAuth() {
     logout: logoutMutation.mutate,
     isLogoutPending: logoutMutation.isPending,
     loginWithOAuth: loginWithOAuthMutation.mutate,
+    loginWithOAuthAsync: loginWithOAuthMutation.mutateAsync,
     isOAuthPending: loginWithOAuthMutation.isPending,
     revokeSession: revokeSessionMutation.mutate,
     revokeAllSessions: revokeAllSessionsMutation.mutate,
+    changePassword: changePasswordMutation.mutate,
   };
 }

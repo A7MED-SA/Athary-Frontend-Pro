@@ -65,6 +65,7 @@ export interface ResetPasswordRequest {
   email: string;
   token: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
 export interface ChangePasswordRequest {
@@ -90,3 +91,13 @@ export interface Enable2faResponse {
 export interface Disable2faRequest {
   code: string;
 }
+
+export interface VerifyEmailRequest {
+  email: string;
+  token: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+

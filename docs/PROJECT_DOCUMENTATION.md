@@ -1,841 +1,2192 @@
-# توثيق منصة آثاري - Athary Platform
+# Athary Platform - Project Documentation
 
-## 📋 فهرس المحتويات
-1. [نظرة عامة عن المشروع](#نظرة-عامة-عن-المشروع)
-2. [هيكل المشروع (Project Structure)](#هيكل-المشروع)
-3. [التقنيات المستخدمة (Tech Stack)](#التقنيات-المستخدمة)
-4. [الصفحات والمسارات (Routes)](#الصفحات-والمسارات)
-5. [وصف كل صفحة والبيانات التي تعرضها](#وصف-كل-صفحة-والبيانات)
-6. [قاعدة البيانات - الـ API المطلوبة لكل صفحة](#قاعدة-البيانات--api-المطلوبة-لكل-صفحة)
-7. [نظام المصادقة (Authentication System)](#نظام-المصادقة)
-8. [ملفات الحالة المخزنة محلياً (localStorage Keys)](#localstorage-keys)
-9. [المكونات المشتركة (Shared Components)](#المكونات-المشتركة)
-10. [الأنواع (TypeScript Types)](#typescript-types)
+**Athary LMS** (منصة آثاري التعليمية) — نظام إدارة التعلم (Learning Management System)
 
 ---
 
-## نظرة عامة عن المشروع
+## Table of Contents
 
-**آثاري** هي منصة تعليمية تراثية عربية تهدف إلى إحياء التراث الإسلامي والعربي عبر دورات تعليمية في:
-- التاريخ الإسلامي
-- اللغة العربية وآدابها
-- الفنون والعمارة التراثية
-- علم الآثار والتحقيق
-
-**نوع المشروع:** SPA (Single Page Application) - Vite + React + TypeScript  
-**نمط التوجيه:** Client-side Routing (React Router v7)  
-**حالة المشروع:** Frontend Prototype (جميع البيانات Mocked، لا يوجد Backend حقيقي)
+1. [Project Overview](#1-project-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Architecture](#3-architecture)
+4. [Project Structure](#4-project-structure)
+5. [Database & Entities](#5-database--entities)
+6. [Enums](#6-enums)
+7. [Authentication & Authorization](#7-authentication--authorization)
+8. [All Endpoints (API Reference)](#8-all-endpoints-api-reference)
+9. [Services Layer](#9-services-layer)
+10. [Real-time (SignalR)](#10-real-time-signalr)
+11. [Background Workers](#11-background-workers)
+12. [Infrastructure Services](#12-infrastructure-services)
+13. [Configuration](#13-configuration)
+14. [Docker & Deployment](#14-docker--deployment)
+15. [Running the Project](#15-running-the-project)
 
 ---
 
-## هيكل المشروع
+## 1. Project Overview
+
+Athary is an Arabic educational platform built with .NET 9 Clean Architecture. It supports:
+
+- **Course Management**: Create, structure, publish, and manage courses with sections, videos, documents, quizzes
+- **Commerce**: Shopping cart, coupons, orders, payments, refunds, wishlists
+- **Enrollment & Learning**: Student enrollment, progress tracking, quiz attempts, grading
+- **Live Sessions**: Scheduled live sessions with attendance tracking
+- **Reviews & Certificates**: Course reviews, auto-generated certificates with verification codes
+- **Communication**: Internal messaging, announcements, system settings, content reporting
+- **Dashboards**: Student, Instructor, and Admin dashboards with analytics
+- **Media**: MinIO-based object storage for files, images, videos, documents
+- **Authentication**: JWT + Google OAuth + Microsoft OAuth
+
+---
+
+## 2. Tech Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Runtime | .NET | 9.0 |
+| Language | C# | latest |
+| Database | SQL Server | 2022 |
+| ORM | Entity Framework Core | 9.0.10 |
+| Auth | ASP.NET Core Identity + JWT | 9.0 |
+| OAuth | Google + Microsoft | — |
+| Object Storage | MinIO (S3-compatible) | 7.0.0 |
+| Real-time | SignalR | — |
+| API Docs | NSwag / OpenAPI | 14.6.1 |
+| Validation | FluentValidation | 12.1.1 |
+| Object Mapping | Mapster | 7.4.0 |
+| PDF Generation | QuestPDF | 2026.5.0 |
+| Logging | Serilog (Console + Seq) | 4.2.0 |
+| Observability | OpenTelemetry | 1.16.0 |
+| Caching | Redis + In-Memory | — |
+| Messaging | MassTransit Abstractions | 8.2.5 |
+
+---
+
+## 3. Architecture
+
+**Clean Architecture** with 4 layers:
 
 ```
-Pro_Front/
-├── index.html                     # مدخل Vite
-├── package.json                   # ملف الحزم والاعتماديات
-├── tsconfig.json                  # إعدادات TypeScript
-├── vite.config.ts                 # إعدادات Vite
-├── .env.example                   # مثال لمتغيرات البيئة
-├── metadata.json                  # بيانات AI Studio
+┌─────────────────────────────────────┐
+│           Athary.API                │  ← Entry point, Controllers, Middleware
+├─────────────────────────────────────┤
+│        Athary.Application           │  ← DTOs, Interfaces, Validators, Mappings
+├─────────────────────────────────────┤
+│        Athary.Infrastructure        │  ← Services, Data (EF Core), Repositories, Hubs
+├─────────────────────────────────────┤
+│          Athary.Domain              │  ← Entities, Enums, Domain Interfaces
+└─────────────────────────────────────┘
+```
+
+**Dependencies**:
+- Domain → No dependencies
+- Application → Domain
+- Infrastructure → Application
+- API → Application + Infrastructure
+
+---
+
+## 4. Project Structure
+
+```
+New/
+├── src/
+│   ├── Athary.Domain/
+│   │   ├── Entities/          (57 entities)
+│   │   ├── Enums/             (37 enums)
+│   │   └── Interfaces/        (IRepository, IUnitOfWork)
+│   │
+│   ├── Athary.Application/
+│   │   ├── Common/            (ApiResponse, PagedList)
+│   │   ├── DTOs/              (54 DTO files organized by feature)
+│   │   ├── Interfaces/        (47 service interfaces)
+│   │   ├── Mappings/          (Mapster mappings)
+│   │   └── Validators/        (FluentValidation validators)
+│   │
+│   ├── Athary.Infrastructure/
+│   │   ├── Data/              (ApplicationDbContext, DbSeeder, Migrations)
+│   │   ├── Services/          (41 service implementations)
+│   │   ├── Hubs/              (NotificationHub, MessageHub)
+│   │   ├── Helpers/           (EnrollmentGuard)
+│   │   ├── HealthChecks/      (Database, Liveness)
+│   │   ├── Repositories/      (GenericRepository, UnitOfWork)
+│   │   ├── Settings/          (JWT, Email, MinIO, Redis settings)
+│   │   └── Workers/           (Background services)
+│   │
+│   └── Athary.API/
+│       ├── Controllers/       (50+ controllers)
+│       ├── Middleware/        (ExceptionMiddleware, SecurityHeaders)
+│       ├── Program.cs         (Application setup)
+│       └── appsettings.json   (Configuration)
 │
-├── assets/                        # الأصول الثابتة
-├── dist/                          # مخرج البناء النهائي
-├── node_modules/                  # حزم npm
+├── infrastructure/
+│   ├── Dockerfile             (Multi-stage Alpine build)
+│   └── docker-compose.yml     (SQL Server, MinIO, Mailpit, Seq)
 │
-├── docs/                          # التوثيق
-│   └── PROJECT_DOCUMENTATION.md   # هذا الملف
-│
-└── src/
-    ├── main.tsx                   # نقطة الدخول
-    ├── router.tsx                 # تعريف المسارات (Routing)
-    ├── index.css                  # التنسيقات (Tailwind + Custom CSS)
-    │
-    ├── types/
-    │   └── index.ts               # أنواع TypeScript الأساسية
-    │
-    ├── data/
-    │   └── index.ts               # البيانات الوهمية (Mock Data)
-    │
-    ├── lib/
-    │   ├── api.ts                 # Axios instance مع Interceptors
-    │   └── query-client.ts        # React Query client config
-    │
-    ├── stores/
-    │   └── notificationStore.ts   # Zustand store للإشعارات
-    │
-    ├── hooks/
-    │   └── useTheme.ts            # Hook للمظهر (Dark/Light/Colors)
-    │
-    ├── providers/
-    │   └── AppProvider.tsx        # React Context (الحالة العامة)
-    │
-    ├── layouts/
-    │   └── RootLayout.tsx         # الـ Layout الرئيسي (Navbar + Footer + CartDrawer)
-    │
-    ├── components/
-    │   └── layout/
-    │       ├── Navbar.tsx         # شريط التنقل العلوي
-    │       ├── Footer.tsx         # التذييل
-    │       ├── CartDrawer.tsx     # سلة التسوق المنزلقة
-    │       ├── NotFound.tsx       # صفحة 404
-    │       └── ErrorBoundary.tsx  # حد الأخطاء
-    │
-    └── features/
-        ├── landing/
-        │   └── LandingPage.tsx
-        ├── catalog/
-        │   ├── CourseCatalog.tsx
-        │   └── CourseDetails.tsx
-        ├── cart/
-        │   └── CartCheckout.tsx
-        ├── auth/
-        │   └── AuthPage.tsx
-        ├── student/
-        │   ├── StudentDashboard.tsx
-        │   ├── LearningRoom.tsx
-        │   ├── QuizTaking.tsx
-        │   ├── MessagingCenter.tsx
-        │   ├── ManuscriptCertificate.tsx
-        │   ├── WishlistRefunds.tsx
-        │   └── InstructorApply.tsx
-        ├── instructor/
-        │   ├── InstructorDashboard.tsx
-        │   ├── CourseBuilder.tsx
-        │   └── LiveSession.tsx
-        ├── admin/
-        │   ├── AdminDashboard.tsx
-        │   ├── AdvancedAnalytics.tsx
-        │   ├── ReviewsModeration.tsx
-        │   ├── AnnouncementsCenter.tsx
-        │   ├── MediaLibrary.tsx
-        │   └── SystemActivitySettings.tsx
-        ├── profile/
-        │   ├── ProfileSettings.tsx
-        │   └── PublicProfile.tsx
-        ├── about/
-        │   └── AboutContactPublic.tsx
-        └── theme/
-            └── ThemeSettingsPopover.tsx
+└── run.sh                     (Development run script)
 ```
 
 ---
 
-## التقنيات المستخدمة
+## 5. Database & Entities
 
-| التقنية | النسخة | الغرض |
-|---------|--------|-------|
-| Vite | ^6.2.3 | Build tool / Dev server |
-| React | ^19.0.1 | UI Library |
-| TypeScript | ~5.8.2 | Type Safety |
-| React Router DOM | ^7.18.0 | Client-side Routing |
-| TanStack React Query | ^5.101.0 | Server State Management |
-| Axios | ^1.18.0 | HTTP Client |
-| Zustand | ^5.0.14 | State Management |
-| Tailwind CSS | ^4.1.14 | Utility-first CSS |
-| Motion (Framer Motion) | ^12.23.24 | Animations |
-| Recharts | ^3.8.1 | Charts & Graphs |
-| react-hook-form | ^7.78.0 | Forms |
-| Zod | ^4.4.3 | Validation Schemas |
-| Radix UI | Popover, Switch | Unstyled UI Primitives |
-| Lucide React | ^0.546.0 | Icons |
+### 5.1 Core Entities
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **User** | Extends IdentityUser\<Guid\> | FirstName, LastName, Slug, Bio, IsActive, RevenueSharePercentage |
+| **Role** | Extends IdentityRole\<Guid\> | Description, IsActive |
+| **Session** | User auth sessions | RefreshTokenHash, IpAddress, UserAgent, ExpiresAt |
+| **Address** | User addresses | StreetLine1, City, PostalCode, Country, IsDefault |
+| **Permission** | RBAC permissions | Name, Resource, IsActive |
+| **RolePermission** | Role-Permission mapping | RoleId, PermissionId |
+
+### 5.2 Course System
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **Category** | Course categories (hierarchical) | Name, Slug, ParentCategoryId, Position |
+| **Course** | Main course entity | Title, Slug, Price, Status, Level, Language, Version |
+| **CourseRequirement** | Course prerequisites | Description, DisplayOrder |
+| **CourseLearningOutcome** | What students will learn | Description, DisplayOrder |
+| **Section** | Course sections | Title, Position, IsLocked |
+| **SectionItem** | Polymorphic content link | ItemType (Video/Quiz/Document/LiveSession), ItemId, IsMandatory |
+| **CourseEditRequest** | Edit approval workflow | RequestType, Operation, JsonPayload, Status, IsEmergency |
+| **CourseLog** | Course audit trail | Action, Details, Timestamp |
+
+### 5.3 Content Entities
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **Video** | Video content | Title, VideoFileId, DurationSeconds |
+| **Document** | Document content | Title, FileId, DownloadCount |
+| **Quiz** | Quiz assessment | Title, DurationMinutes, PassingScorePercent, MaxAttempts |
+| **Question** | Quiz questions | QuestionText, Type, Points, Position |
+| **Option** | Question options | OptionText, IsCorrect, Position |
+
+### 5.4 Learning & Enrollment
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **Enrollment** | Student course enrollment | Status, ProgressPercentage, Source, CertificateId |
+| **ContentProgress** | Per-item progress | ContentType, ContentId, IsCompleted, WatchTimeSeconds |
+| **QuizAttempt** | Quiz attempt record | Score, MaxScore, Status, AttemptNumber, TimeTakenSeconds |
+| **UserAnswer** | Individual quiz answer | SelectedOptionId |
+
+### 5.5 Commerce
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **Cart** | Shopping cart | UserId, SessionId, ExpiresAt |
+| **CartItem** | Cart item | CourseId, PriceSnapshot |
+| **Order** | Purchase order | OrderNumber, SubtotalAmount, DiscountAmount, FinalAmount, Status |
+| **OrderItem** | Order line item | CourseId, PriceAtPurchase |
+| **Payment** | Payment record | Amount, Currency, Status, TransactionRef, GatewayResponse |
+| **PaymentMethod** | Available payment methods | Name, Provider, Type, IsActive, Configuration |
+| **Refund** | Refund request | Amount, Reason, Status, ProcessedAt |
+| **TransactionLog** | Payment audit trail | — |
+| **Coupon** | Discount coupons | Code, Type, Value, UsageLimit, ValidFrom/Until |
+| **CouponCourse** | Coupon-Course mapping | — |
+| **CouponUsage** | Coupon usage tracking | UserId, OrderId, UsedAt |
+| **Wishlist** | User wishlists | CourseId |
+
+### 5.6 Media
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **UploadedFile** | File metadata | FileName, FilePath, ContentType, FileSize, IsDeleted |
+| **Certificate** | Course completion cert | VerificationCode, Status, IssuedAt, CompletedAt |
+| **Review** | Course reviews | Rating, Comment, Status, IsFlagged, HelpfulCount |
+| **ReviewHelpful** | Review helpful votes | IsHelpful |
+
+### 5.7 Communication
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **Message** | Internal messages | SenderId, ReceiverId, Content, IsRead, IsDeleted |
+| **Notification** | User notifications | Type, Title, Message, IsRead, LinkUrl |
+| **NotificationPreference** | Per-user notification settings | EmailNotifications, PushNotifications, CourseUpdates, etc. |
+| **Announcement** | Platform announcements | Title, Content, Target, CourseId, IsActive |
+| **ContactMessage** | Contact form submissions | FullName, Email, Phone, Subject, Message, IsRead |
+| **Report** | Content reports | EntityType, EntityId, Reason, Status, AdminNote |
+| **ActivityLog** | Audit trail | Action, EntityType, EntityId, IpAddress |
+| **SystemSetting** | Key-value settings | Key, Value, DataType, SettingGroup, IsPublic |
+
+### 5.8 Live Sessions
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **LiveSession** | Scheduled live sessions | Title, MeetingUrl, Status, ScheduledStart/End |
+| **LiveAttendance** | Session attendance | JoinedAt, LeftAt, DurationMinutes |
+
+### 5.9 Other
+
+| Entity | Description | Key Properties |
+|--------|-------------|----------------|
+| **LegalPage** | Legal content pages | Type (privacy/terms/refund), Title, Content, IsPublished |
+| **Testimonial** | Student testimonials | Content, Rating, IsApproved, IsFlagged, DisplayOrder |
+| **InstructorRequest** | Instructor application | Status, Message, AdminNotes, RejectionReason |
+| **InstructorRequestDocument** | Application documents | DocumentType, FileId, UrlValue |
 
 ---
 
-## الصفحات والمسارات
+## 6. Enums
 
-| المسار (Route) | المكون (Component) | الوصف |
-|----------------|-------------------|-------|
-| `/` | `LandingPage` | الصفحة الرئيسية |
-| `/catalog` | `CourseCatalog` | كتالوج الدورات مع الفلاتر والبحث |
-| `/course/:courseId` | `CourseDetails` | صفحة تفاصيل دورة معينة |
-| `/checkout` | `CartCheckout` | سلة التسوق وإتمام الشراء |
-| `/auth` | `AuthPage` | تسجيل الدخول / إنشاء حساب / نسيت كلمة المرور / OTP / إعادة تعيين |
-| `/dashboard` | `StudentDashboard` | لوحة تحكم الطالب |
-| `/instructor` | `InstructorDashboard` | لوحة تحكم المدرب |
-| `/admin` | `AdminDashboard` | لوحة تحكم المشرف |
-| `/about` | `AboutContactPublic` | معلومات عن المنصة + نموذج الاتصال |
-| `/profile` | `ProfileSettings` | إعدادات الملف الشخصي |
-| `/instructor/:name` | `PublicProfile` | الملف الشخصي العام للمدرب |
-| `*` | `NotFound` | صفحة 404 |
-
----
-
-## وصف كل صفحة والبيانات
-
-### 1. الصفحة الرئيسية (LandingPage) — `/`
-
-#### البيانات المعروضة:
-- **Hero Section**: عنوان ترحيبي، وصف المنصة، زرين (تصفح المسارات، بروشور التعريف)
-- **Trust Indicators**: نسبة رضا 98%، شهادات موثقة 100%، بث مباشر
-- **بطاقة جذابة**: صورة عمارة إسلامية، اقتباس، عداد الطلاب
-- **Stats Section**: 4 إحصائيات (أكثر من 10,000 طالب، +500 ساعة، +50 مدرب، 24/7 منتديات)
-- **التصنيفات (Categories)**: 4 تصنيفات (التاريخ الإسلامي، اللغة العربية، الفنون التراثية، علم الآثار)
-- **الدورات المميزة (Featured Courses)**: أول 3 دورات مع إمكانية الإضافة للسلة
-- **How It Works**: 3 خطوات (اختر منبر دراستك → حضور المجالس → الامتحان والإجازة)
-- **Testimonials**: شهادات الطلاب
-
-#### البيانات المطلوبة:
-
-| نوع البيانات | المصدر الحالي | الوصف |
-|-------------|--------------|-------|
-| `Category[]` | Mock (`CATEGORIES`) | التصنيفات: id, name, slug, iconName, courseCount |
-| `Course[]` | Mock (`COURSES`) | الدورات المميزة (أول 3): id, title, category, instructorName, price, thumbnail, rating, studentsCount, lessonsCount, duration |
-| `Testimonial[]` | Mock (`TESTIMONIALS`) | آراء الطلاب: id, name, role, content, avatar |
-| أوقات البث المباشر | Mock (`LIVE_SESSIONS`) | جلسات مباشرة قادمة |
+| Enum | Values |
+|------|--------|
+| **CourseStatus** | Draft, PendingReview, Published, Rejected, Archived |
+| **CourseLevel** | Beginner, Intermediate, Advanced |
+| **CourseLanguage** | Ar, En |
+| **EnrollmentStatus** | InProgress, Completed, Expired, Refunded |
+| **EnrollmentSource** | Purchase, Free, Admin, Referral |
+| **ContentType** | Video, Document, Quiz |
+| **SectionItemType** | Video, Quiz, Document, LiveSession |
+| **QuizAttemptStatus** | InProgress, Submitted, AutoSubmitted, Expired |
+| **QuestionType** | MultipleChoice, TrueFalse, ShortAnswer |
+| **OrderStatus** | Pending, Processing, Completed, Cancelled, Refunded |
+| **PaymentStatus** | Pending, Completed, Failed, Refunded, Cancelled |
+| **PaymentCurrency** | EGP, USD |
+| **PaymentMethodType** | CreditCard, DebitCard, BankTransfer, Wallet, Cash |
+| **RefundStatus** | Requested, Approved, Rejected, Processed |
+| **CouponType** | Percentage, FixedAmount |
+| **CouponApplicableTo** | All, SpecificCourses, FirstPurchase |
+| **CertificateStatus** | Valid, Revoked, Expired |
+| **ReviewStatus** | Pending, Approved, Rejected, Flagged |
+| **LiveSessionStatus** | Scheduled, Live, Finished, Cancelled |
+| **InstructorRequestStatus** | Pending, Approved, Rejected |
+| **DocumentType** | NationalId, Certificate, Other |
+| **EditRequestType** | LowRisk, HighRisk |
+| **EditOperation** | Create, Update, Delete |
+| **EditRequestStatus** | Pending, Approved, Rejected, Expired |
+| **ReportEntityType** | Course, Review, Message |
+| **ReportReason** | Inappropriate, Spam, Copyright, Harassment, Other |
+| **ReportStatus** | Pending, Dismissed, ActionTaken |
+| **NotificationType** | Course, Enrollment, Payment, System, Achievement |
+| **AnnouncementTarget** | All, Students, Instructors, SpecificCourse |
+| **ActivityLogEntityType** | User, Course, Category, Order, Payment, Certificate, Message, Announcement, SystemSetting, Report |
+| **CourseLogAction** | Created, Updated, Published, Rejected, Deleted, etc. |
+| **SettingDataType** | String, Int, Bool, Json, Date |
+| **Gender** | Male, Female |
+| **TransactionLogStatus** | Success, Failed, Pending |
 
 ---
 
-### 2. كتالوج الدورات (CourseCatalog) — `/catalog`
+## 7. Authentication & Authorization
 
-#### البيانات المعروضة:
-- **Banner**: عنوان ووصف الكتالوج
-- **Search Bar**: بحث فوري (بالاسم، المدرب، التصنيف)
-- **Filters Sidebar**:
-  - الفئة والموضوع (4 categories - Checkboxes)
-  - المستوى المستهدف (مبتدئ/متوسط/متقدم - Checkboxes)
-  - نموذج السعر (الكل/مجاني/مدفوع - Radio)
-  - تقييم الطلاب (4.8/4.5/4.0 فأكثر - Radio)
-- **Sort**: الأكثر قيمة، الأعلى تقييماً، السعر (من الأقل/الأعلى)
-- **Course Cards**: صورة مصغرة، التصنيف، اسم المدرب، التقييم، السعر، زر الإضافة للسلة
-- **Reviews Dialog**: نافذة منبثقة للمراجعات والتعليقات لكل دورة
-- **Mobile Filters**: نافذة جانبية للفلاتر على الموبايل
+### 7.1 Authentication Methods
 
-#### البيانات المطلوبة:
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| Email/Password | `POST /api/auth/login` | Standard login |
+| Register | `POST /api/auth/register` | New account creation |
+| Google OAuth | `POST /api/oauth/google` | Google social login |
+| Microsoft OAuth | `POST /api/oauth/microsoft` | Microsoft social login |
 
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/courses` | GET | جلب كل الدورات مع دعم الفلاتر: `?search=`, `?category=`, `?level=`, `?price=`, `?minRating=`, `?sortBy=`, `?page=`, `?limit=` |
-| `GET /api/categories` | GET | جلب التصنيفات |
-| `GET /api/courses/:id/reviews` | GET | جلب مراجعات دورة معينة |
-| `POST /api/courses/:id/reviews` | POST | إضافة مراجعة جديدة (body: `{ userName, rating, comment }`) |
-| `PUT /api/reviews/:id/helpful` | PUT | التصويت بأن المراجعة مفيدة |
+### 7.2 Token System
 
-#### هيكل Course Card:
+- **Access Token**: JWT, 60 minutes expiration
+- **Refresh Token**: 7 days expiration, stored as hash in Session table
+- **Token Refresh**: `POST /api/auth/refresh`
+
+### 7.3 Roles
+
+| Role | Description |
+|------|-------------|
+| **Admin** | Full platform access, user management, course approval, content moderation |
+| **Instructor** | Create/manage courses, view analytics, manage live sessions |
+| **Student** | Enroll in courses, take quizzes, write reviews, purchase courses |
+
+### 7.4 Authorization Patterns
+
+```csharp
+[Authorize]                    // Any authenticated user
+[Authorize(Roles = "Admin")]   // Admin only
+[Authorize(Roles = "Instructor")] // Instructor only
+[AllowAnonymous]               // Public access
 ```
+
+---
+
+## 8. All Endpoints (API Reference)
+
+> **Base URL**: `http://localhost:5000`
+> **Content-Type**: `application/json` (for all POST/PUT/PATCH requests)
+> **Auth**: Bearer token in `Authorization: Bearer <token>` header
+
+### 8.0 Response Envelope
+
+All API responses follow this wrapper:
+
+```json
 {
-  id, title, category, categorySlug, instructorName, instructorAvatar,
-  rating, studentsCount, price, originalPrice?, duration, lessonsCount,
-  thumbnail, progress?, nextLesson?, featured?, level?
+  "success": true,
+  "data": { ... },
+  "message": "Optional success message",
+  "errors": null
+}
+```
+
+Error example:
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Validation failed",
+  "errors": ["Email is required", "Password must be at least 6 characters"]
 }
 ```
 
 ---
 
-### 3. تفاصيل الدورة (CourseDetails) — `/course/:courseId`
+### 8.1 Authentication (`/api/auth`)
 
-#### البيانات المعروضة:
-- **Hero Banner**: عنوان الدورة، وصف، breadcrumb، التصنيف
-- **Stats Bar**: التقييم (نجوم)، عدد الطلاب، اللغة، آخر تحديث
-- **Sidebar (يشتري)**: السعر، زر الإضافة للسلة، حفظ للمفضلة، مشاركة
-- **ماذا ستتعلم؟**: قائمة من 4-6 نقاط تعليمية
-- **المنهج (Syllabus Accordion)**: فصول ودروس مع مؤشر التقدم وحالة الإكمال
-- **ملف المدرب**: صورة، اسم، وصف، إحصائيات
-- **التقييمات والمراجعات**: قائمة مراجعات الطلاب مع نظام التقييم بالنجوم
+#### `POST /api/auth/register`
+Create a new user account. Returns a verification code sent to email.
 
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/courses/:courseId` | GET | تفاصيل الدورة الكاملة بما في ذلك المخرجات التعليمية |
-| `GET /api/courses/:courseId/syllabus` | GET | فصول وأقسام المنهج مع الدروس |
-| `GET /api/courses/:courseId/reviews` | GET | مراجعات الدورة |
-| `POST /api/courses/:courseId/reviews` | POST | إضافة مراجعة |
-| `POST /api/courses/:courseId/favorite` | POST | إضافة/إزالة من المفضلة |
-| `GET /api/courses/:courseId/progress` | GET | تقدم الطالب في الدورة (إذا مسجل فيها) |
-| `PUT /api/courses/:courseId/lessons/:lessonId/progress` | PUT | تحديث تقدم درس معين (body: `{ completed: boolean }`) |
-
-#### هيكل Syllabus:
-```
-Chapter {
-  title: string,
-  lessons: Lesson[]
+**Request Body:**
+```json
+{
+  "firstName": "أحمد",
+  "lastName": "محمد",
+  "email": "ahmed@example.com",
+  "password": "Admin@123456",
+  "confirmPassword": "Admin@123456",
+  "gender": "Male",
+  "dateOfBirth": "1995-06-15",
+  "phoneNumber": "+201234567890",
+  "country": "Egypt",
+  "city": "Cairo",
+  "streetLine1": "123 Main St",
+  "postalCode": "12345"
 }
-Lesson {
-  title: string,
-  duration: string,
-  type: 'video' | 'document' | 'quiz',
-  free: boolean,
-  videoUrl?: string,
-  documentUrl?: string
+```
+> Only `firstName`, `lastName`, `email`, `password`, `confirmPassword` are required. All others are optional.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "guid",
+    "email": "ahmed@example.com"
+  },
+  "message": "Registration successful. Please check your email for verification code."
 }
 ```
 
 ---
 
-### 4. سلة التسوق (CartCheckout) — `/checkout`
+#### `POST /api/auth/login`
+Authenticate with email/password. Returns JWT tokens.
 
-#### البيانات المعروضة:
-- **قائمة العناصر في السلة**: صورة، عنوان، تصنيف، مدرب، السعر
-- **حذف عنصر**: نافذة تأكيد الحذف
-- **Coupon Code**: إدخال كود الخصم مع أمثلة (`ATHARY_FOUNDER` = 25%, `FREE100` = مجاني)
-- **ملخص الفاتورة**: المجموع الفرعي، الخصم، رسوم القيد، الإجمالي النهائي
-- **Secure Checkout**: زر تأكيد القيد
-- **Payment Methods**: مدى، تحويل بنكي، فيزا، أبل باي
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/cart` | GET | جلب محتويات السلة (إذا مخزنة على السيرفر) |
-| `POST /api/cart/add` | POST | إضافة دورة للسلة (body: `{ courseId }`) |
-| `DELETE /api/cart/:courseId` | DELETE | إزالة دورة من السلة |
-| `POST /api/coupons/validate` | POST | التحقق من صحة كود الخصم (body: `{ code, subtotal }`) |
-| `POST /api/checkout` | POST | إتمام عملية الشراء (body: `{ items[], couponCode?, paymentMethod }`) |
-
----
-
-### 5. صفحة المصادقة (AuthPage) — `/auth`
-
-#### البيانات المعروضة (6 حالات):
-1. **Login**: بريد إلكتروني، كلمة مرور، Google sign-in
-2. **Register (3 خطوات)**:
-   - الخطوة 1: الاسم الأول، اسم العائلة، البريد الإلكتروني، كلمة المرور، تأكيدها + مؤشر قوة كلمة المرور
-   - الخطوة 2: رقم الهاتف، الجنس (اختياري)، تاريخ الميلاد (اختياري)
-   - الخطوة 3: الدولة، المدينة، عنوان الشارع، الرمز البريدي (اختياري)
-3. **Forgot Password**: إدخال البريد الإلكتروني
-4. **Verify OTP**: 6 خانات لإدخال الرمز مع عداد إعادة الإرسال
-5. **Reset Password**: كلمة مرور جديدة + تأكيد
-6. **Success**: رسالة نجاح
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `POST /api/auth/login` | POST | تسجيل الدخول (body: `{ email, password }`) → يعيد `{ token, user }` |
-| `POST /api/auth/register` | POST | إنشاء حساب جديد (body: `{ firstName, lastName, email, password, phone, gender?, dob?, country?, city?, streetLine1?, postalCode? }`) |
-| `POST /api/auth/verify-email` | POST | تأكيد البريد الإلكتروني (body: `{ email, otp }`) |
-| `POST /api/auth/resend-otp` | POST | إعادة إرسال رمز التحقق (body: `{ email }`) |
-| `POST /api/auth/forgot-password` | POST | طلب إعادة تعيين كلمة المرور (body: `{ email }`) |
-| `POST /api/auth/reset-password` | POST | إعادة تعيين كلمة المرور (body: `{ email, token, newPassword }`) |
-| `POST /api/auth/google` | POST | تسجيل الدخول عبر Google (body: `{ idToken }`) |
-
----
-
-### 6. لوحة تحكم الطالب (StudentDashboard) — `/dashboard`
-
-#### التبويبات (Tabs):
-- **Overview**: إحصائيات (الدورات المكتملة/قيد الدراسة/لم تبدأ)، Bar Chart، Pie Chart
-- **My Courses**: قائمة دورات الطالب مع نسبة التقدم وزر "متابعة التعلم"
-- **Certificates**: الشهادات المتحصل عليها مع زر التحميل والمشاركة
-- **Favorites**: قائمة المفضلة وطلبات الاسترداد
-- **Notifications**: إشعارات النظام
-- **Instructor Apply**: طلب الانضمام كمدرب
-
-#### المكونات الفرعية المضمنة:
-| المكون | الوصف |
-|--------|-------|
-| `LearningRoom` | مشغل الفيديو التعليمي مع قائمة الدروس والملاحظات |
-| `QuizTaking` | واجهة الاختبارات مع مؤقت ودرجات |
-| `MessagingCenter` | نظام التراسل مع المدربين |
-| `ManuscriptCertificate` | عرض الشهادة مع خيارات التحميل والمشاركة |
-| `WishlistRefunds` | قائمة المفضلة وطلبات استرداد المبالغ |
-| `InstructorApply` | نموذج طلب الانضمام كمدرب مع رفع الملفات |
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/student/dashboard` | GET | إحصائيات لوحة التحكم |
-| `GET /api/student/courses` | GET | دورات الطالب المسجلة مع التقدم |
-| `GET /api/student/certificates` | GET | شهادات الطالب |
-| `GET /api/student/favorites` | GET | الدورات المفضلة |
-| `GET /api/notifications` | GET | الإشعارات |
-| `PUT /api/notifications/:id/read` | PUT | تعيين الإشعار كمقروء |
-| `POST /api/student/instructor-apply` | POST | تقديم طلب مدرب (FormData مع CV) |
-| `GET /api/student/live-sessions` | GET | الجلسات المباشرة القادمة |
-| `POST /api/student/refund-request` | POST | طلب استرداد مبلغ |
-| `POST /api/courses/:courseId/favorite` | POST | إضافة/إزالة من المفضلة |
-| `GET /api/quiz/:quizId` | GET | جلب بيانات الاختبار |
-| `POST /api/quiz/:quizId/submit` | POST | تقديم إجابات الاختبار (body: `{ answers[] }`) |
-
----
-
-### 7. لوحة تحكم المدرب (InstructorDashboard) — `/instructor`
-
-#### التبويبات (Tabs):
-- **Overview**: إحصائيات (إجمالي الطلاب، الإيرادات، التقييم، عدد الدورات) + Area Chart للإيرادات
-- **My Courses**: قائمة الدورات مع حالة النشر، بحث وتصفية
-- **Course Builder**: منشئ الدورات (إضافة فصول ودروس، رفع فيديو، تحديد السعر)
-- **Revisions**: طلبات المراجعة من المشرفين
-- **Earnings**: تفاصيل الإيرادات مع Bar Chart شهري
-- **Notifications**: إشعارات المدرب
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/instructor/dashboard` | GET | إحصائيات المدرب |
-| `GET /api/instructor/courses` | GET | دورات المدرب |
-| `POST /api/instructor/courses` | POST | إنشاء دورة جديدة (FormData) |
-| `PUT /api/instructor/courses/:id` | PUT | تحديث بيانات الدورة |
-| `DELETE /api/instructor/courses/:id` | DELETE | حذف دورة |
-| `POST /api/instructor/courses/:id/publish` | POST | طلب نشر الدورة |
-| `GET /api/instructor/earnings` | GET | تقارير الإيرادات `?from=&to=` |
-| `PUT /api/instructor/courses/:id/lessons` | PUT | تحديث الدروس (body: `{ sections[] }`) |
-| `POST /api/instructor/live-sessions` | POST | إنشاء جلسة مباشرة |
-| `POST /api/media/upload` | POST | رفع ملف وسائط (FormData) |
-| `DELETE /api/media/:id` | DELETE | حذف ملف وسائط |
-
----
-
-### 8. لوحة تحكم المشرف (AdminDashboard) — `/admin`
-
-#### التبويبات (Tabs):
-- **Overview**: إحصائيات عامة (مجموع المستخدمين، الإيرادات، الدورات، المدربين)
-- **Courses**: مراجعة واعتماد/رفض الدورات الجديدة
-- **Teachers**: مراجعة واعتماد/رفض طلبات المدربين الجدد
-- **Orders & Refunds**: إدارة الطلبات وطلبات الاسترداد
-- **Categories**: إدارة التصنيفات
-- **Reviews**: الإشراف على المراجعات المبلغ عنها
-- **Announcements**: إرسال إعلانات للمستخدمين
-- **Media Library**: إدارة مكتبة الوسائط
-- **System Logs**: سجل النشاطات وإعدادات النظام
-
-#### المكونات الفرعية المضمنة:
-| المكون | الوصف |
-|--------|-------|
-| `ReviewsModeration` | مراجعة التقييمات المبلغ عنها |
-| `AnnouncementsCenter` | مركز إرسال الإعلانات (Push Notifications) |
-| `MediaLibrary` | مكتبة رفع وإدارة الملفات (صور، فيديو، PDF، Excel) |
-| `SystemActivitySettings` | سجل التدقيق (Audit Logs) وإعدادات النظام |
-| `AdvancedAnalytics` | تحليلات متقدمة مع رسوم بيانية متعددة |
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/admin/dashboard` | GET | إحصائيات لوحة المشرف |
-| `GET /api/admin/courses` | GET | جميع الدورات مع حالة المراجعة |
-| `PUT /api/admin/courses/:id/approve` | PUT | اعتماد دورة |
-| `PUT /api/admin/courses/:id/reject` | PUT | رفض دورة (body: `{ reason }`) |
-| `GET /api/admin/teacher-requests` | GET | طلبات المدربين الجدد |
-| `PUT /api/admin/teacher-requests/:id/approve` | PUT | اعتماد مدرب |
-| `PUT /api/admin/teacher-requests/:id/reject` | PUT | رفض طلب مدرب (body: `{ reason }`) |
-| `GET /api/admin/orders` | GET | جميع الطلبات `?status=&page=&limit=` |
-| `GET /api/admin/refunds` | GET | طلبات الاسترداد |
-| `PUT /api/admin/refunds/:id` | PUT | معالجة طلب استرداد (body: `{ status, reason? }`) |
-| `GET /api/admin/reviews/flagged` | GET | المراجعات المبلغ عنها |
-| `DELETE /api/admin/reviews/:id` | DELETE | حذف مراجعة مخالفة |
-| `PUT /api/admin/reviews/:id/dismiss` | PUT | رفض البلاغ |
-| `POST /api/admin/announcements` | POST | إرسال إعلان (body: `{ title, content, targetRole?, courseId? }`) |
-| `GET /api/admin/media` | GET | ملفات الوسائط `?type=&page=&limit=` |
-| `DELETE /api/admin/media/:id` | DELETE | حذف ملف وسائط |
-| `GET /api/admin/activity-logs` | GET | سجل النشاطات `?from=&to=&actionType=` |
-| `GET /api/admin/settings` | GET | إعدادات النظام |
-| `PUT /api/admin/settings` | PUT | تحديث إعدادات النظام |
-| `GET /api/admin/analytics` | GET | بيانات التحليلات `?from=&to=&metric=` |
-
----
-
-### 9. عن المنصة (AboutContactPublic) — `/about`
-
-#### البيانات المعروضة:
-- **Hero**: عنوان، وصف، شعار
-- **Stats**: 3 إحصائيات (أكثر من 200 مخطوطة، +10,000 متعلم، 14 عاماً)
-- **Contact Form**: الاسم، البريد الإلكتروني، غرض المراسلة (اختيار من قائمة)، نص الرسالة
-- **Contact Info**: البريد الإلكتروني للمنصة، رقم الهاتف، العنوان
-- **Legal Modals**: نافذة منبثقة لكل من:
-  - سياسة الخصوصية
-  - شروط الاستخدام
-  - سياسة استرداد الرسوم
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/about` | GET | معلومات عن المنصة |
-| `POST /api/contact` | POST | إرسال رسالة الاتصال (body: `{ name, email, subject, message }`) |
-| `GET /api/legal/:type` | GET | جلب المحتوى القانوني (privacy, terms, refund) |
-
----
-
-### 10. إعدادات الملف الشخصي (ProfileSettings) — `/profile`
-
-#### التبويبات (Tabs):
-- **Personal**: الاسم الكامل، الاسم الأول، اسم العائلة، السيرة الذاتية، الصورة الرمزية، الجنس، تاريخ الميلاد، الدولة، المدينة، العنوان، الرمز البريدي
-- **Phones**: إدارة أرقام الهواتف (إضافة/حذف/تعيين كافتراضي)
-- **Addresses**: إدارة العناوين
-- **Security**: كلمة المرور، جلسات تسجيل الدخول النشطة
-- **Notifications**: تفضيلات الإشعارات (SMS، Email، Push، النشرة الأسبوعية)
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/profile` | GET | بيانات الملف الشخصي |
-| `PUT /api/profile` | PUT | تحديث الملف الشخصي |
-| `POST /api/profile/avatar` | POST | رفع صورة شخصية (FormData) |
-| `GET /api/profile/phones` | GET | قائمة أرقام الهواتف |
-| `POST /api/profile/phones` | POST | إضافة رقم هاتف |
-| `PUT /api/profile/phones/:id` | PUT | تحديث رقم هاتف |
-| `DELETE /api/profile/phones/:id` | DELETE | حذف رقم هاتف |
-| `PUT /api/profile/phones/:id/default` | PUT | تعيين رقم كافتراضي |
-| `GET /api/profile/addresses` | GET | قائمة العناوين |
-| `POST /api/profile/addresses` | POST | إضافة عنوان |
-| `PUT /api/profile/addresses/:id` | PUT | تحديث عنوان |
-| `DELETE /api/profile/addresses/:id` | DELETE | حذف عنوان |
-| `PUT /api/profile/password` | PUT | تغيير كلمة المرور (body: `{ currentPassword, newPassword }`) |
-| `GET /api/profile/sessions` | GET | جلسات تسجيل الدخول النشطة |
-| `DELETE /api/profile/sessions/:id` | DELETE | إنهاء جلسة |
-| `GET /api/profile/notification-settings` | GET | تفضيلات الإشعارات |
-| `PUT /api/profile/notification-settings` | PUT | تحديث تفضيلات الإشعارات |
-
----
-
-### 11. الملف الشخصي العام (PublicProfile) — `/instructor/:name`
-
-#### البيانات المعروضة:
-- **Header**: شريط ثابت باسم المنصة
-- **Instructor Card**: الصورة، الاسم، التخصص، الموقع، الإحصائيات (عدد الطلاب، التقييم، عدد الدورات)
-- **السيرة الذاتية**: نبذة عن المدرب
-- **قائمة الدورات**: دورات المدرب مع روابط سريعة
-
-#### البيانات المطلوبة:
-
-| API | Method | الهدف |
-|-----|--------|-------|
-| `GET /api/instructors/:name` | GET | بيانات المدرب العامة |
-| `GET /api/instructors/:name/courses` | GET | دورات المدرب المنشورة |
-| `POST /api/messages` | POST | إرسال رسالة للمدرب (body: `{ instructorId, message }`) |
-
----
-
-## نظام المصادقة
-
-**الوضع الحالي:** محاكاة كاملة (Simulated) عبر `localStorage` و `setTimeout`
-
-### التخزين الحالي:
-- **Token**: `localStorage.getItem('auth-token')` — محاكى
-- **بيانات المستخدم المسجل**: `localStorage.getItem('athari_registered_user')`
-- **مسودة التسجيل**: `athari_registration_draft` (تُحفظ تلقائياً)
-
-### Interceptor الموجود في `api.ts`:
-```typescript
-// طلب: يضيف Bearer token من localStorage
-// استجابة: عند 401 يمسح التوكن
+**Request Body:**
+```json
+{
+  "email": "ahmed@example.com",
+  "password": "Admin@123456",
+  "rememberMe": false
+}
 ```
 
-### تدفق المصادقة المتوقع مع Backend حقيقي:
-
-```
-تسجيل الدخول:
-  POST /api/auth/login
-  ← يعيد { token, user }
-  → نخزن token في localStorage
-  → نخزن بيانات المستخدم في Context
-
-تسجيل مستخدم جديد:
-  POST /api/auth/register (مع بيانات 3 خطوات)
-  ← يعيد { message, email }
-  → نوجه إلى OTP verification
-
-التحقق من البريد:
-  POST /api/auth/verify-email { email, otp }
-  ← يعيد { token, user }
-
-التحقق من التوكن:
-  GET /api/auth/me (مع Bearer token)
-  ← يعيد بيانات المستخدم الحالي
-
-تسجيل الخروج:
-  → نمسح token من localStorage
-  → نمسح بيانات المستخدم من Context
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "random-refresh-token-string",
+    "sessionId": "guid",
+    "expiresAt": "2026-06-24T22:00:00Z",
+    "user": {
+      "id": "guid",
+      "email": "ahmed@example.com",
+      "fullName": "أحمد محمد",
+      "profilePictureUrl": null,
+      "isActive": true,
+      "emailConfirmed": true,
+      "roles": ["Student"]
+    }
+  }
+}
 ```
 
 ---
 
-## localStorage Keys
+#### `POST /api/auth/refresh`
+Refresh an expired access token using a refresh token.
 
-### المصادقة والتسجيل:
-| المفتاح | الغرض |
-|---------|-------|
-| `auth-token` | رمز المصادقة |
-| `athari_registration_draft` | مسودة التسجيل المحفوظة تلقائياً |
-| `athari_registered_user` | بيانات المستخدم المسجل الكاملة |
-
-### الملف الشخصي:
-| المفتاح | الغرض |
-|---------|-------|
-| `athari_fullName` | الاسم الكامل |
-| `athari_firstName` | الاسم الأول |
-| `athari_lastName` | اسم العائلة |
-| `athari_bio` | السيرة الذاتية |
-| `athari_avatarUrl` | رابط الصورة الرمزية |
-| `athari_gender` | الجنس |
-| `athari_dob` | تاريخ الميلاد |
-| `athari_country` | الدولة |
-| `athari_city` | المدينة |
-| `athari_streetLine1` | عنوان الشارع |
-| `athari_postalCode` | الرمز البريدي |
-| `athari_email` | البريد الإلكتروني |
-| `athari_phone` | رقم الهاتف |
-
-### أرقام الهواتف والعناوين:
-| المفتاح | الغرض |
-|---------|-------|
-| `athari_phones` | مصفوفة أرقام الهواتف (JSON) |
-| `athari_addresses` | مصفوفة العناوين (JSON) |
-
-### الإشعارات:
-| المفتاح | الغرض |
-|---------|-------|
-| `athari_notif_smsLive` | إشعارات SMS للجلسات المباشرة |
-| `athari_notif_emailManuscript` | إشعارات البريد الإلكتروني للمخطوطات |
-| `athari_notif_pushAnnouncements` | إشعارات push للإعلانات |
-| `athari_notif_weeklyDigest` | الملخص الأسبوعي |
-
-### تقدم التعلم:
-| المفتاح | الغرض |
-|---------|-------|
-| `athari_completed_lessons_{courseId}` | حالة إكمال الدروس لكل دورة (JSON) |
-| `quiz_answers_{quizId}` | إجابات الاختبارات |
-
-### المظهر:
-| المفتاح | الغرض |
-|---------|-------|
-| `theme-mode` | الوضع (light/dark) |
-| `theme-color` | لون السمة (gold/forest/graphite) |
-
----
-
-## المكونات المشتركة
-
-### Layout Components:
-
-| المكون | الموقع | الوظيفة |
-|--------|--------|---------|
-| `Navbar` | `components/layout/Navbar.tsx` | شريط التنقل مع الشعار، الروابط، السلة، المظهر |
-| `Footer` | `components/layout/Footer.tsx` | التذييل مع الروابط والمعلومات |
-| `CartDrawer` | `components/layout/CartDrawer.tsx` | سلة التسوق المنزلقة (Slide-over) |
-| `NotFound` | `components/layout/NotFound.tsx` | صفحة 404 |
-| `ErrorBoundary` | `components/layout/ErrorBoundary.tsx` | حد الأخطاء |
-
-### State Management:
-
-| الطبقة | الأداة | النطاق |
-|--------|--------|--------|
-| Global State | React Context (`AppProvider`) | cart, auth, global toast, courses |
-| Notifications | Zustand (`notificationStore`) | notifications[] |
-| Server State | TanStack React Query (غير مستخدم حالياً) | — |
-| Persistence | localStorage | theme, auth, profile, progress, quiz |
-
----
-
-## TypeScript Types
-
-### الأنواع الأساسية (src/types/index.ts):
-
-```typescript
-interface Course {
-  id: string;
-  title: string;
-  category: string;
-  categorySlug: string;
-  instructorName: string;
-  instructorAvatar: string;
-  rating: number;
-  studentsCount: number;
-  price: number;       // 0 = Free
-  originalPrice?: number;
-  duration: string;    // e.g. "٢٤ ساعة"
-  lessonsCount: number;
-  thumbnail: string;
-  progress?: number;   // 0-100
-  nextLesson?: string;
-  featured?: boolean;
+**Request Body:**
+```json
+{
+  "refreshToken": "random-refresh-token-string"
 }
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  iconName: string;
-  courseCount: number;
-}
-
-interface LiveSession {
-  id: string;
-  title: string;
-  instructor: string;
-  date: string;
-  time: string;
-  duration: string;
-}
-
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  content: string;
-  avatar: string;
-}
-
-type ViewType = 'landing' | 'catalog' | 'dashboard' | 'auth' | 'course-details'
-  | 'cart-checkout' | 'instructor-dashboard' | 'admin-dashboard' | 'about-contact'
-  | 'profile-settings' | 'public-profile';
-
-type AuthSubView = 'login' | 'register' | 'forgot' | 'verify' | 'reset' | 'success';
 ```
 
-### الأنواع الإضافية المضمنة في الملفات:
-
-| الملف | الأنواع |
-|-------|---------|
-| `notificationStore.ts` | `Notification`, `NotificationState` |
-| `AppProvider.tsx` | `AppContextType` |
-| `Navbar.tsx` | `MenuLink` |
-| `CartDrawer.tsx` | `CartItemProps` (ضمني) |
-| `InstructorDashboard.tsx` | `BadgeProps` |
-| `CourseBuilder.tsx` | `Section`, `SectionItem`, `FormValues` |
-| `LiveSession.tsx` | `ChatMessage` |
-| `LearningRoom.tsx` | `LearningRoomProps` |
-| `QuizTaking.tsx` | `QuizTakingProps`, `Question`, `Answer` |
-| `MessagingCenter.tsx` | `Message`, `Conversation` |
-| `ManuscriptCertificate.tsx` | `CertificateProps` |
-| `WishlistRefunds.tsx` | `RefundRequest` |
-| `InstructorApply.tsx` | `UploadedFile`, `InstructorApplyProps` |
-| `AdminDashboard.tsx` | `CourseReview`, `TeacherRequest`, `OrderItem`, `RefundItem`, `Category`, `ActivityLog`, `SignalRNotification` |
-| `ReviewsModeration.tsx` | `FlaggedReview` |
-| `AnnouncementsCenter.tsx` | `Announcement` |
-| `MediaLibrary.tsx` | `MediaFile` |
-| `SystemActivitySettings.tsx` | `AuditLog`, `SystemSetting` |
-| `ProfileSettings.tsx` | `PhoneItem`, `AddressItem`, `AuthSession`, `SettingsTab` |
-| `AdvancedAnalytics.tsx` | `AnalyticsMetric`, `ChartDataPoint` |
+**Response (200):** Same as login response (new accessToken + refreshToken).
 
 ---
 
-## ملاحظات هامة للمطورين
+#### `POST /api/auth/verify-email`
+Verify email with the code sent during registration.
 
-### الوضع الحالي:
-هذا المشروع هو **Frontend Prototype** بكل البيانات Mocked. لا يوجد أي Backend متصل حالياً.
+**Request Body:**
+```json
+{
+  "email": "ahmed@example.com",
+  "code": "123456"
+}
+```
 
-### للربط مع Backend حقيقي:
-1. **React Query**: جاهز للاستخدام (`queryClient` موجود في `lib/query-client.ts`)
-2. **Axios instance**: جاهزة مع Interceptors (`lib/api.ts`) — تحتاج لـ `VITE_API_URL`
-3. **SignalR**: مذكور في الـ Types (SignalRNotification في AdminDashboard) لكنه غير مطبق
-4. **React Hook Form + Zod**: موجودة في `package.json` لكن غير مستخدمة (كل الفورم يدوية حالياً)
+---
 
-### متغيرات البيئة المطلوبة:
+#### `POST /api/auth/resend-verification`
+Resend the verification code.
+
+**Request Body:**
+```json
+{
+  "email": "ahmed@example.com"
+}
+```
+
+---
+
+#### `POST /api/auth/forgot-password`
+Request a password reset code.
+
+**Request Body:**
+```json
+{
+  "email": "ahmed@example.com"
+}
+```
+
+---
+
+#### `POST /api/auth/reset-password`
+Reset password using the code from forgot-password.
+
+**Request Body:**
+```json
+{
+  "email": "ahmed@example.com",
+  "code": "123456",
+  "newPassword": "NewPass@123",
+  "confirmPassword": "NewPass@123"
+}
+```
+
+---
+
+#### `POST /api/auth/change-password` 🔒
+Change password for authenticated user.
+
+**Request Body:**
+```json
+{
+  "currentPassword": "Admin@123456",
+  "newPassword": "NewPass@123",
+  "confirmPassword": "NewPass@123"
+}
+```
+
+---
+
+#### `POST /api/auth/logout` 🔒
+Logout current session.
+
+**No request body.**
+
+---
+
+#### `POST /api/auth/logout-all` 🔒
+Logout all sessions except current.
+
+**No request body.**
+
+---
+
+#### `GET /api/auth/sessions` 🔒
+List all active sessions for current user.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "guid",
+      "ipAddress": "192.168.1.1",
+      "userAgent": "Mozilla/5.0...",
+      "createdAt": "2026-06-24T10:00:00Z",
+      "expiresAt": "2026-07-01T10:00:00Z"
+    }
+  ]
+}
+```
+
+> 🔒 = Requires `Authorization: Bearer <token>` header
+
+---
+
+### 8.2 OAuth (`/api/oauth`)
+
+#### `POST /api/oauth/google`
+Login/register via Google OAuth.
+
+**Request Body:**
+```json
+{
+  "idToken": "google-id-token-string"
+}
+```
+
+**Response:** Same as login response.
+
+#### `POST /api/oauth/microsoft`
+Login/register via Microsoft OAuth.
+
+**Request Body:**
+```json
+{
+  "idToken": "microsoft-id-token-string"
+}
+```
+
+---
+
+### 8.3 Profile (`/api/profile`)
+
+#### `GET /api/profile/me` 🔒
+Get current user's full profile.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "fullName": "أحمد محمد",
+    "email": "ahmed@example.com",
+    "bio": "طالب في منصة آثاري",
+    "gender": "Male",
+    "dateOfBirth": "1995-06-15",
+    "nationality": "Egyptian",
+    "profileImageUrl": "https://minio.../images/photo.jpg",
+    "createdAt": "2026-01-01T00:00:00Z",
+    "phones": [
+      {
+        "id": "guid",
+        "phoneNumber": "+201234567890",
+        "type": "Primary",
+        "isVerified": true,
+        "isDefault": true
+      }
+    ],
+    "addresses": [
+      {
+        "id": "guid",
+        "type": "Home",
+        "streetLine1": "123 Main St",
+        "streetLine2": null,
+        "city": "Cairo",
+        "stateProvince": null,
+        "postalCode": "12345",
+        "country": "Egypt",
+        "contactPhone": "+201234567890",
+        "isDefault": true
+      }
+    ]
+  }
+}
+```
+
+#### `GET /api/profile/{userId}`
+Get public profile (no auth required).
+
+#### `PUT /api/profile` 🔒
+Update profile fields.
+
+**Request Body (all optional):**
+```json
+{
+  "firstName": "أحمد",
+  "lastName": "علي",
+  "bio": "مطور .NET",
+  "gender": "Male",
+  "dateOfBirth": "1995-06-15",
+  "nationality": "Egyptian"
+}
+```
+
+#### `POST /api/profile/picture` 🔒
+Set profile picture from uploaded file.
+
+**Request Body:**
+```json
+{
+  "fileId": "guid-of-uploaded-file"
+}
+```
+
+#### `DELETE /api/profile/picture` 🔒
+Remove profile picture.
+
+#### `POST /api/profile/phones` 🔒
+**Request Body:**
+```json
+{
+  "phoneNumber": "+201234567890",
+  "type": "Primary",
+  "isDefault": true
+}
+```
+
+#### `DELETE /api/profile/phones/{phoneId}` 🔒
+#### `PUT /api/profile/phones/{phoneId}/default` 🔒
+
+#### `POST /api/profile/addresses` 🔒
+**Request Body:**
+```json
+{
+  "type": "Home",
+  "streetLine1": "123 Main St",
+  "streetLine2": "Apt 4",
+  "city": "Cairo",
+  "stateProvince": "Cairo Governorate",
+  "postalCode": "12345",
+  "country": "Egypt",
+  "contactPhone": "+201234567890",
+  "isDefault": true
+}
+```
+
+#### `PUT /api/profile/addresses/{addressId}` 🔒
+#### `DELETE /api/profile/addresses/{addressId}` 🔒
+#### `PUT /api/profile/addresses/{addressId}/default` 🔒
+
+---
+
+### 8.4 Categories (`/api/categories`)
+
+#### `GET /api/categories`
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "guid",
+      "name": "برمجة",
+      "slug": "programming",
+      "description": "دورات البرمجة",
+      "imageUrl": "https://minio.../images/cat.jpg",
+      "parentId": null,
+      "position": 1,
+      "courseCount": 15
+    }
+  ]
+}
+```
+
+#### `GET /api/categories/{id}`
+#### `POST /api/categories` 🔒Admin
+**Request Body:**
+```json
+{
+  "name": "تصميم",
+  "slug": "design",
+  "description": "دورات التصميم",
+  "parentId": null,
+  "position": 2
+}
+```
+#### `PUT /api/categories/{id}` 🔒Admin
+#### `DELETE /api/categories/{id}` 🔒Admin
+#### `PUT /api/categories/{categoryId}/image` 🔒Admin
+
+---
+
+### 8.5 Course Management (`/api/management/courses`)
+
+#### `POST /api/management/courses` 🔒
+Create a new course (draft).
+
+**Request Body:**
+```json
+{
+  "title": "دورة C# للمبتدئين",
+  "slug": "csharp-for-beginners",
+  "description": "تعلم C# من الصفر",
+  "categoryId": "guid",
+  "level": "Beginner",
+  "language": "Ar",
+  "price": 199.99
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "title": "دورة C# للمبتدئين",
+    "slug": "csharp-for-beginners",
+    "description": "تعلم C# من الصفر",
+    "price": 199.99,
+    "level": "Beginner",
+    "language": "Ar",
+    "status": "Draft",
+    "totalDurationMinutes": 0,
+    "enrollmentCount": 0,
+    "averageRating": 0,
+    "thumbnailUrl": null,
+    "categoryName": "برمجة",
+    "createdAt": "2026-06-24T10:00:00Z"
+  }
+}
+```
+
+#### `GET /api/management/courses` 🔒Instructor
+List courses owned by current instructor.
+
+#### `GET /api/management/courses/{id}` 🔒
+Get course details (includes Requirements + LearningOutcomes).
+
+#### `PUT /api/management/courses/{id}` 🔒
+Update course. Only `Draft` or `Rejected` courses can be edited.
+
+**Request Body (all optional):**
+```json
+{
+  "title": "دورة C# للمبتدئين - النسخة المحدثة",
+  "description": "وصف محدث",
+  "categoryId": "guid",
+  "level": "Intermediate",
+  "language": "Ar",
+  "price": 299.99
+}
+```
+
+#### `DELETE /api/management/courses/{id}` 🔒
+#### `POST /api/management/courses/{id}/requirements` 🔒
+**Request Body:** `{ "requirementText": "معرفة básica بالبرمجة" }`
+#### `DELETE /api/management/courses/{id}/requirements/{requirementId}` 🔒
+#### `POST /api/management/courses/{id}/outcomes` 🔒
+**Request Body:** `{ "outcomeText": "ستتعلم بناء تطبيقات ويب" }`
+#### `DELETE /api/management/courses/{id}/outcomes/{outcomeId}` 🔒
+#### `POST /api/management/courses/{id}/submit-for-review` 🔒
+Submit course for admin review.
+#### `POST /api/management/courses/{id}/schedule-deletion` 🔒
+**Request Body:** `{ "scheduledDate": "2026-07-01T00:00:00Z", "reason": "محتوى قديم" }`
+#### `POST /api/management/courses/{id}/cancel-scheduled-deletion` 🔒
+#### `GET /api/management/courses/{id}/deletion-status` 🔒
+#### `PUT /api/management/courses/{courseId}/image` 🔒
+**Request Body:** `{ "fileId": "guid" }`
+
+---
+
+### 8.6 Sections (`/api/management/courses/{courseId}/sections`)
+
+#### `GET .../sections` 🔒
+**Response:** Array of `SectionDto` with nested `Items`.
+
+#### `POST .../sections` 🔒
+**Request Body:**
+```json
+{
+  "title": "المحاضرة الأولى: مقدمة في C#",
+  "description": "مقدمة شاملة"
+}
+```
+
+#### `PUT .../sections/{sectionId}` 🔒
+**Request Body:** `{ "title": "...", "description": "...", "isLocked": false }`
+
+#### `DELETE .../sections/{sectionId}` 🔒
+
+#### `PUT .../sections/reorder` 🔒
+**Request Body:**
+```json
+{
+  "items": [
+    { "id": "section-guid-1", "position": 1 },
+    { "id": "section-guid-2", "position": 2 }
+  ]
+}
+```
+
+#### `POST .../sections/{sectionId}/items` 🔒
+**Request Body:**
+```json
+{
+  "itemType": "Video",
+  "itemId": "video-guid",
+  "isPreviewAllowed": false,
+  "isMandatory": true
+}
+```
+> `itemType` values: `"Video"`, `"Quiz"`, `"Document"`, `"LiveSession"`
+
+#### `PUT .../sections/{sectionId}/items/{itemId}` 🔒
+**Request Body:** `{ "isPreviewAllowed": true, "isMandatory": false }`
+
+#### `DELETE .../sections/{sectionId}/items/{itemId}` 🔒
+#### `PUT .../sections/{sectionId}/items/reorder` 🔒
+
+---
+
+### 8.7 Video Content (`/api/courses/{courseId}/videos`)
+
+#### `POST .../videos` 🔒Instructor
+**Request Body:**
+```json
+{
+  "sectionId": "guid",
+  "title": "محاضرة 1: تثبيت بيئة التطوير",
+  "videoFileId": "guid-of-uploaded-video",
+  "provider": "Local",
+  "durationSeconds": 1800,
+  "transcript": "نص المحاضرة...",
+  "isPreview": false
+}
+```
+
+#### `GET .../videos/{id}` 🔒Instructor
+#### `PUT .../videos/{id}` 🔒Instructor
+#### `DELETE .../videos/{id}` 🔒Instructor
+
+---
+
+### 8.8 Document Content (`/api/courses/{courseId}/documents`)
+
+#### `POST .../documents` 🔒Instructor
+**Request Body:**
+```json
+{
+  "sectionId": "guid",
+  "title": "ملحق الدورة",
+  "description": "PDF يحتوي على ملخص المحاضرات",
+  "fileId": "guid-of-uploaded-file",
+  "isDownloadable": true
+}
+```
+
+#### `GET .../documents/{id}` 🔒Instructor
+#### `PUT .../documents/{id}` 🔒Instructor
+#### `DELETE .../documents/{id}` 🔒Instructor
+
+---
+
+### 8.9 Quiz Management (`/api/courses/{courseId}/quizzes`)
+
+#### `POST .../quizzes` 🔒Instructor
+**Request Body:**
+```json
+{
+  "sectionId": "guid",
+  "title": "اختبار الوحدة الأولى",
+  "description": "اختبار قصير",
+  "durationMinutes": 30,
+  "passingScorePercent": 60,
+  "maxAttempts": 3,
+  "shuffleQuestions": true,
+  "shuffleOptions": true,
+  "showResultsImmediately": true,
+  "allowReview": true,
+  "availableFrom": "2026-06-25T00:00:00Z",
+  "availableUntil": "2026-07-01T23:59:59Z"
+}
+```
+
+#### `GET .../quizzes/{id}` 🔒Instructor
+Returns quiz with all questions and options.
+
+#### `PUT .../quizzes/{id}` 🔒Instructor
+#### `DELETE .../quizzes/{id}` 🔒Instructor
+
+#### `POST .../quizzes/{quizId}/questions` 🔒Instructor
+**Request Body:**
+```json
+{
+  "questionText": "ما هو نوع البيانات الصحيح لتخزين عدد صحيح؟",
+  "type": "MultipleChoice",
+  "points": 1,
+  "explanation": "int هو نوع البيانات الأساسي للأعداد الصحيحة",
+  "position": 1,
+  "options": [
+    { "optionText": "int", "isCorrect": true, "position": 1 },
+    { "optionText": "string", "isCorrect": false, "position": 2 },
+    { "optionText": "bool", "isCorrect": false, "position": 3 },
+    { "optionText": "float", "isCorrect": false, "position": 4 }
+  ]
+}
+```
+> `type` values: `"MultipleChoice"`, `"TrueFalse"`, `"ShortAnswer"`
+
+#### `PUT .../quizzes/{quizId}/questions/{questionId}` 🔒Instructor
+#### `DELETE .../quizzes/{quizId}/questions/{questionId}` 🔒Instructor
+
+---
+
+### 8.10 Quiz Attempts (`/api/enrollments/{enrollmentId}/quizzes/{quizId}/attempts`)
+
+#### `POST .../attempts` 🔒
+Start a new quiz attempt.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "enrollmentId": "guid",
+    "quizId": "guid",
+    "attemptNumber": 1,
+    "startedAt": "2026-06-24T10:00:00Z",
+    "submittedAt": null,
+    "scorePercentage": 0,
+    "isPassed": false,
+    "status": "InProgress"
+  }
+}
+```
+
+#### `PUT .../attempts/{attemptId}` 🔒
+Submit quiz answers.
+
+**Request Body:**
+```json
+{
+  "answers": [
+    {
+      "questionId": "guid",
+      "selectedOptionId": "guid",
+      "answerText": null
+    },
+    {
+      "questionId": "guid",
+      "selectedOptionId": null,
+      "answerText": "إجابة نصية"
+    }
+  ]
+}
+```
+
+#### `GET .../attempts` 🔒
+#### `GET .../attempts/{attemptId}` 🔒
+
+---
+
+### 8.11 Enrollments (`/api/enrollments`)
+
+#### `POST /api/enrollments` 🔒
+Enroll in a course.
+
+**Request Body:**
+```json
+{
+  "courseId": "guid",
+  "userId": "guid",
+  "source": "Purchase"
+}
+```
+> `source` values: `"Purchase"`, `"Free"`, `"Admin"`, `"Referral"`
+
+#### `GET /api/enrollments` 🔒
+List current user's enrollments.
+
+#### `GET /api/enrollments/{id}` 🔒
+Get enrollment details with progress.
+
+#### `GET /api/enrollments/{enrollmentId}/progress` 🔒
+
+#### `PUT /api/enrollments/{enrollmentId}/progress` 🔒
+**Request Body:**
+```json
+{
+  "watchTimeSeconds": 300,
+  "completionPercentage": 75.5,
+  "metadata": null,
+  "markAsCompleted": false
+}
+```
+
+#### `POST /api/enrollments/{enrollmentId}/progress/{contentType}/{contentId}/complete` 🔒
+Mark a content item as completed.
+
+---
+
+### 8.12 Admin Course Management (`/api/admin/courses`)
+
+#### `POST .../courses/{id}/approve` 🔒Admin
+#### `POST .../courses/{id}/reject` 🔒Admin
+#### `GET .../courses/edit-requests` 🔒Admin
+#### `GET .../courses/edit-requests/{requestId}` 🔒Admin
+#### `POST .../courses/edit-requests/{requestId}/review` 🔒Admin
+**Request Body:**
+```json
+{
+  "approve": true,
+  "notes": "تمت المراجعة والموافقة"
+}
+```
+
+---
+
+### 8.13 Live Sessions (`/api/courses/{courseId}/live-sessions`)
+
+#### `POST .../live-sessions` 🔒Instructor
+**Request Body:**
+```json
+{
+  "title": "جلسة مباشرة: مراجعة الأسئلة",
+  "description": "جلسة تفاعلية",
+  "meetingUrl": "https://zoom.us/j/123456",
+  "scheduledStart": "2026-06-25T18:00:00Z",
+  "scheduledEnd": "2026-06-25T19:00:00Z",
+  "maxAttendees": 50
+}
+```
+
+#### `GET .../live-sessions` 🔒Instructor
+#### `PUT .../live-sessions/{sessionId}/status` 🔒Instructor
+#### `DELETE .../live-sessions/{sessionId}` 🔒Instructor
+
+---
+
+### 8.14 Live Attendance (`/api/live-sessions/{sessionId}/attendance`)
+
+#### `POST .../attendance/join` 🔒
+#### `POST .../attendance/leave` 🔒
+#### `GET .../attendance/count` 🔒
+
+---
+
+### 8.15 Video Comments (`/api/videos/{videoId}/comments`)
+
+#### `GET .../comments`
+**Response:** Array of comments with replies.
+
+#### `POST .../comments` 🔒
+**Request Body:** `{ "content": "محاضرة ممتازة!" }`
+
+#### `PUT .../comments/{commentId}` 🔒
+#### `DELETE .../comments/{commentId}` 🔒
+#### `POST .../comments/{commentId}/like` 🔒
+
+---
+
+### 8.16 Reviews (`/api/reviews`)
+
+#### `POST /api/reviews` 🔒
+**Request Body:**
+```json
+{
+  "courseId": "guid",
+  "rating": 5,
+  "comment": "دورة ممتازة ومحتوى غني"
+}
+```
+
+#### `GET /api/reviews/course/{courseId}`
+#### `GET /api/reviews/{id}`
+#### `PUT /api/reviews/{id}` 🔒
+#### `DELETE /api/reviews/{id}` 🔒
+#### `POST /api/reviews/{id}/helpful` 🔒
+#### `POST /api/reviews/{id}/flag` 🔒Instructor
+#### `GET /api/reviews/pending` 🔒Admin
+#### `PUT /api/reviews/{id}/moderate` 🔒Admin
+
+---
+
+### 8.17 Certificates (`/api/certificates`)
+
+#### `GET /api/certificates/my` 🔒
+#### `GET /api/certificates/{id}` 🔒
+#### `GET /api/certificates/{id}/download` 🔒
+Returns PDF file.
+#### `GET /api/certificates/verify/{code}`
+Public verification endpoint.
+
+---
+
+### 8.18 Admin Certificates (`/api/admin/certificates`)
+
+#### `GET /api/admin/certificates` 🔒Admin
+#### `POST /api/admin/certificates/{id}/revoke` 🔒Admin
+#### `POST /api/admin/certificates/issue` 🔒Admin
+
+---
+
+### 8.19 Cart (`/api/cart`)
+
+#### `GET /api/cart` 🔒
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "items": [
+      {
+        "id": "guid",
+        "courseId": "guid",
+        "courseTitle": "دورة C# للمبتدئين",
+        "courseImageUrl": "https://minio.../images/course.jpg",
+        "instructorName": "أحمد محمد",
+        "priceSnapshot": 199.99,
+        "currentPrice": 199.99,
+        "addedAt": "2026-06-24T10:00:00Z"
+      }
+    ],
+    "subtotal": 199.99,
+    "couponCode": null,
+    "discountAmount": 0,
+    "finalAmount": 199.99
+  }
+}
+```
+
+#### `POST /api/cart/items` 🔒
+**Request Body:** `{ "courseId": "guid" }`
+
+#### `DELETE /api/cart/items/{itemId}` 🔒
+
+#### `POST /api/cart/apply-coupon` 🔒
+**Request Body:** `{ "code": "SUMMER20" }`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "code": "SUMMER20",
+    "discountAmount": 40.00,
+    "finalAmount": 159.99,
+    "message": "تم تطبيق الخصم بنجاح"
+  }
+}
+```
+
+#### `DELETE /api/cart/coupon` 🔒
+
+---
+
+### 8.20 Coupons (`/api/coupons`)
+
+#### `POST /api/coupons/validate` 🔒
+**Request Body:**
+```json
+{
+  "code": "SUMMER20",
+  "cartTotal": 199.99,
+  "courseIds": ["guid1", "guid2"]
+}
+```
+
+---
+
+### 8.21 Admin Coupons (`/api/admin/coupons`)
+
+#### `GET /api/admin/coupons` 🔒Admin
+#### `GET /api/admin/coupons/{couponId}` 🔒Admin
+#### `POST /api/admin/coupons` 🔒Admin
+**Request Body:**
+```json
+{
+  "code": "SUMMER20",
+  "type": "Percentage",
+  "value": 20,
+  "maxDiscountAmount": 50,
+  "minimumPurchaseAmount": 100,
+  "applicableTo": "All",
+  "courseIds": null,
+  "usageLimit": 100,
+  "userLimitPerUser": 1,
+  "isPublic": true,
+  "validFrom": "2026-06-01T00:00:00Z",
+  "validUntil": "2026-08-31T23:59:59Z"
+}
+```
+> `type` values: `"Percentage"`, `"FixedAmount"`
+> `applicableTo` values: `"All"`, `"SpecificCourses"`, `"FirstPurchase"`
+
+#### `PUT /api/admin/coupons/{couponId}` 🔒Admin
+#### `PATCH /api/admin/coupons/{couponId}/toggle` 🔒Admin
+#### `DELETE /api/admin/coupons/{couponId}` 🔒Admin
+
+---
+
+### 8.22 Orders (`/api/orders`)
+
+#### `GET /api/orders` 🔒
+List current user's orders.
+
+#### `GET /api/orders/{orderId}` 🔒
+Get order details with items and payment history.
+
+#### `POST /api/orders` 🔒
+Create order from cart contents.
+
+**Request Body:**
+```json
+{
+  "couponCode": "SUMMER20"
+}
+```
+> `couponCode` is optional.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "orderNumber": "ORD-20260624-001",
+    "subtotal": 199.99,
+    "discountAmount": 40.00,
+    "finalAmount": 159.99,
+    "status": "Pending",
+    "couponCode": "SUMMER20",
+    "itemCount": 1,
+    "createdAt": "2026-06-24T10:00:00Z"
+  }
+}
+```
+
+---
+
+### 8.23 Payments (`/api/payments`)
+
+#### `POST /api/payments/process` 🔒
+Process payment for an order.
+
+**Query Parameter:** `orderId=guid`
+**Request Body:**
+```json
+{
+  "paymentMethodId": "guid"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "guid",
+    "orderId": "guid",
+    "amount": 159.99,
+    "status": "Completed",
+    "gatewayTransactionId": "TXN-123456",
+    "gatewayResponse": "Payment processed successfully",
+    "paymentMethodName": "Credit Card",
+    "createdAt": "2026-06-24T10:05:00Z"
+  }
+}
+```
+
+#### `GET /api/payments/methods`
+List active payment methods (public).
+
+#### `GET /api/payments/history/{orderId}` 🔒
+
+---
+
+### 8.24 Admin Payment Methods (`/api/admin/payment-methods`)
+
+#### `GET .../payment-methods` 🔒Admin
+#### `POST .../payment-methods` 🔒Admin
+**Request Body:**
+```json
+{
+  "name": "بطاقة ائتمان",
+  "provider": "Stripe",
+  "type": "CreditCard",
+  "configuration": "{ \"apiKey\": \"sk_test_...\" }"
+}
+```
+#### `PATCH .../payment-methods/{id}/toggle` 🔒Admin
+
+---
+
+### 8.25 Refunds (`/api/refunds`)
+
+#### `POST /api/refunds` 🔒
+**Request Body:**
+```json
+{
+  "paymentId": "guid",
+  "reason": "أريد استرداد المبلغ"
+}
+```
+
+#### `GET /api/refunds` 🔒
+
+---
+
+### 8.26 Admin Refunds (`/api/admin/refunds`)
+
+#### `GET /api/admin/refunds` 🔒Admin
+#### `POST /api/admin/refunds/approve` 🔒Admin
+**Request Body:** `{ "refundId": "guid", "adminNotes": "تمت الموافقة" }`
+#### `POST /api/admin/refunds/reject` 🔒Admin
+**Request Body:** `{ "refundId": "guid", "adminNotes": "السبب غير كافٍ" }`
+
+---
+
+### 8.27 Wishlist (`/api/wishlist`)
+
+#### `GET /api/wishlist` 🔒
+#### `POST /api/wishlist/{courseId}` 🔒
+#### `DELETE /api/wishlist/{courseId}` 🔒
+
+---
+
+### 8.28 Notifications (`/api/notifications`)
+
+#### `GET /api/notifications` 🔒
+#### `GET /api/notifications/unread-count` 🔒
+#### `PATCH /api/notifications/{notificationId}/read` 🔒
+#### `POST /api/notifications/mark-all-read` 🔒
+#### `DELETE /api/notifications/{notificationId}` 🔒
+#### `DELETE /api/notifications/clear-all` 🔒
+
+---
+
+### 8.29 Notification Preferences (`/api/notifications/preferences`)
+
+#### `GET /api/notifications/preferences` 🔒
+#### `PUT /api/notifications/preferences` 🔒
+**Request Body:**
+```json
+{
+  "emailNotifications": true,
+  "pushNotifications": true,
+  "courseUpdates": true,
+  "newMessages": true,
+  "announcements": true,
+  "marketingEmails": false
+}
+```
+
+---
+
+### 8.30 Media (`/api/media`)
+
+#### `POST /api/media/upload-url` 🔒
+Generate a pre-signed upload URL.
+
+**Request Body:** `{ "fileName": "video.mp4", "contentType": "video/mp4", "fileSize": 104857600 }`
+
+#### `POST /api/media/confirm-upload` 🔒
+**Request Body:** `{ "fileId": "guid" }`
+
+#### `GET /api/media/{fileId}/view-url`
+Get a pre-signed view/download URL.
+
+---
+
+### 8.31 Admin Media (`/api/admin/media`)
+
+#### `GET /api/admin/media` 🔒Admin
+#### `GET /api/admin/media/{fileId}` 🔒Admin
+#### `DELETE /api/admin/media/{fileId}/soft` 🔒Admin
+#### `POST /api/admin/media/{fileId}/restore` 🔒Admin
+#### `DELETE /api/admin/media/{fileId}` 🔒Admin
+#### `GET /api/admin/media/stats` 🔒Admin
+
+---
+
+### 8.32 Instructor Requests (`/api/instructor-requests`)
+
+#### `GET /api/instructor-requests/can-submit` 🔒
+#### `POST /api/instructor-requests` 🔒
+**Request Body:**
+```json
+{
+  "message": "أريد أن أكون مدرّب في المنصة",
+  "documents": [
+    {
+      "documentType": "Certificate",
+      "fileId": "guid",
+      "urlValue": null
+    }
+  ]
+}
+```
+
+#### `PUT /api/instructor-requests/{requestId}` 🔒
+#### `POST /api/instructor-requests/{requestId}/documents` 🔒
+#### `GET /api/instructor-requests/my-requests` 🔒
+#### `GET /api/instructor-requests/my-requests/{requestId}` 🔒
+#### `DELETE /api/instructor-requests/{requestId}/cancel` 🔒
+#### `GET /api/instructor-requests/pending` 🔒Admin
+#### `GET /api/instructor-requests/{requestId}` 🔒Admin
+#### `PUT /api/instructor-requests/{requestId}/process` 🔒Admin
+#### `DELETE /api/instructor-requests/{requestId}` 🔒Admin
+
+---
+
+### 8.33 Admin Users (`/api/admin/users`)
+
+#### `GET /api/admin/users` 🔒Admin
+#### `GET /api/admin/users/{userId}` 🔒Admin
+#### `PATCH /api/admin/users/{userId}/toggle-active` 🔒Admin
+#### `DELETE /api/admin/users/{userId}` 🔒Admin
+
+---
+
+### 8.34 Dashboards
+
+#### Student (`/api/student/dashboard`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET .../overview` 🔒 | Student | Stats: enrolled courses, completed, certificates |
+| `GET .../courses` 🔒 | Student | List enrolled courses with progress |
+| `GET .../weekly-activity` 🔒 | Student | Activity chart data |
+| `GET .../certificates` 🔒 | Student | Student's certificates |
+
+#### Instructor (`/api/instructor/dashboard`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET .../overview` 🔒 | Instructor | Stats: total courses, students, revenue |
+| `GET .../courses` 🔒 | Instructor | Instructor's courses |
+| `GET .../revenue` 🔒 | Instructor | Revenue data |
+| `GET .../students` 🔒 | Instructor | Student stats |
+| `GET .../pending-requests` 🔒 | Instructor | Pending edit requests |
+| `GET .../recent-reviews` 🔒 | Instructor | Recent reviews |
+
+#### Admin (`/api/admin/dashboard`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET .../overview` 🔒 | Admin | Platform-wide stats |
+| `GET .../revenue` 🔒 | Admin | Revenue trends |
+| `GET .../user-growth` 🔒 | Admin | User growth data |
+| `GET .../enrollment-trend` 🔒 | Admin | Enrollment trends |
+| `GET .../top-courses` 🔒 | Admin | Top performing courses |
+
+---
+
+### 8.35 Communication
+
+#### Announcements (`/api/announcements`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET .../feed` 🔒 | Auth | Get announcement feed |
+| `POST ...` 🔒Admin | Admin | Create announcement |
+| `PUT .../{id}` 🔒Admin | Admin | Update announcement |
+| `PATCH .../{id}/deactivate` 🔒Admin | Admin | Deactivate |
+| `DELETE .../{id}` 🔒Admin | Admin | Delete |
+
+#### Messages (`/api/messages`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST .../send` 🔒 | Auth | Send message |
+| `GET .../conversations` 🔒 | Auth | List conversations |
+| `GET .../conversations/{id}` 🔒 | Auth | Get messages in conversation |
+| `PATCH .../{messageId}/read` 🔒 | Auth | Mark as read |
+| `DELETE .../{messageId}` 🔒 | Auth | Soft delete |
+| `GET .../unread-count` 🔒 | Auth | Unread count |
+
+#### System Settings (`/api/system-settings`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET ...` 🔒Admin | Admin | List all settings |
+| `GET .../{key}` 🔒Admin | Admin | Get setting by key |
+| `POST ...` 🔒Admin | Admin | Create setting |
+| `PUT .../{key}` 🔒Admin | Admin | Update setting |
+| `DELETE .../{key}` 🔒Admin | Admin | Delete setting |
+
+#### Activity Logs (`/api/activity-logs`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET ...` 🔒Admin | Admin | List logs with filters |
+
+#### Reports (`/api/reports`)
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST ...` 🔒 | Auth | Create report |
+| `GET .../pending` 🔒Admin | Admin | Pending reports |
+| `PATCH .../{id}/resolve` 🔒Admin | Admin | Resolve report |
+
+---
+
+### 8.36 Public Endpoints
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/public/landing` | — | Aggregated landing page data |
+| `GET /api/public/stats` | — | Platform statistics |
+| `GET /api/public/about` | — | About page content |
+| `GET /api/public/legal/{type}` | — | Legal pages (`"privacy"`, `"terms"`, `"refund"`) |
+| `GET /api/public/testimonials` | — | Approved testimonials |
+| `POST /api/public/testimonials` 🔒 | Auth | Submit testimonial |
+| `GET /api/public/instructors/{slug}` | — | Instructor profile by slug |
+| `GET /api/public/instructors/check-slug` 🔒 | Auth | Check slug availability |
+| `GET /api/public/instructors/search` | — | Search instructors |
+| `GET /api/public/courses` | — | Browse published courses (with filters) |
+| `GET /api/public/courses/{id}` | — | Course details |
+| `GET /api/public/courses/slug/{slug}` | — | Course by slug |
+| `GET /api/public/courses/search/suggest` | — | Search suggestions |
+| `GET /api/public/courses/stats` | — | Platform stats |
+| `GET /api/public/courses/{id}/related` | — | Related courses |
+| `GET /api/public/courses/filters/options` | — | Available filter options |
+| `POST /api/public/contact` | — | Submit contact message |
+
+#### `GET /api/public/courses` Query Parameters:
+```
+?searchQuery=CSharp&categoryId=guid&level=Beginner&language=Ar
+&minPrice=0&maxPrice=500&isFreeOnly=false&minRating=4
+&sortBy=PublishedAt&sortDescending=true&page=1&pageSize=12
+```
+> `sortBy` values: `"PublishedAt"`, `"Price"`, `"AverageRating"`, `"EnrollmentCount"`, `"Title"`
+
+---
+
+### 8.37 Health Checks
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Basic health check |
+| `GET /healthz` | Liveness probe |
+| `GET /ready` | Readiness probe (checks database) |
+
+---
+
+### 8.38 Root
+
+#### `GET /`
+**Response:**
+```json
+{
+  "name": "Athary LMS API",
+  "version": "1.0.0",
+  "swagger": "/swagger",
+  "health": "/health"
+}
+```
+| PUT | `/api/categories/{id}` | Admin | Update category |
+| DELETE | `/api/categories/{id}` | Admin | Delete category |
+| PUT | `/api/categories/{categoryId}/image` | Admin | Set category image |
+
+### 8.5 Course Management (`/api/management/courses`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/management/courses` | Auth | Create course |
+| GET | `/api/management/courses` | Instructor | List instructor's courses |
+| GET | `/api/management/courses/{id}` | Auth | Get course details |
+| PUT | `/api/management/courses/{id}` | Auth | Update course |
+| DELETE | `/api/management/courses/{id}` | Auth | Delete course |
+| POST | `/api/management/courses/{id}/requirements` | Auth | Add requirement |
+| DELETE | `/api/management/courses/{id}/requirements/{requirementId}` | Auth | Remove requirement |
+| POST | `/api/management/courses/{id}/outcomes` | Auth | Add learning outcome |
+| DELETE | `/api/management/courses/{id}/outcomes/{outcomeId}` | Auth | Remove learning outcome |
+| POST | `/api/management/courses/{id}/submit-for-review` | Auth | Submit for review |
+| POST | `/api/management/courses/{id}/schedule-deletion` | Auth | Schedule deletion |
+| POST | `/api/management/courses/{id}/cancel-scheduled-deletion` | Auth | Cancel scheduled deletion |
+| GET | `/api/management/courses/{id}/deletion-status` | Auth | Get deletion status |
+| PUT | `/api/management/courses/{courseId}/image` | Auth | Set course image |
+
+### 8.6 Section Management (`/api/management/courses/{courseId}/sections`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/management/courses/{courseId}/sections` | Auth | List sections |
+| POST | `/api/management/courses/{courseId}/sections` | Auth | Create section |
+| GET | `/api/management/courses/{courseId}/sections/{sectionId}` | Auth | Get section |
+| PUT | `/api/management/courses/{courseId}/sections/{sectionId}` | Auth | Update section |
+| DELETE | `/api/management/courses/{courseId}/sections/{sectionId}` | Auth | Delete section |
+| PUT | `/api/management/courses/{courseId}/sections/reorder` | Auth | Reorder sections |
+| POST | `/api/management/courses/{courseId}/sections/{sectionId}/items` | Auth | Add item to section |
+| PUT | `/api/management/courses/{courseId}/sections/{sectionId}/items/{itemId}` | Auth | Update section item |
+| DELETE | `/api/management/courses/{courseId}/sections/{sectionId}/items/{itemId}` | Auth | Delete section item |
+| PUT | `/api/management/courses/{courseId}/sections/{sectionId}/items/reorder` | Auth | Reorder section items |
+
+### 8.7 Video Content (`/api/courses/{courseId}/videos`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/courses/{courseId}/videos/{id}` | Instructor | Get video |
+| POST | `/api/courses/{courseId}/videos` | Instructor | Create video |
+| PUT | `/api/courses/{courseId}/videos/{id}` | Instructor | Update video |
+| DELETE | `/api/courses/{courseId}/videos/{id}` | Instructor | Delete video |
+
+### 8.8 Document Content (`/api/courses/{courseId}/documents`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/courses/{courseId}/documents/{id}` | Instructor | Get document |
+| POST | `/api/courses/{courseId}/documents` | Instructor | Create document |
+| PUT | `/api/courses/{courseId}/documents/{id}` | Instructor | Update document |
+| DELETE | `/api/courses/{courseId}/documents/{id}` | Instructor | Delete document |
+
+### 8.9 Quiz Management (`/api/courses/{courseId}/quizzes`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/courses/{courseId}/quizzes/{id}` | Instructor | Get quiz |
+| POST | `/api/courses/{courseId}/quizzes` | Instructor | Create quiz |
+| PUT | `/api/courses/{courseId}/quizzes/{id}` | Instructor | Update quiz |
+| DELETE | `/api/courses/{courseId}/quizzes/{id}` | Instructor | Delete quiz |
+| POST | `/api/courses/{courseId}/quizzes/{quizId}/questions` | Instructor | Add question |
+| PUT | `/api/courses/{courseId}/quizzes/{quizId}/questions/{questionId}` | Instructor | Update question |
+| DELETE | `/api/courses/{courseId}/quizzes/{quizId}/questions/{questionId}` | Instructor | Delete question |
+
+### 8.10 Quiz Attempts (`/api/enrollments/{enrollmentId}/quizzes/{quizId}/attempts`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `.../attempts` | Auth | Start quiz attempt |
+| PUT | `.../attempts/{attemptId}` | Auth | Submit attempt |
+| GET | `.../attempts` | Auth | List attempts |
+| GET | `.../attempts/{attemptId}` | Auth | Get attempt result |
+
+### 8.11 Enrollments (`/api/enrollments`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/enrollments` | Auth | Enroll in course |
+| GET | `/api/enrollments` | Auth | List my enrollments |
+| GET | `/api/enrollments/{id}` | Auth | Get enrollment details |
+| GET | `/api/enrollments/{enrollmentId}/progress` | Auth | Get progress |
+| PUT | `/api/enrollments/{enrollmentId}/progress` | Auth | Update progress |
+| POST | `/api/enrollments/{enrollmentId}/progress/{contentType}/{contentId}/complete` | Auth | Mark content complete |
+
+### 8.12 Admin Course Management (`/api/admin/courses`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/admin/courses/{id}/approve` | Admin | Approve course |
+| POST | `/api/admin/courses/{id}/reject` | Admin | Reject course |
+| GET | `/api/admin/courses/edit-requests` | Admin | List edit requests |
+| GET | `/api/admin/courses/edit-requests/{requestId}` | Admin | Get request details |
+| POST | `/api/admin/courses/edit-requests/{requestId}/review` | Admin | Review edit request |
+
+### 8.13 Live Sessions (`/api/courses/{courseId}/live-sessions`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/courses/{courseId}/live-sessions` | Instructor | List sessions |
+| POST | `/api/courses/{courseId}/live-sessions` | Instructor | Create session |
+| PUT | `/api/courses/{courseId}/live-sessions/{sessionId}/status` | Instructor | Update status |
+| DELETE | `/api/courses/{courseId}/live-sessions/{sessionId}` | Instructor | Delete session |
+
+### 8.14 Live Attendance (`/api/live-sessions/{sessionId}/attendance`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `.../attendance/join` | Auth | Join session |
+| POST | `.../attendance/leave` | Auth | Leave session |
+| GET | `.../attendance/count` | Auth | Get attendee count |
+
+### 8.15 Video Comments (`/api/videos/{videoId}/comments`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/videos/{videoId}/comments` | — | List comments |
+| POST | `/api/videos/{videoId}/comments` | Auth | Add comment |
+| PUT | `/api/videos/{videoId}/comments/{commentId}` | Auth | Update comment |
+| DELETE | `/api/videos/{videoId}/comments/{commentId}` | Auth | Delete comment |
+| POST | `/api/videos/{videoId}/comments/{commentId}/like` | Auth | Toggle like |
+
+### 8.16 Reviews (`/api/reviews`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/reviews` | Auth | Create review |
+| GET | `/api/reviews/course/{courseId}` | — | Get course reviews |
+| GET | `/api/reviews/{id}` | — | Get review details |
+| PUT | `/api/reviews/{id}` | Auth | Update review |
+| DELETE | `/api/reviews/{id}` | Auth | Delete review |
+| POST | `/api/reviews/{id}/helpful` | Auth | Toggle helpful |
+| POST | `/api/reviews/{id}/flag` | Instructor | Flag review |
+| GET | `/api/reviews/pending` | Admin | Get pending reviews |
+| PUT | `/api/reviews/{id}/moderate` | Admin | Moderate review |
+
+### 8.17 Certificates (`/api/certificates`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/certificates/my` | Auth | List my certificates |
+| GET | `/api/certificates/{id}` | Auth | Get certificate |
+| GET | `/api/certificates/{id}/download` | Auth | Download PDF |
+| GET | `/api/certificates/verify/{code}` | — | Verify certificate |
+
+### 8.18 Admin Certificates (`/api/admin/certificates`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/certificates` | Admin | List all certificates |
+| POST | `/api/admin/certificates/{id}/revoke` | Admin | Revoke certificate |
+| POST | `/api/admin/certificates/issue` | Admin | Issue certificate |
+
+### 8.19 Cart (`/api/cart`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/cart` | Auth | Get cart |
+| POST | `/api/cart/items` | Auth | Add item |
+| DELETE | `/api/cart/items/{itemId}` | Auth | Remove item |
+| POST | `/api/cart/apply-coupon` | Auth | Apply coupon |
+| DELETE | `/api/cart/coupon` | Auth | Remove coupon |
+
+### 8.20 Coupons (`/api/coupons`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/coupons/validate` | Auth | Validate coupon code |
+
+### 8.21 Admin Coupons (`/api/admin/coupons`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/coupons` | Admin | List coupons |
+| GET | `/api/admin/coupons/{couponId}` | Admin | Get coupon |
+| POST | `/api/admin/coupons` | Admin | Create coupon |
+| PUT | `/api/admin/coupons/{couponId}` | Admin | Update coupon |
+| PATCH | `/api/admin/coupons/{couponId}/toggle` | Admin | Toggle active |
+| DELETE | `/api/admin/coupons/{couponId}` | Admin | Delete coupon |
+
+### 8.22 Orders (`/api/orders`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/orders` | Auth | List my orders |
+| GET | `/api/orders/{orderId}` | Auth | Get order details |
+| POST | `/api/orders` | Auth | Create order |
+
+### 8.23 Payments (`/api/payments`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/payments/process` | Auth | Process payment |
+| GET | `/api/payments/methods` | — | List payment methods |
+| GET | `/api/payments/history/{orderId}` | Auth | Payment history |
+
+### 8.24 Admin Payment Methods (`/api/admin/payment-methods`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/payment-methods` | Admin | List methods |
+| POST | `/api/admin/payment-methods` | Admin | Create method |
+| PATCH | `/api/admin/payment-methods/{id}/toggle` | Admin | Toggle active |
+
+### 8.25 Refunds (`/api/refunds`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/refunds` | Auth | Request refund |
+| GET | `/api/refunds` | Auth | List my refunds |
+
+### 8.26 Admin Refunds (`/api/admin/refunds`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/refunds` | Admin | List refunds |
+| POST | `/api/admin/refunds/approve` | Admin | Approve refund |
+| POST | `/api/admin/refunds/reject` | Admin | Reject refund |
+
+### 8.27 Wishlist (`/api/wishlist`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/wishlist` | Auth | Get wishlist |
+| POST | `/api/wishlist/{courseId}` | Auth | Add to wishlist |
+| DELETE | `/api/wishlist/{courseId}` | Auth | Remove from wishlist |
+
+### 8.28 Notifications (`/api/notifications`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/notifications` | Auth | List notifications |
+| GET | `/api/notifications/unread-count` | Auth | Get unread count |
+| PATCH | `/api/notifications/{notificationId}/read` | Auth | Mark as read |
+| POST | `/api/notifications/mark-all-read` | Auth | Mark all as read |
+| DELETE | `/api/notifications/{notificationId}` | Auth | Delete notification |
+| DELETE | `/api/notifications/clear-all` | Auth | Clear all |
+
+### 8.29 Notification Preferences (`/api/notifications/preferences`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/notifications/preferences` | Auth | Get preferences |
+| PUT | `/api/notifications/preferences` | Auth | Update preferences |
+
+### 8.30 Media (`/api/media`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/media/upload-url` | Auth | Generate upload URL |
+| POST | `/api/media/confirm-upload` | Auth | Confirm upload |
+| GET | `/api/media/{fileId}/view-url` | — | Get view URL |
+
+### 8.31 Admin Media (`/api/admin/media`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/media` | Admin | List media |
+| GET | `/api/admin/media/{fileId}` | Admin | Get media details |
+| DELETE | `/api/admin/media/{fileId}/soft` | Admin | Soft delete |
+| POST | `/api/admin/media/{fileId}/restore` | Admin | Restore |
+| DELETE | `/api/admin/media/{fileId}` | Admin | Permanent delete |
+| GET | `/api/admin/media/stats` | Admin | Storage stats |
+
+### 8.32 Instructor Requests (`/api/instructor-requests`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/instructor-requests/can-submit` | Auth | Check if can submit |
+| POST | `/api/instructor-requests` | Auth | Submit request |
+| PUT | `/api/instructor-requests/{requestId}` | Auth | Update request |
+| POST | `/api/instructor-requests/{requestId}/documents` | Auth | Add document |
+| GET | `/api/instructor-requests/my-requests` | Auth | List my requests |
+| GET | `/api/instructor-requests/my-requests/{requestId}` | Auth | Get request |
+| DELETE | `/api/instructor-requests/{requestId}/cancel` | Auth | Cancel request |
+| GET | `/api/instructor-requests/pending` | Admin | Pending requests |
+| GET | `/api/instructor-requests/{requestId}` | Admin | Get request details |
+| PUT | `/api/instructor-requests/{requestId}/process` | Admin | Process request |
+| DELETE | `/api/instructor-requests/{requestId}` | Admin | Delete request |
+
+### 8.33 Admin Users (`/api/admin/users`)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/users` | Admin | List users |
+| GET | `/api/admin/users/{userId}` | Admin | Get user |
+| PATCH | `/api/admin/users/{userId}/toggle-active` | Admin | Toggle active |
+| DELETE | `/api/admin/users/{userId}` | Admin | Delete user |
+
+### 8.34 Dashboards
+
+**Student** (`/api/student/dashboard`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/student/dashboard/overview` | Student | Overview stats |
+| GET | `/api/student/dashboard/courses` | Student | Enrolled courses |
+| GET | `/api/student/dashboard/weekly-activity` | Student | Weekly activity chart |
+| GET | `/api/student/dashboard/certificates` | Student | Certificates |
+
+**Instructor** (`/api/instructor/dashboard`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/instructor/dashboard/overview` | Instructor | Overview stats |
+| GET | `/api/instructor/dashboard/courses` | Instructor | My courses |
+| GET | `/api/instructor/dashboard/revenue` | Instructor | Revenue data |
+| GET | `/api/instructor/dashboard/students` | Instructor | Student stats |
+| GET | `/api/instructor/dashboard/pending-requests` | Instructor | Pending edit requests |
+| GET | `/api/instructor/dashboard/recent-reviews` | Instructor | Recent reviews |
+
+**Admin** (`/api/admin/dashboard`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/admin/dashboard/overview` | Admin | Platform overview |
+| GET | `/api/admin/dashboard/revenue` | Admin | Revenue trends |
+| GET | `/api/admin/dashboard/user-growth` | Admin | User growth |
+| GET | `/api/admin/dashboard/enrollment-trend` | Admin | Enrollment trends |
+| GET | `/api/admin/dashboard/top-courses` | Admin | Top courses |
+
+### 8.35 Communication
+
+**Announcements** (`/api/announcements`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/announcements/feed` | Auth | Get announcement feed |
+| POST | `/api/announcements` | Admin | Create announcement |
+| PUT | `/api/announcements/{id}` | Admin | Update announcement |
+| PATCH | `/api/announcements/{id}/deactivate` | Admin | Deactivate |
+| DELETE | `/api/announcements/{id}` | Admin | Delete announcement |
+
+**Messages** (`/api/messages`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/messages/send` | Auth | Send message |
+| GET | `/api/messages/conversations` | Auth | List conversations |
+| GET | `/api/messages/conversations/{conversationId}` | Auth | Get messages |
+| PATCH | `/api/messages/{messageId}/read` | Auth | Mark as read |
+| DELETE | `/api/messages/{messageId}` | Auth | Soft delete |
+| GET | `/api/messages/unread-count` | Auth | Unread count |
+
+**System Settings** (`/api/system-settings`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/system-settings` | Admin | List settings |
+| GET | `/api/system-settings/{key}` | Admin | Get setting |
+| POST | `/api/system-settings` | Admin | Create setting |
+| PUT | `/api/system-settings/{key}` | Admin | Update setting |
+| DELETE | `/api/system-settings/{key}` | Admin | Delete setting |
+
+**Activity Logs** (`/api/activity-logs`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/activity-logs` | Admin | List logs with filters |
+
+**Reports** (`/api/reports`):
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/reports` | Auth | Create report |
+| GET | `/api/reports/pending` | Admin | Pending reports |
+| PATCH | `/api/reports/{id}/resolve` | Admin | Resolve report |
+
+### 8.36 Public Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/public/landing` | — | Aggregated landing data |
+| GET | `/api/public/stats` | — | Platform statistics |
+| GET | `/api/public/about` | — | About page content |
+| GET | `/api/public/legal/{type}` | — | Legal pages (privacy/terms/refund) |
+| GET | `/api/public/testimonials` | — | Approved testimonials |
+| POST | `/api/public/testimonials` | Auth | Submit testimonial |
+| GET | `/api/public/instructors/{slug}` | — | Instructor profile by slug |
+| GET | `/api/public/instructors/check-slug` | Auth | Check slug availability |
+| GET | `/api/public/instructors/search` | — | Search instructors |
+| GET | `/api/public/courses` | — | Browse published courses |
+| GET | `/api/public/courses/{id}` | — | Course details |
+| GET | `/api/public/courses/slug/{slug}` | — | Course by slug |
+| GET | `/api/public/courses/search/suggest` | — | Search suggestions |
+| GET | `/api/public/courses/stats` | — | Platform stats |
+| GET | `/api/public/courses/{id}/related` | — | Related courses |
+| GET | `/api/public/courses/filters/options` | — | Filter options |
+| POST | `/api/public/contact` | — | Submit contact message |
+
+### 8.37 Health Checks
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Basic health check |
+| GET | `/healthz` | Liveness probe |
+| GET | `/ready` | Readiness probe (database) |
+
+### 8.38 Root
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API info (name, version, links) |
+
+---
+
+## 9. Services Layer
+
+### 9.1 Authentication Services
+
+| Service | Location | Description |
+|---------|----------|-------------|
+| `IAuthenticationService` | Infrastructure/Services/Authentication/ | Login, register, password reset |
+| `ITokenService` | Infrastructure/Services/Authentication/ | JWT generation and validation |
+| `ISessionService` | Infrastructure/Services/Authentication/ | Session management |
+| `IOAuthService` | Infrastructure/Services/Authentication/ | Google/Microsoft OAuth |
+| `IVerificationService` | Infrastructure/Services/Authentication/ | Email verification |
+
+### 9.2 Course Services
+
+| Service | Location | Description |
+|---------|----------|-------------|
+| `ICourseService` | Infrastructure/Services/Courses/ | CRUD, approval workflow |
+| `ISectionService` | Infrastructure/Services/Courses/ | Section and item management |
+| `IVideoService` | Infrastructure/Services/Courses/ | Video content CRUD |
+| `IDocumentService` | Infrastructure/Services/Courses/ | Document content CRUD |
+| `IQuizService` | Infrastructure/Services/Courses/ | Quiz management |
+| `IQuizAttemptService` | Infrastructure/Services/Courses/ | Quiz taking and grading |
+| `IEnrollmentService` | Infrastructure/Services/Courses/ | Enrollment management |
+| `IContentProgressService` | Infrastructure/Services/Courses/ | Progress tracking |
+| `ICourseEditApprovalService` | Infrastructure/Services/Courses/ | Edit approval workflow |
+| `IPublicCourseService` | Infrastructure/Services/Courses/ | Public course browsing |
+
+### 9.3 Commerce Services
+
+| Service | Location | Description |
+|---------|----------|-------------|
+| `ICartService` | Infrastructure/Services/Commerce/ | Shopping cart |
+| `ICouponService` | Infrastructure/Services/Commerce/ | Coupon management |
+| `IOrderService` | Infrastructure/Services/Commerce/ | Order processing |
+| `IPaymentService` | Infrastructure/Services/Commerce/ | Payment processing |
+| `IRefundService` | Infrastructure/Services/Commerce/ | Refund handling |
+| `IWishlistService` | Infrastructure/Services/Wishlist/ | Wishlist management |
+| `IPaymentGateway` | Infrastructure/Services/Commerce/PaymentGateway/ | Mock payment gateway |
+
+### 9.4 Communication Services
+
+| Service | Location | Description |
+|---------|----------|-------------|
+| `IMessageService` | Infrastructure/Services/Communication/ | Internal messaging |
+| `IAnnouncementService` | Infrastructure/Services/Communication/ | Announcements |
+| `ISystemSettingService` | Infrastructure/Services/Communication/ | System settings |
+| `IReportService` | Infrastructure/Services/Communication/ | Content reporting |
+| `IActivityLogService` | Infrastructure/Services/Communication/ | Audit logging |
+| `IEmailService` | Infrastructure/Services/Communication/ | Email sending |
+| `INotificationService` | Infrastructure/Services/Communication/ | Notifications |
+
+### 9.5 Other Services
+
+| Service | Location | Description |
+|---------|----------|-------------|
+| `IProfileService` | Infrastructure/Services/Profile/ | User profile management |
+| `ICategoryService` | Infrastructure/Services/Category/ | Category CRUD |
+| `ICertificateService` | Infrastructure/Services/Certificate/ | Certificate generation |
+| `IReviewService` | Infrastructure/Services/Review/ | Review management |
+| `IMediaService` | Infrastructure/Services/Media/ | File upload/download |
+| `IObjectStorage` | Infrastructure/Services/Media/ | MinIO integration |
+| `IVideoProcessingService` | Infrastructure/Services/Media/ | Video processing |
+| `ILiveSessionService` | Infrastructure/Services/LiveSession/ | Live session management |
+| `ILiveAttendanceService` | Infrastructure/Services/LiveSession/ | Attendance tracking |
+| `IVideoCommentService` | Infrastructure/Services/VideoComment/ | Video comments |
+| `INotificationPreferenceService` | Infrastructure/Services/Notification/ | Notification preferences |
+| `IContactService` | Infrastructure/Services/Contact/ | Contact form |
+| `ILegalPageService` | Infrastructure/Services/Public/ | Legal pages |
+| `IPublicService` | Infrastructure/Services/Public/ | Landing page data |
+| `ITestimonialService` | Infrastructure/Services/Public/ | Testimonials |
+| `IInstructorRequestService` | Infrastructure/Services/InstructorRequests/ | Instructor applications |
+| `IAdminUserService` | Infrastructure/Services/Admin/ | Admin user management |
+| `IStudentDashboardService` | Infrastructure/Services/Dashboard/ | Student dashboard |
+| `IInstructorDashboardService` | Infrastructure/Services/Dashboard/ | Instructor dashboard |
+| `IAdminDashboardService` | Infrastructure/Services/Dashboard/ | Admin dashboard |
+
+---
+
+## 10. Real-time (SignalR)
+
+| Hub | URL | Description |
+|-----|-----|-------------|
+| `NotificationHub` | `/api/hubs/notifications` | Real-time notifications |
+| `MessageHub` | `/api/hubs/messaging` | Real-time messaging |
+
+---
+
+## 11. Background Workers
+
+| Worker | Description |
+|--------|-------------|
+| `VideoProcessingWorker` | Processes uploaded videos |
+| `EditRequestCleanupService` | Cleans up expired edit requests |
+| `ScheduledDeletionService` | Handles scheduled course deletions |
+
+---
+
+## 12. Infrastructure Services
+
+| Service | Description |
+|---------|-------------|
+| **SQL Server** | Primary database (port 1433) |
+| **MinIO** | Object storage for files, images, videos (port 9000/9001) |
+| **Mailpit** | Dev email testing (SMTP port 1025, UI port 8025) |
+| **Seq** | Structured logging UI (port 5341/8081) |
+| **Redis** | Distributed caching (optional) |
+
+---
+
+## 13. Configuration
+
+### 13.1 Connection Strings
+
+```json
+{
+  "DefaultConnection": "Server=localhost,1433;Database=Athary;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true",
+  "Redis": ""
+}
+```
+
+### 13.2 JWT Settings
+
+```json
+{
+  "SecretKey": "YourSuperSecretKeyThatIsAtLeast32CharactersLong!",
+  "Issuer": "Athary",
+  "Audience": "AtharyClient",
+  "AccessTokenExpirationMinutes": 60,
+  "RefreshTokenExpirationDays": 7
+}
+```
+
+### 13.3 Email Settings
+
+```json
+{
+  "SmtpHost": "localhost",
+  "SmtpPort": 1025,
+  "EnableSsl": false,
+  "FromEmail": "noreply@athary.com",
+  "FromName": "منصة آثاري التعليمية"
+}
+```
+
+### 13.4 MinIO Settings
+
+```json
+{
+  "Endpoint": "localhost:9000",
+  "AccessKey": "minioadmin",
+  "SecretKey": "minioadmin",
+  "Buckets": ["private", "images", "videos", "documents", "recordings", "certificates"]
+}
+```
+
+---
+
+## 14. Docker & Deployment
+
+### 14.1 Docker Compose Services
+
+| Service | Image | Ports |
+|---------|-------|-------|
+| sqlserver | mssql/server:2022-latest | 1433:1433 |
+| minio | minio/minio:latest | 8002:9000, 9001:9001 |
+| mailpit | axllent/mailpit:latest | 8025:8025, 1025:1025 |
+| seq | datalust/seq:latest | 5341:5341, 8081:80 |
+
+### 14.2 Dockerfile
+
+- Multi-stage build (SDK → Alpine runtime)
+- Non-root user (`appuser`)
+- Port 8080
+- Health check on `/healthz`
+
+---
+
+## 15. Running the Project
+
+### 15.1 Prerequisites
+
+- .NET 9 SDK
+- SQL Server (local or Docker)
+- MinIO (optional, for media)
+
+### 15.2 Development
+
 ```bash
-VITE_API_URL='http://localhost:3000/api'
-VITE_APP_URL='http://localhost:5173'
-VITE_GEMINI_API_KEY=''
+# Start infrastructure services
+cd infrastructure && docker-compose up -d
+
+# Run the API
+./run.sh
+# or
+dotnet run --project src/Athary.API
+
+# API will be available at:
+# http://localhost:5000
+# http://localhost:5000/swagger (Swagger UI)
+# http://localhost:5000/openapi/v1.json (OpenAPI spec)
 ```
 
-### قائمة API Endpoints كاملة (للـ Backend):
+### 15.3 Default Admin Account
 
+- **Email**: admin@lms.com
+- **Password**: Admin@123456
+
+### 15.4 Database Migrations
+
+```bash
+# Create migration
+dotnet ef migrations add <MigrationName> --project src/Athary.Infrastructure --startup-project src/Athary.API
+
+# Apply migration
+dotnet ef database update --project src/Athary.Infrastructure --startup-project src/Athary.API
 ```
-AUTH:
-  POST /api/auth/login
-  POST /api/auth/register
-  POST /api/auth/verify-email
-  POST /api/auth/resend-otp
-  POST /api/auth/forgot-password
-  POST /api/auth/reset-password
-  POST /api/auth/google
-  GET  /api/auth/me
 
-COURSES:
-  GET    /api/courses
-  GET    /api/courses/:id
-  GET    /api/courses/:id/syllabus
-  GET    /api/courses/:id/reviews
-  POST   /api/courses/:id/reviews
-  POST   /api/courses/:id/favorite
-  GET    /api/categories
-  GET    /api/courses/:id/progress
-  PUT    /api/courses/:id/lessons/:lessonId/progress
+---
 
-CART & CHECKOUT:
-  GET    /api/cart
-  POST   /api/cart/add
-  DELETE /api/cart/:courseId
-  POST   /api/coupons/validate
-  POST   /api/checkout
-
-STUDENT:
-  GET    /api/student/dashboard
-  GET    /api/student/courses
-  GET    /api/student/certificates
-  GET    /api/student/favorites
-  GET    /api/student/live-sessions
-  POST   /api/student/instructor-apply
-  POST   /api/student/refund-request
-  GET    /api/quiz/:quizId
-  POST   /api/quiz/:quizId/submit
-
-INSTRUCTOR:
-  GET    /api/instructor/dashboard
-  GET    /api/instructor/courses
-  POST   /api/instructor/courses
-  PUT    /api/instructor/courses/:id
-  DELETE /api/instructor/courses/:id
-  POST   /api/instructor/courses/:id/publish
-  GET    /api/instructor/earnings
-  PUT    /api/instructor/courses/:id/lessons
-  POST   /api/instructor/live-sessions
-
-ADMIN:
-  GET    /api/admin/dashboard
-  GET    /api/admin/courses
-  PUT    /api/admin/courses/:id/approve
-  PUT    /api/admin/courses/:id/reject
-  GET    /api/admin/teacher-requests
-  PUT    /api/admin/teacher-requests/:id/approve
-  PUT    /api/admin/teacher-requests/:id/reject
-  GET    /api/admin/orders
-  GET    /api/admin/refunds
-  PUT    /api/admin/refunds/:id
-  GET    /api/admin/reviews/flagged
-  DELETE /api/admin/reviews/:id
-  PUT    /api/admin/reviews/:id/dismiss
-  POST   /api/admin/announcements
-  GET    /api/admin/media
-  DELETE /api/admin/media/:id
-  GET    /api/admin/activity-logs
-  GET    /api/admin/settings
-  PUT    /api/admin/settings
-  GET    /api/admin/analytics
-
-PROFILE:
-  GET    /api/profile
-  PUT    /api/profile
-  POST   /api/profile/avatar
-  GET    /api/profile/phones
-  POST   /api/profile/phones
-  PUT    /api/profile/phones/:id
-  DELETE /api/profile/phones/:id
-  PUT    /api/profile/phones/:id/default
-  GET    /api/profile/addresses
-  POST   /api/profile/addresses
-  PUT    /api/profile/addresses/:id
-  DELETE /api/profile/addresses/:id
-  PUT    /api/profile/password
-  GET    /api/profile/sessions
-  DELETE /api/profile/sessions/:id
-  GET    /api/profile/notification-settings
-  PUT    /api/profile/notification-settings
-
-PUBLIC:
-  GET    /api/instructors/:name
-  GET    /api/instructors/:name/courses
-  GET    /api/about
-  POST   /api/contact
-  GET    /api/legal/:type
-
-NOTIFICATIONS:
-  GET    /api/notifications
-  PUT    /api/notifications/:id/read
-  PUT    /api/notifications/read-all
-
-MEDIA:
-  POST   /api/media/upload
-  DELETE /api/media/:id
-
-MESSAGES:
-  POST   /api/messages
-  GET    /api/conversations
-  GET    /api/conversations/:id/messages
-  POST   /api/conversations/:id/messages
-```
+*Documentation generated for Athary Platform v1.0 — 2026-06-24*

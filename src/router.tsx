@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
 import NotFound from './components/layout/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 import { DashboardSkeleton } from './components/shared/Skeleton';
 
 const LandingPage = lazy(() => import('./features/landing/LandingPage'));
@@ -35,11 +36,39 @@ export const router = createBrowserRouter([
       { path: 'course/:courseId', element: <LazyPage><CourseDetails /></LazyPage> },
       { path: 'checkout', element: <LazyPage><CartCheckout /></LazyPage> },
       { path: 'auth', element: <LazyPage><AuthPage /></LazyPage> },
-      { path: 'dashboard', element: <LazyPage><StudentDashboard /></LazyPage> },
-      { path: 'instructor', element: <LazyPage><InstructorDashboard /></LazyPage> },
-      { path: 'admin', element: <LazyPage><AdminDashboard /></LazyPage> },
+      {
+        path: 'dashboard',
+        element: (
+          <ProtectedRoute allowedRoles={['Student', 'Instructor', 'Admin']}>
+            <LazyPage><StudentDashboard /></LazyPage>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'instructor',
+        element: (
+          <ProtectedRoute allowedRoles={['Instructor', 'Admin']}>
+            <LazyPage><InstructorDashboard /></LazyPage>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <LazyPage><AdminDashboard /></LazyPage>
+          </ProtectedRoute>
+        ),
+      },
       { path: 'about', element: <LazyPage><AboutContactPublic /></LazyPage> },
-      { path: 'profile', element: <LazyPage><ProfileSettings /></LazyPage> },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <LazyPage><ProfileSettings /></LazyPage>
+          </ProtectedRoute>
+        ),
+      },
       { path: 'instructor/:name', element: <LazyPage><PublicProfile /></LazyPage> },
       { path: '*', element: <NotFound /> },
     ],
