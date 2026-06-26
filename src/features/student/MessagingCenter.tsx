@@ -66,7 +66,7 @@ export default function MessagingCenter() {
       <div className="w-full md:w-64 bg-white border border-amber-100 rounded-2xl p-3 shrink-0 flex flex-col justify-between">
         <div className="space-y-4">
           <div className="px-2 pt-2 pb-1 text-right">
-            <h3 className="font-extrabold text-[#962D15] text-sm font-serif">مركز الاتصال</h3>
+            <h3 className="font-extrabold text-orange-700 text-sm font-serif">مركز الاتصال</h3>
             <p className="text-[10px] text-stone-400 mt-0.5">مراسلات وإشعارات</p>
           </div>
 
@@ -276,7 +276,7 @@ export default function MessagingCenter() {
           <div className="p-5 space-y-4 overflow-y-auto max-h-[550px] text-right">
             <div className="flex items-center justify-between pb-3 border-b border-amber-100">
               <div>
-                <h3 className="font-extrabold text-[#962D15] text-xs sm:text-sm font-serif">التنبيهات</h3>
+                <h3 className="font-extrabold text-orange-700 text-xs sm:text-sm font-serif">التنبيهات</h3>
                 <p className="text-[10px] text-stone-500 mt-0.5">متابعة لكل القرارات المعنية بحسابك</p>
               </div>
               <button

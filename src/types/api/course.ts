@@ -1,4 +1,5 @@
 export type CourseLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+export type CourseStatus = 'Draft' | 'Pending' | 'Published' | 'Rejected' | 'Archived';
 export type CourseLanguage = 'Ar' | 'En';
 export type PublicCourseSortBy =
   | 'PublishedAt'
@@ -89,6 +90,26 @@ export interface CourseResponseDto {
   status: string;
   publishedAt?: string;
   createdAt: string;
+}
+
+export interface ManagementCourseDto {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  thumbnailUrl?: string;
+  price: number;
+  status: CourseStatus;
+  categoryName: string;
+  totalDurationMinutes: number;
+  enrollmentCount: number;
+  averageRating: number;
+  revenue: number;
+  sectionCount: number;
+  lessonCount: number;
+  createdAt: string;
+  publishedAt?: string;
+  updatedAt?: string;
 }
 
 export interface CourseDetailResponseDto extends CourseResponseDto {

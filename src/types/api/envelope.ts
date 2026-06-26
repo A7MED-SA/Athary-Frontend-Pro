@@ -11,6 +11,8 @@ export interface PagedList<T> {
   pageSize: number;
   totalCount: number;
   totalPages: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
 }

@@ -3,7 +3,8 @@ import type { ApiResponse, PagedList } from '@/types/api/envelope';
 import type { CouponResponseDto } from '@/types/api/coupon';
 import type { RefundResponseDto } from '@/types/api/refund';
 import type { PaymentMethodResponse } from '@/types/api/payment';
-import type { InstructorRequestDto } from '@/types/api/instructorRequest';
+import type { InstructorRequestDetailDto, InstructorRequestDto } from '@/types/api/instructorRequest';
+import type { AdminUserListItemDto } from '@/types/api/admin';
 
 export interface CreateCouponRequest {
   code: string;
@@ -15,23 +16,13 @@ export interface CreateCouponRequest {
   validUntil: string;
 }
 
-export interface AdminUserDto {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  isBlocked: boolean;
-  createdAt: string;
-}
-
 export const adminService = {
   // Courses
   approveCourse: (id: string) =>
-    api.put<ApiResponse>(`/admin/courses/${id}/approve`).then((r) => r.data),
+    api.post<ApiResponse>(`/admin/courses/${id}/approve`).then((r) => r.data),
 
   rejectCourse: (id: string, data: { reason: string }) =>
-    api.put<ApiResponse>(`/admin/courses/${id}/reject`, data).then((r) => r.data),
+    api.post<ApiResponse>(`/admin/courses/${id}/reject`, data).then((r) => r.data),
 
   archiveCourse: (id: string) =>
     api.put<ApiResponse>(`/admin/courses/${id}/archive`).then((r) => r.data),
@@ -66,20 +57,23 @@ export const adminService = {
   rejectRefund: (id: string, data: { reason: string }) =>
     api.put<ApiResponse>(`/admin/refunds/${id}/reject`, data).then((r) => r.data),
 
-  // Instructor Requests
+  // Instructor Requests (admin endpoints on /instructor-requests)
   getInstructorRequests: () =>
-    api.get<ApiResponse<InstructorRequestDto[]>>('/admin/instructor-requests').then((r) => r.data),
+    api.get<ApiResponse<InstructorRequestDto[]>>('/instructor-requests/pending').then((r) => r.data),
 
   approveInstructorRequest: (id: string) =>
-    api.put<ApiResponse>(`/admin/instructor-requests/${id}/approve`).then((r) => r.data),
+    api.put<ApiResponse>(`/instructor-requests/${id}/process`, { Status: 'Approved' }).then((r) => r.data),
 
   rejectInstructorRequest: (id: string, data: { reason: string }) =>
-    api.put<ApiResponse>(`/admin/instructor-requests/${id}/reject`, data).then((r) => r.data),
+    api.put<ApiResponse>(`/instructor-requests/${id}/process`, { Status: 'Rejected', RejectionReason: data.reason }).then((r) => r.data),
+
+  getInstructorRequestDetails: (id: string) =>
+    api.get<ApiResponse<InstructorRequestDetailDto>>(`/instructor-requests/${id}`).then((r) => r.data),
 
   // Users
   getUsers: () =>
-    api.get<ApiResponse<AdminUserDto[]>>('/admin/users').then((r) => r.data),
+    api.get<ApiResponse<PagedList<AdminUserListItemDto>>>('/admin/users').then((r) => r.data),
 
-  toggleUserBlock: (id: string) =>
-    api.put<ApiResponse>(`/admin/users/${id}/toggle-block`).then((r) => r.data),
+  toggleUserActive: (id: string) =>
+    api.patch<ApiResponse<boolean>>(`/admin/users/${id}/toggle-active`).then((r) => r.data),
 };

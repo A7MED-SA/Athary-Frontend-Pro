@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, ShoppingBag, Menu, X, Landmark, User, Bookmark, LogIn, Award, Bell, Trash2, CheckCheck, Sun, Moon } from 'lucide-react';
+import { BookOpen, ShoppingBag, Menu, X, User, LogIn, Bell, Trash2, CheckCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNotifications } from '@/features/common/hooks/useNotifications';
 import { useSignalR } from '@/features/common/hooks/useSignalR';
@@ -15,7 +15,7 @@ import CartDrawer from './CartDrawer';
 export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { cartItems, isLoggedIn, userName, handleLogout, cartOpen, setCartOpen } = useAppContext();
+  const { cartItems, isLoggedIn, userName, handleLogout, cartOpen, setCartOpen, userRoles, hasAnyRole } = useAppContext();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function Navbar() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-  } = useNotifications(isLoggedIn);
+  } = useNotifications();
 
   const token = isLoggedIn ? tokenStorage.getAccessToken() : undefined;
   useSignalR({
@@ -63,10 +63,34 @@ export default function Navbar() {
     }
   };
 
+  const dashboardPath = isLoggedIn
+    ? hasAnyRole(['Admin'])
+      ? '/admin'
+      : hasAnyRole(['Instructor'])
+        ? '/instructor/dashboard'
+        : '/dashboard'
+    : '/dashboard';
+
+  const dashboardLabel = isLoggedIn
+    ? hasAnyRole(['Admin'])
+      ? 'لوحة المشرف'
+      : hasAnyRole(['Instructor'])
+        ? 'بوابة المدرب'
+        : 'بوابة الطالب'
+    : 'بوابة الطالب';
+
+  const roleLabel = isLoggedIn
+    ? hasAnyRole(['Admin'])
+      ? 'حساب المشرف'
+      : hasAnyRole(['Instructor'])
+        ? 'حساب المدرب'
+        : 'حساب الطالب'
+    : 'حساب الطالب';
+
   const navLinks = [
     { label: 'الرئيسية', path: '/' },
     { label: 'تصفح الدورات', path: '/catalog' },
-    { label: 'بوابة الطالب', path: '/dashboard' },
+    ...(isLoggedIn ? [{ label: dashboardLabel, path: dashboardPath }] : []),
     { label: 'من نحن واتصل بنا', path: '/about' },
   ];
 
@@ -132,116 +156,120 @@ export default function Navbar() {
 
             <ThemeSettingsPopover />
 
-            <div className="relative">
+            {isLoggedIn && (
+              <div className="relative">
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="relative p-2.5 text-stone-700 dark:text-stone-300 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-stone-900 rounded-full transition-all duration-200 focus:outline-none cursor-pointer"
+                  title="التنبيهات والمستجدات"
+                  id="notifications-bell-btn"
+                >
+                  <Bell className="w-6 h-6 stroke-[2]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-orange-700 text-amber-50 text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-amber-50 dark:ring-stone-900 shadow-sm animate-pulse">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {notifOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className="absolute left-0 mt-2 w-80 sm:w-96 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-stone-800 rounded-2xl shadow-xl z-40 text-right overflow-hidden origin-top-left"
+                        id="notifications-popover-panel"
+                      >
+                        <div className="px-4 py-3.5 bg-amber-50/50 dark:bg-stone-950 border-b border-amber-100 dark:border-stone-800 flex items-center justify-between">
+                          <span className="font-bold text-xs text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                            <Bell className="w-4 h-4 text-orange-700 dark:text-orange-400" />
+                            <span>التحديثات والمستجدات ({notifications.length})</span>
+                          </span>
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={handleMarkAllAsRead}
+                              className="text-[10px] text-orange-700 hover:text-orange-900 dark:text-amber-500 font-bold hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0"
+                            >
+                              <CheckCheck className="w-3.5 h-3.5" />
+                              <span>تعيين كقروء</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="max-h-80 overflow-y-auto divide-y divide-amber-100/55 dark:divide-stone-800">
+                          {notifications.length === 0 ? (
+                            <div className="p-8 text-center text-stone-500 space-y-2">
+                              <span className="block text-2xl">✨</span>
+                              <p className="text-xs font-bold text-stone-800 dark:text-stone-200">صندوق الوارد نظيف ومبهج!</p>
+                              <p className="text-[10px] text-stone-400 dark:text-stone-500">لا توجد إعلانات أو إشعارات غير مقروءة حالياً في المنصة.</p>
+                            </div>
+                          ) : (
+                            notifications.map((notif) => (
+                              <div
+                                key={notif.id}
+                                onClick={() => handleMarkAsRead(notif.id)}
+                                className={`p-4 transition duration-150 cursor-pointer flex flex-col justify-between gap-1.5 relative ${
+                                  notif.isRead
+                                    ? 'bg-white dark:bg-stone-900 hover:bg-stone-50/50 dark:hover:bg-stone-800/30'
+                                    : 'bg-orange-50/30 dark:bg-orange-950/15 hover:bg-orange-50/50 dark:hover:bg-orange-950/35'
+                                }`}
+                              >
+                                {!notif.isRead && (
+                                  <div className="absolute top-0 right-0 bottom-0 w-1 bg-orange-700" />
+                                )}
+                                <div className="flex justify-between items-start gap-2">
+                                  <h4 className={`text-xs font-bold leading-snug ${notif.isRead ? 'text-stone-800 dark:text-stone-200' : 'text-stone-950 dark:text-stone-50 font-black'}`}>
+                                    {notif.title}
+                                  </h4>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteNotif(notif.id); }}
+                                    className="text-stone-400 dark:text-stone-500 hover:text-red-700 dark:hover:text-red-400 p-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 transition shrink-0 cursor-pointer border-0 bg-transparent"
+                                    title="حذف التنبيه"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                                <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed font-light">{notif.message}</p>
+                                <span className="text-[9px] text-stone-400 dark:text-stone-500 block self-start">{formatRelativeTime(notif.createdAt)}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="p-3 bg-stone-50 dark:bg-stone-950 border-t border-amber-100/60 dark:border-stone-800 text-center">
+                          <button
+                            onClick={() => { navigate('/dashboard'); setNotifOpen(false); }}
+                            className="text-[11px] font-bold text-orange-700 dark:text-amber-500 hover:text-orange-900 transition-colors cursor-pointer bg-transparent border-0"
+                          >
+                            عرض مركز التنبيهات الكامل بصفحة التحصيل الدراسي ←
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {isLoggedIn && (
               <button
-                onClick={() => setNotifOpen(!notifOpen)}
+                onClick={() => setCartOpen(true)}
                 className="relative p-2.5 text-stone-700 dark:text-stone-300 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-stone-900 rounded-full transition-all duration-200 focus:outline-none cursor-pointer"
-                title="التنبيهات والمستجدات"
-                id="notifications-bell-btn"
+                title="حقيبة الدورات"
+                id="cart-btn"
               >
-                <Bell className="w-6 h-6 stroke-[2]" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-orange-700 text-amber-50 text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-amber-50 dark:ring-stone-900 shadow-sm animate-pulse">
-                    {unreadCount}
+                <ShoppingBag className="w-6 h-6 stroke-[2]" />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-orange-700 text-amber-50 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-amber-50 shadow-sm animate-bounce">
+                    {cartItems.length}
                   </span>
                 )}
               </button>
-
-              <AnimatePresence>
-                {notifOpen && (
-                  <>
-                    <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      className="absolute left-0 mt-2 w-80 sm:w-96 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-stone-800 rounded-2xl shadow-xl z-40 text-right overflow-hidden origin-top-left"
-                      id="notifications-popover-panel"
-                    >
-                      <div className="px-4 py-3.5 bg-amber-50/50 dark:bg-stone-950 border-b border-amber-100 dark:border-stone-800 flex items-center justify-between">
-                        <span className="font-bold text-xs text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
-                          <Bell className="w-4 h-4 text-orange-700 dark:text-orange-400" />
-                          <span>التحديثات والمستجدات ({notifications.length})</span>
-                        </span>
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={handleMarkAllAsRead}
-                            className="text-[10px] text-orange-700 hover:text-orange-900 dark:text-amber-500 font-bold hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0"
-                          >
-                            <CheckCheck className="w-3.5 h-3.5" />
-                            <span>تعيين كقروء</span>
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="max-h-80 overflow-y-auto divide-y divide-amber-100/55 dark:divide-stone-800">
-                        {notifications.length === 0 ? (
-                          <div className="p-8 text-center text-stone-500 space-y-2">
-                            <span className="block text-2xl">✨</span>
-                            <p className="text-xs font-bold text-stone-800 dark:text-stone-200">صندوق الوارد نظيف ومبهج!</p>
-                            <p className="text-[10px] text-stone-400 dark:text-stone-500">لا توجد إعلانات أو إشعارات غير مقروءة حالياً في المنصة.</p>
-                          </div>
-                        ) : (
-                          notifications.map((notif) => (
-                            <div
-                              key={notif.id}
-                              onClick={() => handleMarkAsRead(notif.id)}
-                              className={`p-4 transition duration-150 cursor-pointer flex flex-col justify-between gap-1.5 relative ${
-                                notif.isRead
-                                  ? 'bg-white dark:bg-stone-900 hover:bg-stone-50/50 dark:hover:bg-stone-800/30'
-                                  : 'bg-orange-50/30 dark:bg-orange-950/15 hover:bg-orange-50/50 dark:hover:bg-orange-950/35'
-                              }`}
-                            >
-                              {!notif.isRead && (
-                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-orange-700" />
-                              )}
-                              <div className="flex justify-between items-start gap-2">
-                                <h4 className={`text-xs font-bold leading-snug ${notif.isRead ? 'text-stone-800 dark:text-stone-200' : 'text-stone-950 dark:text-stone-50 font-black'}`}>
-                                  {notif.title}
-                                </h4>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteNotif(notif.id); }}
-                                  className="text-stone-400 dark:text-stone-500 hover:text-red-700 dark:hover:text-red-400 p-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 transition shrink-0 cursor-pointer border-0 bg-transparent"
-                                  title="حذف التنبيه"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                              <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed font-light">{notif.message}</p>
-                              <span className="text-[9px] text-stone-400 dark:text-stone-500 block self-start">{formatRelativeTime(notif.createdAt)}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      <div className="p-3 bg-stone-50 dark:bg-stone-950 border-t border-amber-100/60 dark:border-stone-800 text-center">
-                        <button
-                          onClick={() => { navigate('/dashboard'); setNotifOpen(false); }}
-                          className="text-[11px] font-bold text-orange-700 dark:text-amber-500 hover:text-orange-900 transition-colors cursor-pointer bg-transparent border-0"
-                        >
-                          عرض مركز التنبيهات الكامل بصفحة التحصيل الدراسي ←
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative p-2.5 text-stone-700 dark:text-stone-300 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-stone-900 rounded-full transition-all duration-200 focus:outline-none cursor-pointer"
-              title="حقيبة الدورات"
-              id="cart-btn"
-            >
-              <ShoppingBag className="w-6 h-6 stroke-[2]" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-orange-700 text-amber-50 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ring-2 ring-amber-50 shadow-sm animate-bounce">
-                  {cartItems.length}
-                </span>
-              )}
-            </button>
+            )}
 
             <div className="hidden sm:flex items-center gap-3">
               {isLoggedIn ? (
@@ -256,7 +284,7 @@ export default function Navbar() {
                     </div>
                     <div className="text-right text-xs">
                       <p className="font-semibold text-stone-900 dark:text-stone-100">{userName}</p>
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400">بوابة الطالب</p>
+                       <p className="text-[10px] text-amber-700 dark:text-amber-400">{roleLabel}</p>
                     </div>
                   </button>
 
@@ -274,16 +302,16 @@ export default function Navbar() {
                         >
                           <div className="px-4 py-3 bg-amber-50/50 dark:bg-stone-950 border-b border-amber-100 dark:border-stone-800">
                             <p className="font-bold text-xs text-stone-900 dark:text-stone-100">{userName}</p>
-                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">بوابة الطالب</p>
+                             <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">{roleLabel}</p>
                           </div>
 
                           <div className="p-2 space-y-1">
                             <button
-                              onClick={() => { navigate('/dashboard'); setUserMenuOpen(false); }}
+                              onClick={() => { navigate(dashboardPath); setUserMenuOpen(false); }}
                               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-stone-700 dark:text-stone-300 hover:bg-orange-50 dark:hover:bg-stone-800 text-xs font-bold transition-all duration-150 cursor-pointer text-right border-0 bg-transparent"
                             >
                               <BookOpen className="w-4.5 h-4.5 text-orange-700 dark:text-orange-400" />
-                              <span>لوحة التحكم (بوابة الطالب)</span>
+                              <span>{dashboardLabel}</span>
                             </button>
 
                             <button
@@ -376,10 +404,10 @@ export default function Navbar() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { navigate('/dashboard'); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate(dashboardPath); setMobileMenuOpen(false); }}
                   className="w-full text-center bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold py-3 rounded-xl text-sm transition-all"
                 >
-                  لوحة التحكم الخاصة بي
+                  {dashboardLabel}
                 </button>
                 <button
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}

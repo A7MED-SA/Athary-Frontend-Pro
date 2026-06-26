@@ -51,7 +51,7 @@ export function useNotifications() {
   });
 
   return {
-    notifications: notificationsQuery.data?.data?.items ?? [],
+    notifications: notificationsQuery.data?.data?.notifications ?? [],
     unreadCount: unreadCountQuery.data?.data ?? 0,
     preferences: preferencesQuery.data?.data,
     isLoading: notificationsQuery.isLoading,

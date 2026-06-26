@@ -19,14 +19,14 @@ export function ErrorFallback({
       role="alert"
     >
       <AlertTriangle className="h-12 w-12 text-red-500 dark:text-red-400 mb-4" />
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-2">
         {title}
       </h3>
-      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">{message}</p>
+      <p className="text-stone-600 dark:text-stone-400 mb-4 max-w-md">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-orange-700 hover:bg-orange-800 py-2 text-sm font-medium text-white transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
           إعادة المحاولة

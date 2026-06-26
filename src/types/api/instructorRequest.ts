@@ -24,3 +24,7 @@ export interface SubmitInstructorRequestDto {
   message: string;
   documents: InstructorRequestDocumentDto[];
 }
+
+export interface InstructorRequestDetailDto extends InstructorRequestDto {
+  documents?: InstructorRequestDocumentDto[];
+}

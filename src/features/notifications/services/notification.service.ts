@@ -1,7 +1,8 @@
 import api from '@/lib/api';
-import type { ApiResponse, PagedList } from '@/types/api/envelope';
+import type { ApiResponse } from '@/types/api/envelope';
 import type {
   NotificationDto,
+  NotificationListDto,
   NotificationPreferencesDto,
   UpdateNotificationPreferencesRequest,
 } from '@/types/api/notification';
@@ -9,12 +10,12 @@ import type {
 export const notificationService = {
   getMyNotifications: () =>
     api
-      .get<ApiResponse<PagedList<NotificationDto>>>('/notifications')
+      .get<ApiResponse<NotificationListDto>>('/notifications')
       .then((r) => r.data),
 
   getNotifications: (params?: Record<string, unknown>) =>
     api
-      .get<ApiResponse<PagedList<NotificationDto>>>('/notifications', { params })
+      .get<ApiResponse<NotificationListDto>>('/notifications', { params })
       .then((r) => r.data),
 
   getUnreadCount: () =>

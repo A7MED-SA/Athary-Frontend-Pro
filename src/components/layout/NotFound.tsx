@@ -25,7 +25,7 @@ export default function NotFound() {
           <span className="text-[10px] text-orange-700 font-extrabold uppercase bg-orange-100 py-0.5 px-3 rounded-md border border-orange-200 inline-block font-sans">
             ضلّ الطريق في الأرشيف!
           </span>
-          <h1 className="text-xl sm:text-2xl font-black text-[#5C230E] font-serif leading-snug">
+          <h1 className="text-xl sm:text-2xl font-black text-orange-950 font-serif leading-snug">
             هذه الصفحة غائبة عن الفهرس وسجلات آثاري
           </h1>
           <p className="text-xs text-stone-500 leading-relaxed font-light">
@@ -46,7 +46,7 @@ export default function NotFound() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/')}
-              className="bg-[#962D15] hover:bg-[#7D220F] text-amber-50 py-3 px-4 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition flex items-center justify-center gap-1.5"
+              className="bg-orange-700 hover:bg-orange-800 text-amber-50 py-3 px-4 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition flex items-center justify-center gap-1.5"
             >
               <Home className="w-3.5 h-3.5" />
               <span>الرئيسية</span>

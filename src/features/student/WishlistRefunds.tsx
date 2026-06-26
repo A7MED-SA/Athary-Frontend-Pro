@@ -90,7 +90,7 @@ export default function WishlistRefunds() {
       {activeTab === 'wishlist' && (
         <div className="space-y-4">
           <div>
-            <h3 className="font-extrabold text-[#962D15] text-xs sm:text-sm font-serif">المقررات المفضلة</h3>
+            <h3 className="font-extrabold text-orange-700 text-xs sm:text-sm font-serif">المقررات المفضلة</h3>
             <p className="text-[11px] text-stone-500 mt-1">المناجي التي تعتزم حجز مقعدك بها لاحقاً.</p>
           </div>
 
@@ -170,7 +170,7 @@ export default function WishlistRefunds() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-extrabold text-[#962D15] text-xs sm:text-sm font-serif">طلبات الاسترداد</h3>
+              <h3 className="font-extrabold text-orange-700 text-xs sm:text-sm font-serif">طلبات الاسترداد</h3>
               <p className="text-[11px] text-stone-500 mt-1">متابعة طلبات استعادة الرسوم.</p>
             </div>
           </div>

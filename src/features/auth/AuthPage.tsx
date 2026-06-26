@@ -9,23 +9,15 @@ import { authService } from '@/features/auth/services/auth.service';
 import { useAppContext } from '@/providers/AppProvider';
 import { env } from '@/lib/env';
 import { tokenStorage } from '@/lib/token-storage';
-import {
-  Mail,
-  Lock,
-  Phone,
-  User,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  KeyRound,
-  Loader2,
-  AlertCircle,
-  MapPin,
-  Calendar,
-  Globe,
-  Building,
-} from 'lucide-react';
+import { getErrorMessage, getErrorCode } from '@/lib/error-codes';
+import { AuthLayout } from './components/AuthLayout';
+import { LoginForm } from './components/LoginForm';
+import { RegisterForm } from './components/RegisterForm';
+import { ForgotPasswordForm } from './components/ForgotPasswordForm';
+import { ResetPasswordForm } from './components/ResetPasswordForm';
+import { OtpVerification } from './components/OtpVerification';
+import { VerifyView } from './components/VerifyView';
+import { SuccessView } from './components/SuccessView';
 
 const loginSchema = z.object({
   email: z.string().email('البريد الإلكتروني غير صحيح'),
@@ -36,7 +28,12 @@ const registerSchema = z.object({
   firstName: z.string().min(1, 'الاسم الأول مطلوب').max(100),
   lastName: z.string().min(1, 'اسم العائلة مطلوب').max(100),
   email: z.string().email('البريد الإلكتروني غير صحيح'),
-  password: z.string().min(8, 'كلمة المرور يجب أن تكون ٨ أحرف على الأقل'),
+  password: z.string()
+    .min(8, 'كلمة المرور يجب أن تكون ٨ أحرف على الأقل')
+    .regex(/[A-Z]/, 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل')
+    .regex(/[a-z]/, 'يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل')
+    .regex(/[0-9]/, 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل')
+    .regex(/[^A-Za-z0-9]/, 'يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل (!@#$%^&* 등)'),
   confirmPassword: z.string(),
   phoneNumber: z.string().optional(),
   gender: z.enum(['Male', 'Female', 'Other', 'PreferNotToSay']).optional(),
@@ -81,7 +78,8 @@ export default function AuthPage() {
     register: registerUser,
     isRegisterPending,
     registerError,
-    loginWithOAuthAsync,
+    loginWithGoogleAsync,
+    loginWithMicrosoftAsync,
     isOAuthPending,
   } = useAuth();
 
@@ -91,6 +89,7 @@ export default function AuthPage() {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const [emailForVerification, setEmailForVerification] = useState<string>('');
+  const [tokenForVerification, setTokenForVerification] = useState<string>('');
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -145,6 +144,8 @@ export default function AuthPage() {
       setEmailForVerification(email);
     } else if (token && email) {
       setSubView('verify');
+      setEmailForVerification(email);
+      setTokenForVerification(token);
     }
   }, [searchParams, resetForm]);
 
@@ -217,8 +218,7 @@ export default function AuthPage() {
       toast.success('تم تفعيل الحساب بنجاح!');
       setSubView('login');
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.message || 'فشل تفعيل الحساب';
-      toast.error(msg);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsVerifying(false);
     }
@@ -233,8 +233,7 @@ export default function AuthPage() {
       setTimer(60);
       setCanResend(false);
     } catch (error: any) {
-      const msg = error?.response?.data?.message || error?.message || 'فشل إعادة إرسال الرمز';
-      toast.error(msg);
+      toast.error(getErrorMessage(error));
     } finally {
       setIsResending(false);
     }
@@ -252,9 +251,7 @@ export default function AuthPage() {
           client_id: clientId,
           callback: async (response: { credential: string }) => {
             try {
-              const result = await loginWithOAuthAsync(
-                { idToken: response.credential, provider: 'google' },
-              );
+              const result = await loginWithGoogleAsync(response.credential);
               if (result?.data) {
                 tokenStorage.setTokens(result.data.accessToken, result.data.refreshToken);
                 handleLoginSuccess(result.data.user);
@@ -270,7 +267,7 @@ export default function AuthPage() {
     }, 200);
 
     return () => clearInterval(checkGoogle);
-  }, [loginWithOAuthAsync, navigate]);
+  }, [loginWithGoogleAsync, navigate]);
 
   const handleGoogleLogin = () => {
     if (window.google?.accounts?.id) {
@@ -306,9 +303,7 @@ export default function AuthPage() {
       const response = await msalInstance.loginPopup(loginRequest);
       if (response.idToken) {
         try {
-          const result = await loginWithOAuthAsync(
-            { idToken: response.idToken, provider: 'microsoft' },
-          );
+          const result = await loginWithMicrosoftAsync(response.idToken);
           if (result?.data) {
             tokenStorage.setTokens(result.data.accessToken, result.data.refreshToken);
             handleLoginSuccess(result.data.user);
@@ -334,17 +329,18 @@ export default function AuthPage() {
       toast.success('تم تسجيل الدخول بنجاح!');
       navigate('/dashboard');
     } catch (error: any) {
-      const status = error?.response?.status;
-      const msg = error?.response?.data?.message || error?.message || 'فشل تسجيل الدخول';
-      if (status === 403) {
-        toast.error('الحساب غير نشط. يرجى تأكيد البريد الإلكتروني.');
+      const errorCode = getErrorCode(error);
+      if (errorCode === 'ACCOUNT_NOT_ACTIVE') {
+        toast.error('يرجى تأكيد البريد الإلكتروني أولاً.');
         setEmailForVerification(data.email);
         setOtp(new Array(6).fill(''));
         setTimer(60);
         setCanResend(false);
         setSubView('otp');
+      } else if (errorCode === 'ACCOUNT_LOCKED') {
+        toast.error(getErrorMessage(error), { duration: 6000 });
       } else {
-        toast.error(msg);
+        toast.error(getErrorMessage(error));
       }
     }
   };
@@ -369,8 +365,7 @@ export default function AuthPage() {
         setSubView('otp');
       },
       onError: (error: any) => {
-        const msg = error?.response?.data?.message || error?.message || 'فشل إنشاء الحساب';
-        toast.error(msg);
+        toast.error(getErrorMessage(error));
       },
     });
   };
@@ -381,8 +376,7 @@ export default function AuthPage() {
       setEmailForVerification(data.email);
       setSubView('reset');
     }).catch((error: any) => {
-      const msg = error?.response?.data?.message || error?.message || 'فشل إرسال رمز إعادة التعيين';
-      toast.error(msg);
+      toast.error(getErrorMessage(error));
     });
   };
 
@@ -402,588 +396,94 @@ export default function AuthPage() {
       toast.success('تم تغيير كلمة المرور بنجاح!');
       setSubView('login');
     }).catch((error: any) => {
-      const msg = error?.response?.data?.message || error?.message || 'فشل تغيير كلمة المرور';
-      toast.error(msg);
+      toast.error(getErrorMessage(error));
     });
   };
-
   return (
-    <div className="min-h-screen bg-amber-50 flex flex-col justify-center font-sans py-12 px-4 sm:px-6 lg:px-8" dir="rtl" id="athary-auth-engine">
-      <div className="absolute inset-0 bg-heritage-pattern opacity-[0.08] pointer-events-none" />
+    <AuthLayout error={loginError || registerError}>
+      {subView === 'login' && (
+        <LoginForm
+          form={loginForm}
+          onSubmit={onLoginSubmit}
+          showPass={showPass}
+          onTogglePass={() => setShowPass(!showPass)}
+          isPending={isLoginPending}
+          onForgotClick={() => setSubView('forgot')}
+          onRegisterClick={() => setSubView('register')}
+          onGoogleLogin={handleGoogleLogin}
+          onMicrosoftLogin={handleMicrosoftLogin}
+          isOAuthPending={isOAuthPending}
+        />
+      )}
 
-      <div className="max-w-5xl mx-auto w-full bg-white rounded-3xl overflow-hidden border border-amber-200/60 shadow-2xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12">
+      {subView === 'register' && (
+        <RegisterForm
+          form={registerForm}
+          onSubmit={onRegisterSubmit}
+          step={registerStep}
+          onPrevStep={() => setRegisterStep((p) => p - 1)}
+          showPass={showPass}
+          onTogglePass={() => setShowPass(!showPass)}
+          showConfirmPass={showConfirmPass}
+          onToggleConfirmPass={() => setShowConfirmPass(!showConfirmPass)}
+          password={password}
+          strength={strength}
+          strengthCount={strengthCount}
+          isPending={isRegisterPending}
+          onLoginClick={() => setSubView('login')}
+        />
+      )}
 
-          {/* RIGHT PANEL: Desktop Heritage Banner */}
-          <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-orange-700 via-orange-800 to-amber-900 text-amber-50 p-10 flex-col justify-between relative overflow-hidden">
-            <div className="absolute inset-0 bg-heritage-pattern opacity-12 pointer-events-none" />
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/10 backdrop-blur rounded-xl flex items-center justify-center text-amber-300">
-                <svg className="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </div>
-              <span className="text-xl font-black text-amber-50 tracking-tight">منصة آثاري</span>
-            </div>
-            <div className="space-y-6 my-12" dir="rtl">
-              <span className="text-[10px] uppercase font-bold text-amber-300 bg-white/10 px-3 py-1 rounded-full">رسالة المجلس الأكاديمي</span>
-              <p className="text-base sm:text-lg font-serif italic leading-relaxed text-amber-100">
-                "مَنْ كَانَ يَرْجُو مَنَازِلَ الأَبْرَارِ فَلْيَحْرِصْ عَلَى نِيلِ الحِكْمَةِ النَّافِعَةِ؛ فَإِنَّ سُلْطَانَ الجسدِ يَزُولُ وَسُلْطَانَ المعْرِفَةِ الخَالِدَةِ يَبْقَى وَيَتَّصِلُ."
-              </p>
-              <div className="h-0.5 bg-dashed bg-orange-600/60 w-32" />
-              <p className="text-xs text-amber-200">الشيخ المحقق: عبد الكريم الأندلسي</p>
-            </div>
-            <p className="text-[10px] text-orange-200">بوابة آثاري الموحدة للمصادقة وتأمين الحسابات ٢٠٢٦</p>
-          </div>
+      {subView === 'forgot' && (
+        <ForgotPasswordForm
+          form={forgotForm}
+          onSubmit={onForgotSubmit}
+          onBackToLogin={() => setSubView('login')}
+        />
+      )}
 
-          {/* LEFT PANEL: Auth Forms */}
-          <div className="lg:col-span-7 p-8 sm:p-12" id="auth-forms-holder">
-            <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-              <div className="w-9 h-9 bg-orange-700 text-amber-50 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </div>
-              <span className="text-lg font-extrabold text-stone-900">منصة آثاري</span>
-            </div>
+      {subView === 'verify' && (
+        <VerifyView
+          email={emailForVerification}
+          token={tokenForVerification}
+          onVerified={() => setSubView('login')}
+        />
+      )}
 
-            {/* Error alert */}
-            {(loginError || registerError) && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-start gap-2.5 shadow-sm text-xs">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">فشلت العملية</p>
-                  <p className="mt-0.5 opacity-90">{loginError?.message || registerError?.message}</p>
-                </div>
-              </div>
-            )}
+      {subView === 'reset' && (
+        <ResetPasswordForm
+          form={resetForm}
+          onSubmit={onResetSubmit}
+          showPass={showPass}
+          onTogglePass={() => setShowPass(!showPass)}
+          showConfirmPass={showConfirmPass}
+          onToggleConfirmPass={() => setShowConfirmPass(!showConfirmPass)}
+          email={emailForVerification}
+          onBackToForgot={() => setSubView('forgot')}
+        />
+      )}
 
-            {/* LOGIN VIEW */}
-            {subView === 'login' && (
-              <div className="space-y-6" id="login-subview">
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-stone-900">تسجيل الدخول للمجلس وبوابة الطلاب</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1">يمكنك الوصول الآمن ومتابعة دروسك المسجلة وحضور البثوث المباشرة.</p>
-                </div>
+      {subView === 'success' && (
+        <SuccessView onAction={() => setSubView('login')} />
+      )}
 
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                  <div className="space-y-1.5 text-right">
-                    <label className="text-xs font-bold text-stone-700">البريد الإلكتروني للدارس</label>
-                    <div className="relative">
-                      <input
-                        type="email"
-                        placeholder="example@email.com"
-                        {...loginForm.register('email')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <Mail className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                    </div>
-                    {loginForm.formState.errors.email && (
-                      <p className="text-[10px] text-red-600 mt-1 font-bold">{loginForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5 text-right">
-                    <div className="flex justify-between items-center text-xs">
-                      <label className="font-bold text-stone-700">كلمة المرور المشفرة</label>
-                      <button type="button" onClick={() => setSubView('forgot')} className="text-orange-700 hover:underline font-semibold">نسيت كلمة المرور؟</button>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type={showPass ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        {...loginForm.register('password')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <Lock className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute top-4 left-3 text-stone-400 hover:text-stone-600">
-                        {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {loginForm.formState.errors.password && (
-                      <p className="text-[10px] text-red-600 mt-1 font-bold">{loginForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoginPending}
-                    className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-3.5 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs"
-                    id="login-btn-final"
-                  >
-                    {isLoginPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'تسجيل الدخول ومتابعة العلم'}
-                  </button>
-                </form>
-
-                {/* OAuth buttons */}
-                <div className="relative my-6 text-center">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-amber-100"></span></div>
-                  <span className="relative bg-white px-4 text-[10px] text-stone-400">أو سجل عبر الهوية الموثقة</span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={isOAuthPending}
-                  className="w-full border border-stone-200 hover:bg-stone-50 text-stone-800 text-xs font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
-                  id="google-login-btn"
-                >
-                  <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.7 0 3.3.6 4.6 1.8l2.4-2.4C17.3 1.7 14.9 1 12.24 1c-5.5 0-10 4.5-10 10s4.5 10 10 10c5.3 0 9.8-3.8 9.8-10 0-.6-.1-1.2-.2-1.7H12.24z"/>
-                  </svg>
-                  <span>تسجيل الدخول عبر Google</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleMicrosoftLogin}
-                  disabled={isOAuthPending}
-                  className="w-full border border-stone-200 hover:bg-stone-50 text-stone-800 text-xs font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
-                  id="microsoft-login-btn"
-                >
-                  <svg className="w-4 h-4 ml-1" viewBox="0 0 23 23" fill="currentColor">
-                    <path fill="#f35325" d="M1 1h10v10H1z"/>
-                    <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                    <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                    <path fill="#ffba08" d="M12 12h10v10H12z"/>
-                  </svg>
-                  <span>تسجيل الدخول عبر Microsoft</span>
-                </button>
-
-                <div className="pt-6 border-t border-amber-50 text-center text-xs text-stone-600">
-                  <span>ليس لديك حساب بعد؟ </span>
-                  <button onClick={() => setSubView('register')} className="text-orange-700 font-bold hover:underline">إنشاء حساب جديد بالمنصة</button>
-                </div>
-              </div>
-            )}
-
-            {/* REGISTER VIEW */}
-            {subView === 'register' && (
-              <div className="space-y-5" id="register-subview">
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-stone-900">إنشاء حساب جديد بمنصة آثاري</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1">ابدأ رحلتك المعرفية وسجل في الفصول العلمية الممنهجة بالمنصة.</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 py-2 text-center" dir="rtl">
-                  <div className="space-y-1">
-                    <div className={`h-1.5 rounded-full transition ${registerStep >= 1 ? 'bg-orange-700' : 'bg-stone-200'}`} />
-                    <span className={`text-[9.5px] font-bold ${registerStep === 1 ? 'text-orange-700' : 'text-stone-400'}`}>١. الحساب والأمان</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className={`h-1.5 rounded-full transition ${registerStep >= 2 ? 'bg-orange-700' : 'bg-stone-200'}`} />
-                    <span className={`text-[9.5px] font-bold ${registerStep === 2 ? 'text-orange-700' : 'text-stone-400'}`}>٢. الهوية والاتصال</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className={`h-1.5 rounded-full transition ${registerStep >= 3 ? 'bg-orange-700' : 'bg-stone-200'}`} />
-                    <span className={`text-[9.5px] font-bold ${registerStep === 3 ? 'text-orange-700' : 'text-stone-400'}`}>٣. محل الإقامة</span>
-                  </div>
-                </div>
-
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                  {registerStep === 1 && (
-                    <div className="space-y-3.5 text-right">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">الاسم الأول <span className="text-red-500">*</span></label>
-                          <div className="relative">
-                            <input type="text" placeholder="أحمد" {...registerForm.register('firstName')}
-                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${registerForm.formState.errors.firstName ? 'border-red-500' : 'border-amber-200'}`} />
-                            <User className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                          {registerForm.formState.errors.firstName && <p className="text-[10px] text-red-600 mt-1 font-bold">{registerForm.formState.errors.firstName.message}</p>}
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">اسم العائلة <span className="text-red-500">*</span></label>
-                          <div className="relative">
-                            <input type="text" placeholder="التميمي" {...registerForm.register('lastName')}
-                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${registerForm.formState.errors.lastName ? 'border-red-500' : 'border-amber-200'}`} />
-                            <User className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                          {registerForm.formState.errors.lastName && <p className="text-[10px] text-red-600 mt-1 font-bold">{registerForm.formState.errors.lastName.message}</p>}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1 text-right">
-                        <label className="text-xs font-bold text-stone-700">البريد الإلكتروني للدارس <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <input type="email" placeholder="example@email.com" {...registerForm.register('email')}
-                            className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${registerForm.formState.errors.email ? 'border-red-500' : 'border-amber-200'}`} />
-                          <Mail className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                        </div>
-                        {registerForm.formState.errors.email && <p className="text-[10px] text-red-600 mt-1 font-bold">{registerForm.formState.errors.email.message}</p>}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">كلمة المرور <span className="text-red-500">*</span></label>
-                          <div className="relative">
-                            <input type={showPass ? 'text' : 'password'} placeholder="••••••••" {...registerForm.register('password')}
-                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${registerForm.formState.errors.password ? 'border-red-500' : 'border-amber-200'}`} />
-                            <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute top-3.5 left-3 text-stone-400 hover:text-stone-600">
-                              {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                          {registerForm.formState.errors.password && <p className="text-[10px] text-red-600 mt-1 font-bold">{registerForm.formState.errors.password.message}</p>}
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">تأكيد كلمة المرور <span className="text-red-500">*</span></label>
-                          <div className="relative">
-                            <input type={showConfirmPass ? 'text' : 'password'} placeholder="••••••••" {...registerForm.register('confirmPassword')}
-                              className={`w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-10 rounded-xl border focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right ${registerForm.formState.errors.confirmPassword ? 'border-red-500' : 'border-amber-200'}`} />
-                            <Lock className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                            <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute top-3.5 left-3 text-stone-400 hover:text-stone-600">
-                              {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                          {registerForm.formState.errors.confirmPassword && <p className="text-[10px] text-red-600 mt-1 font-bold">{registerForm.formState.errors.confirmPassword.message}</p>}
-                        </div>
-                      </div>
-
-                      {password.length > 0 && (
-                        <div className="p-3 bg-amber-50 rounded-xl text-[10px] space-y-1.5 text-right border border-amber-100">
-                          <p className="font-bold text-stone-800">قوة كلمة المرور:</p>
-                          <div className="w-full bg-stone-200 h-1 rounded-full overflow-hidden">
-                            <div className={`h-full transition-all duration-300 ${strengthCount < 2 ? 'bg-red-500' : strengthCount < 4 ? 'bg-amber-500' : 'bg-teal-600'}`} style={{ width: `${(strengthCount / 5) * 100}%` }} />
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
-                            <span className={strength.minLength ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ ٨ أحرف على الأقل</span>
-                            <span className={strength.hasUpper ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ حرف كبير</span>
-                            <span className={strength.hasLower ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ حرف صغير</span>
-                            <span className={strength.hasNumber ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ رقم واحد</span>
-                            <span className={strength.hasSpecial ? 'text-teal-700 font-bold' : 'text-stone-400'}>✓ رمز خاص</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {registerStep === 2 && (
-                    <div className="space-y-3.5 text-right">
-                      <div className="space-y-1 text-right">
-                        <label className="text-xs font-bold text-stone-700">رقم الهاتف</label>
-                        <div className="relative">
-                          <input type="tel" placeholder="+966 50 123 4567" {...registerForm.register('phoneNumber')}
-                            className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                          <Phone className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">الجنس</label>
-                          <select {...registerForm.register('gender')} className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-3 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right appearance-none cursor-pointer">
-                            <option value="">اختر...</option>
-                            <option value="Male">ذكر</option>
-                            <option value="Female">أنثى</option>
-                            <option value="Other">أخرى</option>
-                            <option value="PreferNotToSay">أفضّل عدم الإفصاح</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">تاريخ الميلاد</label>
-                          <div className="relative">
-                            <input type="date" {...registerForm.register('dateOfBirth')}
-                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                            <Calendar className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {registerStep === 3 && (
-                    <div className="space-y-3.5 text-right">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">الدولة</label>
-                          <div className="relative">
-                            <input type="text" placeholder="المملكة العربية السعودية" {...registerForm.register('country')}
-                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                            <Globe className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">المدينة</label>
-                          <div className="relative">
-                            <input type="text" placeholder="الرياض" {...registerForm.register('city')}
-                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                            <Building className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">اسم الشارع</label>
-                          <div className="relative">
-                            <input type="text" placeholder="الملز، طريق صلاح الدين" {...registerForm.register('streetLine1')}
-                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                            <MapPin className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <label className="text-xs font-bold text-stone-700">الرمز البريدي</label>
-                          <div className="relative">
-                            <input type="text" placeholder="11564" {...registerForm.register('postalCode')}
-                              className="w-full bg-stone-50 text-stone-950 text-xs py-3 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right" />
-                            <MapPin className="w-4 h-4 text-amber-700 absolute top-3.5 right-3.5" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-4 pt-2">
-                    {registerStep > 1 && (
-                      <button type="button" onClick={() => setRegisterStep((prev) => prev - 1)}
-                        className="w-1/3 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-1.5 text-xs cursor-pointer border-0">السابق</button>
-                    )}
-                    <button type="submit" disabled={isRegisterPending}
-                      className={`font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs cursor-pointer border-0 ${registerStep > 1 ? 'w-2/3' : 'w-full'} bg-orange-700 hover:bg-orange-800 text-amber-50`}>
-                      {isRegisterPending ? <Loader2 className="w-4 h-4 animate-spin" /> : registerStep < 3 ? <span>الخطوة التالية ➔</span> : <span>إنشاء وحجز المقعد الأكاديمي ✓</span>}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="pt-6 border-t border-amber-50 text-center text-xs text-stone-600">
-                  <span>لديك حساب بالفعل بالمجلس؟ </span>
-                  <button onClick={() => setSubView('login')} className="text-orange-700 font-bold hover:underline cursor-pointer bg-transparent border-0">تسجيل الدخول الآن</button>
-                </div>
-              </div>
-            )}
-
-            {/* FORGOT PASSWORD VIEW */}
-            {subView === 'forgot' && (
-              <div className="space-y-6" id="forgot-subview">
-                <div className="text-center space-y-4">
-                  <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                    <KeyRound className="w-6 h-6 stroke-[1.8]" />
-                  </div>
-                  <h2 className="text-xl font-bold text-stone-900">نسيت كلمة المرور؟</h2>
-                  <p className="text-xs text-stone-600 max-w-sm mx-auto leading-relaxed">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.</p>
-                </div>
-                <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} className="space-y-4">
-                  <div className="space-y-1.5 text-right">
-                    <label className="text-xs font-bold text-stone-700">البريد الإلكتروني</label>
-                    <div className="relative">
-                      <input type="email" placeholder="example@email.com" {...forgotForm.register('email')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none" />
-                      <Mail className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                    </div>
-                    {forgotForm.formState.errors.email && <p className="text-[10px] text-red-600 mt-1 font-bold">{forgotForm.formState.errors.email.message}</p>}
-                  </div>
-                  <button type="submit" className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-3.5 rounded-xl transition text-xs shadow-md">إرسال رابط إعادة التعيين</button>
-                </form>
-                <div className="pt-6 border-t border-amber-50 text-center text-xs">
-                  <button onClick={() => setSubView('login')} className="text-stone-500 hover:text-orange-700 flex items-center gap-1.5 mx-auto hover:underline">
-                    <ArrowRight className="w-4 h-4 transform rotate-180" />
-                    <span>تذكرت كلمة المرور؟ سجل الدخول</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* VERIFY EMAIL VIEW */}
-            {subView === 'verify' && (
-              <div className="space-y-6 text-center py-4" id="verify-subview">
-                <div className="w-14 h-14 bg-orange-50 text-orange-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                  <Mail className="w-6 h-6 animate-pulse" />
-                </div>
-                <div className="space-y-3">
-                  <h2 className="text-xl font-bold text-stone-900">تأكيد البريد الإلكتروني</h2>
-                  <p className="text-xs text-stone-600 max-w-sm mx-auto leading-relaxed">جارٍ التحقق من حسابك...</p>
-                </div>
-                <Loader2 className="w-8 h-8 animate-spin text-orange-700 mx-auto" />
-              </div>
-            )}
-
-            {/* RESET PASSWORD VIEW */}
-            {subView === 'reset' && (
-              <div className="space-y-6" id="reset-subview">
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-stone-900">إنشاء كلمة مرور جديدة</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1 text-right font-sans">
-                    أدخل رمز التحقق (OTP) المرسل إلى بريدك الإلكتروني{' '}
-                    <span className="font-bold text-orange-700 select-all" dir="ltr">{emailForVerification}</span>{' '}
-                    ثم أدخل كلمة المرور الجديدة.
-                  </p>
-                </div>
-                <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
-                  {/* Code Input */}
-                  <div className="space-y-1.5 text-right">
-                    <label className="text-xs font-bold text-stone-700">رمز التحقق (OTP)</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="123456"
-                        {...resetForm.register('code')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-4 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <KeyRound className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                    </div>
-                    {resetForm.formState.errors.code && (
-                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.code.message}</p>
-                    )}
-                  </div>
-
-                  {/* New Password */}
-                  <div className="space-y-1.5 text-right">
-                    <label className="text-xs font-bold text-stone-700">كلمة المرور الجديدة</label>
-                    <div className="relative">
-                      <input
-                        type={showPass ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        {...resetForm.register('newPassword')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <Lock className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute top-4 left-3 text-stone-400">
-                        {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {resetForm.formState.errors.newPassword && (
-                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.newPassword.message}</p>
-                    )}
-                  </div>
-
-                  {/* Confirm Password */}
-                  <div className="space-y-1.5 text-right">
-                    <label className="text-xs font-bold text-stone-700">تأكيد كلمة المرور</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPass ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        {...resetForm.register('confirmPassword')}
-                        className="w-full bg-stone-50 text-stone-950 text-xs py-3.5 pr-10 pl-10 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-right"
-                      />
-                      <Lock className="w-4 h-4 text-amber-700 absolute top-4 right-3.5" />
-                      <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute top-4 left-3 text-stone-400">
-                        {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {resetForm.formState.errors.confirmPassword && (
-                      <p className="text-[10px] text-red-600 mt-1 font-bold">{resetForm.formState.errors.confirmPassword.message}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-3.5 rounded-xl transition text-xs shadow-md border-0 cursor-pointer"
-                  >
-                    حفظ وتحديث كلمة المرور
-                  </button>
-                </form>
-
-                <div className="pt-4 text-center border-t border-amber-50">
-                  <button
-                    type="button"
-                    onClick={() => setSubView('forgot')}
-                    className="text-stone-500 hover:text-orange-700 flex items-center gap-1.5 mx-auto hover:underline bg-transparent border-0 cursor-pointer text-xs"
-                  >
-                    <ArrowRight className="w-4 h-4 transform rotate-180" />
-                    <span>الرجوع للخطوة السابقة</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* SUCCESS VIEW */}
-            {subView === 'success' && (
-              <div className="space-y-6 text-center py-4" id="success-subview">
-                <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto shadow-inner relative">
-                  <span className="absolute inset-0 rounded-full bg-teal-500/10 animate-ping pointer-events-none" />
-                  <CheckCircle className="w-10 h-10 stroke-[1.8]" />
-                </div>
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-black text-stone-900">تمت العملية بنجاح!</h2>
-                  <p className="text-xs text-stone-600 max-w-sm mx-auto leading-relaxed">تحقق من بريدك الإلكتروني لتأكيد الحساب.</p>
-                </div>
-                <div className="pt-6">
-                  <button onClick={() => setSubView('login')} className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-bold py-4 rounded-xl text-xs transition shadow-md hover:shadow-lg">الذهاب لتسجيل الدخول</button>
-                </div>
-              </div>
-            )}
-
-            {/* OTP VERIFICATION VIEW */}
-            {subView === 'otp' && (
-              <div className="space-y-6" id="otp-subview">
-                <div className="text-right">
-                  <h2 className="text-xl font-bold text-stone-900">رمز تأكيد البريد الإلكتروني</h2>
-                  <p className="text-xs text-stone-500 font-light mt-1 text-right">
-                    أدخل الرمز المكون من 6 أرقام الذي أرسلناه إلى بريدك الإلكتروني{' '}
-                    <span className="font-bold text-orange-700 select-all" dir="ltr">{emailForVerification}</span>
-                  </p>
-                </div>
-
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  <div className="flex justify-between items-center gap-2" dir="ltr">
-                    {otp.map((digit, idx) => (
-                      <input
-                        key={idx}
-                        type="text"
-                        maxLength={1}
-                        value={digit}
-                        ref={(el) => {
-                          if (el) otpInputsRef.current[idx] = el;
-                        }}
-                        onChange={(e) => handleOtpChange(e.target.value, idx)}
-                        onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-                        onPaste={handleOtpPaste}
-                        className="w-12 h-12 text-center text-lg font-bold bg-stone-50 text-stone-950 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent transition-all"
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isVerifying || otp.join('').length < 6}
-                    className="w-full bg-orange-700 hover:bg-orange-800 disabled:bg-stone-300 disabled:cursor-not-allowed text-amber-50 font-bold py-3.5 rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs border-0 cursor-pointer"
-                  >
-                    {isVerifying ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'تأكيد البريد الإلكتروني وتفعيل الحساب'
-                    )}
-                  </button>
-                </form>
-
-                <div className="pt-2 text-center text-xs space-y-3">
-                  <div className="text-stone-600">
-                    {canResend ? (
-                      <button
-                        type="button"
-                        onClick={handleResendOtp}
-                        disabled={isResending}
-                        className="text-orange-700 font-bold hover:underline cursor-pointer bg-transparent border-0 inline-flex items-center gap-1"
-                      >
-                        {isResending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                        إعادة إرسال رمز التحقق
-                      </button>
-                    ) : (
-                      <span>
-                        يمكنك إعادة إرسال الرمز خلال{' '}
-                        <span className="font-bold text-orange-700">{timer}</span> ثانية
-                      </span>
-                    )}
-                  </div>
-                  <div className="border-t border-amber-50 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setSubView('login')}
-                      className="text-stone-500 hover:text-orange-700 flex items-center gap-1.5 mx-auto hover:underline bg-transparent border-0 cursor-pointer text-xs"
-                    >
-                      <ArrowRight className="w-4 h-4 transform rotate-180" />
-                      <span>الرجوع إلى تسجيل الدخول</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+      {subView === 'otp' && (
+        <OtpVerification
+          email={emailForVerification}
+          otp={otp}
+          onOtpChange={handleOtpChange}
+          onOtpKeyDown={handleOtpKeyDown}
+          onOtpPaste={handleOtpPaste}
+          onVerify={handleVerifyOtp}
+          onResend={handleResendOtp}
+          isVerifying={isVerifying}
+          isResending={isResending}
+          timer={timer}
+          canResend={canResend}
+          otpRefs={otpInputsRef}
+          onBackToLogin={() => setSubView('login')}
+        />
+      )}
+    </AuthLayout>
   );
 }

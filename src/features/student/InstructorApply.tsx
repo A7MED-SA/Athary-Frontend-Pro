@@ -93,7 +93,7 @@ export default function InstructorApply() {
     <div className="bg-amber-50/15 rounded-3xl border border-amber-200/80 p-5 sm:p-8 max-w-3xl mx-auto text-right font-sans" dir="rtl">
 
       <div className="text-center space-y-3 pb-6 border-b border-amber-100 mb-6">
-        <div className="w-16 h-16 bg-[#962D15]/10 text-[#962D15] rounded-full flex items-center justify-center mx-auto shadow-2xs">
+        <div className="w-16 h-16 bg-orange-700/10 text-orange-700 rounded-full flex items-center justify-center mx-auto shadow-2xs">
           <GraduationCap className="w-9 h-9 animate-pulse" />
         </div>
         <div className="space-y-1.5 max-w-xl mx-auto">
@@ -181,7 +181,7 @@ export default function InstructorApply() {
                 {cvFile ? (
                   <div className="border border-amber-200 bg-white rounded-2xl p-4 flex flex-col justify-between min-h-[140px] relative">
                     <div className="flex gap-3 items-start">
-                      <div className="p-2.5 bg-orange-50 text-[#962D15] rounded-xl shrink-0">
+                      <div className="p-2.5 bg-orange-50 text-orange-700 rounded-xl shrink-0">
                         <FileText className="w-6 h-6" />
                       </div>
                       <div className="space-y-1 min-w-0">
@@ -231,7 +231,7 @@ export default function InstructorApply() {
                 {certFile ? (
                   <div className="border border-amber-200 bg-white rounded-2xl p-4 flex flex-col justify-between min-h-[140px] relative">
                     <div className="flex gap-3 items-start">
-                      <div className="p-2.5 bg-orange-50 text-[#962D15] rounded-xl shrink-0">
+                      <div className="p-2.5 bg-orange-50 text-orange-700 rounded-xl shrink-0">
                         <GraduationCap className="w-6 h-6" />
                       </div>
                       <div className="space-y-1 min-w-0">

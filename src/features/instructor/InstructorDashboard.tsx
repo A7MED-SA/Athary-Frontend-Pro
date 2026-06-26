@@ -8,7 +8,6 @@ import {
   DollarSign,
   Users,
   AlertCircle,
-  LogOut,
   ChevronLeft,
   Edit3,
   Plus,
@@ -33,34 +32,13 @@ import CourseBuilder from './CourseBuilder';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { CourseResponseDto } from '../../types/api/course';
 import type { InstructorRevenueDto } from '../../types/api/dashboard';
-
-interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'secondary' | 'outline' | 'destructive' | 'success' | 'warning';
-  children?: React.ReactNode;
-  className?: string;
-}
-
-function Badge({ className, children, variant = 'default', ...props }: BadgeProps) {
-  const baseStyles = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border transition-all duration-150 shadow-2xs";
-  const variants = {
-    default: "border-transparent bg-orange-700 text-amber-50 hover:bg-orange-700",
-    secondary: "border-stone-200 bg-stone-100/90 text-stone-700 hover:bg-stone-200",
-    outline: "text-stone-800 border-stone-200 bg-white hover:bg-stone-50",
-    destructive: "border-transparent bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
-    success: "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100/60",
-    warning: "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100/60"
-  };
-  return (
-    <div className={`${baseStyles} ${variants[variant]} ${className || ''}`} {...props}>
-      {children}
-    </div>
-  );
-}
+import { Badge, StatCard } from '../../components/shared/ui';
+import { DashboardSidebar } from '../../components/layout/dashboard';
 
 function LineCheckIcon() {
   return (
     <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5h-18a2 2 0 00-2 2v10a2 2 0 002 2h18a2 2 0 002-2V14a2 2 0 00-2-2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
     </svg>
   );
 }
@@ -125,7 +103,7 @@ export default function InstructorDashboard() {
   };
 
   const overview = instructorOverview;
-  const coursesList = instructorCourses?.items ?? [];
+  const coursesList = instructorCourses ?? [];
   const isLoading = isInstructorLoading || isCoursesLoading;
 
   const chartData = (revenueData?.revenueByMonth ?? []).map((m) => ({
@@ -139,7 +117,7 @@ export default function InstructorDashboard() {
       c.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' ||
       (statusFilter === 'published' && c.status === 'Published') ||
-      (statusFilter === 'pending' && c.status === 'PendingReview') ||
+      (statusFilter === 'pending' && c.status === 'Pending') ||
       (statusFilter === 'draft' && c.status === 'Draft');
     return matchesSearch && matchesStatus;
   });
@@ -174,70 +152,32 @@ export default function InstructorDashboard() {
       </div>
 
       <div className="flex flex-1 relative z-10">
-        <AnimatePresence mode="wait">
-          {isSidebarOpen && (
-            <motion.aside
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 280 }}
-              exit={{ opacity: 0, width: 0 }}
-              className="hidden lg:flex flex-col bg-[var(--color-contrast)] text-[var(--color-contrast-foreground)] border-l border-[var(--color-contrast-border)] min-h-screen px-4 py-8 justify-between sticky top-0"
-              id="instructor-sidebar"
+        <DashboardSidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as any)}
+          navItems={[
+            { id: 'overview', label: 'لوحة المراقبة ونظرة عامة', icon: <LayoutDashboard className="w-4 h-4" /> },
+            { id: 'my-courses', label: 'سجل ومراجعة دوراتي', icon: <BookOpen className="w-4 h-4" /> },
+            { id: 'revisions', label: 'طلبات تعديل المنهج', icon: <FileSignature className="w-4 h-4" /> },
+            { id: 'earnings', label: 'عائدات التدقيق المالي ومحاضرينا', icon: <DollarSign className="w-4 h-4" /> },
+          ]}
+          branding={{ title: 'بوابة الأستاذ آثاري', subtitle: 'الهيئة التدريسية المعتمدة' }}
+          userName={userName}
+          userRole="مدقق الحلقات التراثية"
+          onLogout={handleLogout}
+          sidebarId="instructor-sidebar"
+          extraTop={
+            <button
+              onClick={handleOpenNewCourseBuilder}
+              className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-black text-xs py-3 px-4 rounded-xl transition shadow flex items-center justify-center gap-2 border-0 cursor-pointer hover:scale-102"
             >
-              <div className="space-y-8">
-                <div className="flex items-center gap-3 px-2 border-b border-orange-900 pb-5">
-                  <div className="w-10 h-10 rounded-xl bg-orange-700 flex items-center justify-center shadow-lg border border-orange-600">
-                    <Sparkles className="w-5 h-5 text-amber-50" />
-                  </div>
-                  <div>
-                    <h2 className="font-extrabold text-sm tracking-tight text-amber-200">بوابة الأستاذ آثاري</h2>
-                    <p className="text-[10px] text-stone-300 font-light">الهيئة التدريسية المعتمدة</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleOpenNewCourseBuilder}
-                  className="w-full bg-orange-700 hover:bg-orange-800 text-amber-50 font-black text-xs py-3 px-4 rounded-xl transition shadow flex items-center justify-center gap-2 border-0 cursor-pointer hover:scale-102"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>تأليف ومنشأ دبلوم جديد</span>
-                </button>
-
-                <nav className="space-y-1.5 pt-4">
-                  <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${activeTab === 'overview' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'}`}>
-                    <LayoutDashboard className="w-4 h-4 text-orange-500" />
-                    <span>لوحة المراقبة ونظرة عامة</span>
-                  </button>
-                  <button onClick={() => setActiveTab('my-courses')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${activeTab === 'my-courses' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'}`}>
-                    <BookOpen className="w-4 h-4 text-orange-500" />
-                    <span>سجل ومراجعة دوراتي</span>
-                  </button>
-                  <button onClick={() => setActiveTab('revisions')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${activeTab === 'revisions' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'}`}>
-                    <FileSignature className="w-4 h-4 text-orange-500" />
-                    <span>طلبات تعديل المنهج</span>
-                  </button>
-                  <button onClick={() => setActiveTab('earnings')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition text-right text-xs font-bold border-0 cursor-pointer ${activeTab === 'earnings' ? 'bg-orange-800 text-amber-200' : 'bg-transparent text-stone-300 hover:bg-orange-900/40 hover:text-white'}`}>
-                    <DollarSign className="w-4 h-4 text-orange-500" />
-                    <span>عائدات التدقيق المالي ومحاضرينا</span>
-                  </button>
-                </nav>
-              </div>
-
-              <div className="pt-6 border-t border-orange-900 space-y-4">
-                <div className="flex items-center gap-3 px-1">
-                  <div className="w-9 h-9 rounded-full bg-orange-700 flex items-center justify-center text-xs font-bold text-amber-50">أ</div>
-                  <div>
-                    <h4 className="text-xs font-black">{userName}</h4>
-                    <p className="text-[9px] text-[#fbbf24]">مدقق الحلقات التراثية</p>
-                  </div>
-                </div>
-                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-950/40 hover:text-red-300 transition text-right text-xs font-semibold cursor-pointer border-0 bg-transparent">
-                  <LogOut className="w-4 h-4" />
-                  <span>الخروج من كابينة التدريس</span>
-                </button>
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
+              <PlusCircle className="w-4 h-4" />
+              <span>تأليف ومنشأ دبلوم جديد</span>
+            </button>
+          }
+        />
 
         <main className="flex-1 px-4 sm:px-8 py-8 overflow-x-hidden min-h-screen">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-amber-100 pb-5">
@@ -558,7 +498,7 @@ export default function InstructorDashboard() {
                   {filteredCourses.map((c) => (
                     <div key={c.id} className="bg-white rounded-2xl border border-amber-200/70 overflow-hidden flex flex-col justify-between hover:scale-101 transition shadow-sm">
                       <div className="relative h-40">
-                        {c.courseImageUrl && <img src={c.courseImageUrl} alt={c.title} className="w-full h-full object-cover" />}
+                        {c.thumbnailUrl && <img src={c.thumbnailUrl} alt={c.title} className="w-full h-full object-cover" />}
                         <div className="absolute top-4 right-4 flex gap-1">
                           {c.status === 'Published' && <Badge variant="success">منشور</Badge>}
                           {c.status === 'PendingReview' && <Badge variant="warning">قيد المراجعة</Badge>}
@@ -573,7 +513,7 @@ export default function InstructorDashboard() {
                         <div className="space-y-3 pt-3 border-t border-amber-100 text-xs">
                           <div className="flex justify-between items-center text-stone-500 font-mono">
                             <span>السعر:</span>
-                            <span className="font-bold text-orange-950 font-sans">{c.isFree ? 'مجاني' : `${c.price} ر.س`}</span>
+                            <span className="font-bold text-orange-950 font-sans">{c.price === 0 ? 'مجاني' : `${c.price} ر.س`}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 pt-2">
                             <button onClick={() => handleEditExistingCourse(c)} className="bg-orange-700 hover:bg-orange-800 text-amber-50 rounded-xl text-center font-bold py-2 transition border-0 cursor-pointer text-xs">تعديل المنهج</button>

@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { useNavigate } from 'react-router-dom';
 import { tokenStorage } from '@/lib/token-storage';
 import { setAuthFailureHandler } from '@/lib/api';
+import { authService } from '@/features/auth/services/auth.service';
 import type { UserInfoDto } from '@/types/api/auth';
 
 type Role = 'Admin' | 'Instructor' | 'Student';

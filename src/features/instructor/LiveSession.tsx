@@ -223,7 +223,7 @@ export default function LiveSession({
 
             {/* Middle presenter watermark placeholder */}
             <div className="z-10 text-center space-y-3 self-center max-w-sm px-6 bg-black/40 py-6 rounded-3xl backdrop-blur-md border border-white/5 mx-4">
-              <div className="w-16 h-16 bg-[#F5F0E6] text-[#962D15] rounded-full flex items-center justify-center font-bold text-center border-2 border-amber-500 mx-auto font-serif text-lg leading-none">
+              <div className="w-16 h-16 bg-[#F5F0E6] text-orange-700 rounded-full flex items-center justify-center font-bold text-center border-2 border-amber-500 mx-auto font-serif text-lg leading-none">
                 أثري
               </div>
               <div className="space-y-1">
@@ -295,7 +295,7 @@ export default function LiveSession({
           {/* Sidebar Header details */}
           <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
             <h3 className="font-black text-xs text-stone-950 flex items-center gap-1.5">
-              <MessageSquare className="w-4 h-4 text-[#962D15]" />
+              <MessageSquare className="w-4 h-4 text-orange-700" />
               <span>الدردشة التفاعلية الفورية</span>
             </h3>
             
@@ -321,8 +321,8 @@ export default function LiveSession({
                 borderClass = 'border-r-3 border-orange-700 border-t-0 border-b-0 border-l-0';
               } else if (isInstructor) {
                 cardBg = 'bg-[#FAECE8]';
-                nameColor = 'text-[#962D15] font-black';
-                borderClass = 'border-r-3 border-[#962D15] border-t-0 border-b-0 border-l-0';
+                nameColor = 'text-orange-700 font-black';
+                borderClass = 'border-r-3 border-orange-700 border-t-0 border-b-0 border-l-0';
               } else if (isModerator) {
                 cardBg = 'bg-teal-50/50';
                 nameColor = 'text-teal-900';

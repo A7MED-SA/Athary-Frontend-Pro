@@ -151,4 +151,14 @@ export const queryKeys = {
     all: ['instructorRequests'] as const,
     status: () => ['instructorRequests', 'status'] as const,
   },
+
+  admin: {
+    all: ['admin'] as const,
+    coupons: () => [...queryKeys.admin.all, 'coupons'] as const,
+    paymentMethods: () => [...queryKeys.admin.all, 'paymentMethods'] as const,
+    refunds: () => [...queryKeys.admin.all, 'refunds'] as const,
+    instructorRequests: () => [...queryKeys.admin.all, 'instructorRequests'] as const,
+    users: () => [...queryKeys.admin.all, 'users'] as const,
+    pendingCourses: () => [...queryKeys.admin.all, 'pendingCourses'] as const,
+  },
 };

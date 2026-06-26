@@ -127,7 +127,7 @@ export default function ThemeSettingsPopover() {
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-[#962d15] border border-orange-500/30 flex items-center justify-center shrink-0" />
+                      <div className="w-4 h-4 rounded-full bg-orange-700 border border-orange-500/30 flex items-center justify-center shrink-0" />
                       <div>
                         <span className="block text-xs font-bold text-stone-800 dark:text-stone-200">الألوان الكلاسيكية (الافتراضي)</span>
                         <span className="block text-[8px] text-stone-400 dark:text-stone-500 font-light">الهوية البصرية الأصلية للمنصة (العنابي والبيج الأثري)</span>

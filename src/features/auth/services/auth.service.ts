@@ -4,7 +4,6 @@ import type {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
-  OAuthLoginRequest,
   SessionDto,
   ResendConfirmationRequest,
   ForgotPasswordRequest,
@@ -24,7 +23,7 @@ export const authService = {
 
   register: (data: RegisterRequest) =>
     api
-      .post<ApiResponse<{ userId: string; token: string; refreshToken: string; expiration: string }>>(
+      .post<ApiResponse<{ userId: string; email: string; message: string }>>(
         '/auth/register',
         data,
       )
@@ -36,8 +35,11 @@ export const authService = {
   refreshToken: () =>
     api.post<ApiResponse<{ accessToken: string; refreshToken: string; expiresAt: string }>>('/auth/refresh').then((r) => r.data),
 
-  loginWithOAuth: (data: OAuthLoginRequest) =>
-    api.post<ApiResponse<AuthResponse>>('/auth/loginWithOAuth', data).then((r) => r.data),
+  loginWithGoogle: (idToken: string) =>
+    api.post<ApiResponse<AuthResponse>>('/oauth/google', { idToken, provider: 'google' as const }).then((r) => r.data),
+
+  loginWithMicrosoft: (idToken: string) =>
+    api.post<ApiResponse<AuthResponse>>('/oauth/microsoft', { idToken, provider: 'microsoft' as const }).then((r) => r.data),
 
   confirmEmail: (userId: string, token: string) =>
     api
@@ -75,7 +77,7 @@ export const authService = {
     api.delete<ApiResponse>(`/auth/sessions/${id}`).then((r) => r.data),
 
   revokeAllSessions: () =>
-    api.delete<ApiResponse>('/auth/revoke-all-sessions').then((r) => r.data),
+    api.post<ApiResponse>('/auth/logout-all').then((r) => r.data),
 
   verifyEmail: (data: VerifyEmailRequest) =>
     api.post<ApiResponse>('/auth/verify-email', data).then((r) => r.data),

@@ -4,7 +4,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className = '', variant = 'rectangular' }: SkeletonProps) {
-  const baseClasses = 'animate-pulse bg-gray-200 dark:bg-gray-700';
+  const baseClasses = 'animate-pulse bg-stone-200 dark:bg-stone-700';
 
   const variantClasses = {
     text: 'h-4 rounded',
@@ -22,7 +22,7 @@ export function Skeleton({ className = '', variant = 'rectangular' }: SkeletonPr
 
 export function CourseCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
       <Skeleton className="h-40 w-full" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-4 w-3/4" variant="text" />
@@ -43,7 +43,7 @@ export function DashboardSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+            className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-800"
           >
             <Skeleton className="h-4 w-24 mb-2" variant="text" />
             <Skeleton className="h-8 w-16" variant="text" />

@@ -1,32 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  Clock, 
-  User, 
-  ShieldAlert, 
-  Settings, 
-  Save, 
-  Filter, 
-  ChevronRight, 
-  ChevronLeft, 
-  ShieldCheck, 
-  Sliders, 
-  ToggleLeft, 
-  ToggleRight, 
-  FileLock2, 
-  Globe, 
-  AlertTriangle,
+import {
+  Clock,
+  ShieldAlert,
+  Settings,
+  Save,
+  Filter,
+  ShieldCheck,
+  Sliders,
+  ToggleLeft,
+  ToggleRight,
   Info
 } from 'lucide-react';
-
-interface AuditLog {
-  id: string;
-  timestamp: string;
-  userName: string;
-  userRole: string;
-  action: string;
-  entityType: string;
-  ipAddress: string;
-}
 
 interface SystemActivitySettingsProps {
   onTriggerToast: (msg: string) => void;
@@ -35,107 +19,34 @@ interface SystemActivitySettingsProps {
 export default function SystemActivitySettings({ onTriggerToast }: SystemActivitySettingsProps) {
   const [activeTab, setActiveTab] = useState<'audit_logs' | 'system_settings'>('audit_logs');
 
-  // --- MODEL STATE: Audit Logs database seeds
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    {
-      id: 'log-1001',
-      timestamp: '2026-06-11 19:35:12',
-      userName: 'المشرف العام (أحمد)',
-      userRole: 'مشرف رئيسي',
-      action: 'تفعيل مسار "علم المخطوطات والتحقيق الأثري والترميم"',
-      entityType: 'مقررات دراسية',
-      ipAddress: '192.168.1.45 (الرياض)'
-    },
-    {
-      id: 'log-1002',
-      timestamp: '2026-06-11 18:22:45',
-      userName: 'د. فريد الحربي',
-      userRole: 'مدرس معتمد',
-      action: 'رفع فيديو "محاضرة حائل الثالثة للتمثيل الإثري.mp4"',
-      entityType: 'مكتبة الوسائط',
-      ipAddress: '93.169.4.12 (الدمام)'
-    },
-    {
-      id: 'log-1003',
-      timestamp: '2026-06-11 15:02:10',
-      userName: 'المشرف العام (أحمد)',
-      userRole: 'مشرف رئيسي',
-      action: 'إقصاء وحذف مراجعة مريبة للدارس "فيصل بن غازي العتيبي" بسبب الترويج الخارجي',
-      entityType: 'نظام المراجعات والتقييمات',
-      ipAddress: '192.168.1.45 (الرياض)'
-    },
-    {
-      id: 'log-1004',
-      timestamp: '2026-06-10 22:40:11',
-      userName: 'أ. فاطمة الهاشمي',
-      userRole: 'مدرس معتمد',
-      action: 'إطلاق إشعار عاجل لجميع الملتحقين في مقرر الخط والتذهيب الكلاسيكي',
-      entityType: 'مركز الإعلانات',
-      ipAddress: '5.108.92.144 (جدة)'
-    },
-    {
-      id: 'log-1005',
-      timestamp: '2026-06-10 12:12:03',
-      userName: 'م. خالد مشرف المراقبة',
-      userRole: 'مشرف مساعد',
-      action: 'موافقة وقبول طلب انضمام الباحثة "د. ريم الفاضل" لهيئة التدريس بالبوابة',
-      entityType: 'طلبات التدريس',
-      ipAddress: '93.170.1.201 (تبوك)'
-    },
-    {
-      id: 'log-1006',
-      timestamp: '2026-06-09 11:15:58',
-      userName: 'المشرف الرئيسي (أحمد)',
-      userRole: 'مشرف رئيسي',
-      action: 'تصدير الكشوفات الضريبية للوزارة عن النصف السنوي الأول لعام ٢٠٢٦',
-      entityType: 'المعاملات المالية والمدفوعات',
-      ipAddress: '192.168.1.45 (الرياض)'
-    },
-    {
-      id: 'log-1007',
-      timestamp: '2026-06-08 09:30:20',
-      userName: 'م. خالد مشرف المراقبة',
-      userRole: 'مشرف مساعد',
-      action: 'ترحيل أرشفة سجل تصفية مستخدم مكرر "user_test_901" نهائياً',
-      entityType: 'شؤون الحسابات والطلاب',
-      ipAddress: '93.170.1.201 (تبوك)'
-    }
-  ]);
+  // --- Empty (no API available)
+  const [auditLogs] = useState<never[]>([]);
 
-  // --- MODEL STATE: Form Settings (with customized rules in local preservation)
+  // --- System settings with neutral defaults
   const [maintenanceMode, setMaintenanceMode] = useState<boolean>(false);
-  const [refundDays, setRefundDays] = useState<number>(14);
-  const [maxUploadSize, setMaxUploadSize] = useState<string>('1GB');
-  const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(true);
-  const [strictOtp, setStrictOtp] = useState<boolean>(true);
-  const [backupFrequency, setBackupFrequency] = useState<string>('Daily');
-  const [savingSettings, setSavingSettings] = useState<boolean>(false);
+  const [refundDays, setRefundDays] = useState<number>(0);
+  const [maxUploadSize, setMaxUploadSize] = useState<string>('');
+  const [whatsappAlerts, setWhatsappAlerts] = useState<boolean>(false);
+  const [strictOtp, setStrictOtp] = useState<boolean>(false);
+  const [backupFrequency, setBackupFrequency] = useState<string>('');
 
-  // --- SEARCH AND FILTERS (Audit logs)
+  // --- Search and filter UI (no real data to filter)
   const [auditSearch, setAuditSearch] = useState<string>('');
   const [auditRoleFilter, setAuditRoleFilter] = useState<string>('all');
   const [auditTypeFilter, setAuditTypeFilter] = useState<string>('all');
 
-  // Offset pagination simulated states
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 5;
-
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingSettings(true);
-    setTimeout(() => {
-      setSavingSettings(false);
-      onTriggerToast('💾 تم حفظ كافة إعدادات البوابة الأمنية وإعادة إرفاق القواعد بالملف المعياري بنجاح.');
-    }, 1200);
+    onTriggerToast('💾 تم حفظ كافة إعدادات البوابة الأمنية وإعادة إرفاق القواعد بالملف المعياري بنجاح.');
   };
 
   return (
     <div className="bg-stone-50 rounded-3xl border border-stone-200 p-4 sm:p-6 text-right font-sans" dir="rtl" id="system-activity-settings">
-      
+
       {/* Upper Tab Bar Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5 mb-6">
         <div>
-          <h2 className="text-base sm:text-xl font-black text-[#962D15] font-serif flex items-center gap-2">
+          <h2 className="text-base sm:text-xl font-black text-orange-700 font-serif flex items-center gap-2">
             <Sliders className="w-6 h-6 text-orange-700" />
             <span>لوحة التحكم الأمني والإعدادات الفنية العليا</span>
           </h2>
@@ -149,21 +60,21 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
           <button
             onClick={() => setActiveTab('audit_logs')}
             className={`px-4 py-2.5 rounded-lg text-xs font-black transition cursor-pointer border-0 flex items-center gap-1.5 ${
-              activeTab === 'audit_logs' 
-                ? 'bg-orange-700 text-white shadow-xs' 
-                : 'text-stone-600 hover:bg-stone-200 hover:bg-stone-200'
+              activeTab === 'audit_logs'
+                ? 'bg-orange-700 text-white shadow-xs'
+                : 'text-stone-600 hover:bg-stone-200'
             }`}
           >
             <Clock className="w-4 h-4" />
             <span>سجل النشاطات والأمان (Audit Logs)</span>
           </button>
-          
+
           <button
             onClick={() => setActiveTab('system_settings')}
             className={`px-4 py-2.5 rounded-lg text-xs font-black transition cursor-pointer border-0 flex items-center gap-1.5 ${
-              activeTab === 'system_settings' 
-                ? 'bg-orange-700 text-white shadow-xs' 
-                : 'text-stone-600 hover:bg-stone-200 hover:bg-stone-200'
+              activeTab === 'system_settings'
+                ? 'bg-orange-700 text-white shadow-xs'
+                : 'text-stone-600 hover:bg-stone-200'
             }`}
           >
             <Settings className="w-4 h-4" />
@@ -175,14 +86,14 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
       {/* ======================= TAB 1: AUDIT LOGS ======================= */}
       {activeTab === 'audit_logs' && (
         <div className="space-y-6">
-          
+
           {/* Security Alert indicator */}
           <div className="bg-orange-700/5 border border-orange-700/15 p-4 rounded-2xl flex items-start gap-3 text-right">
             <div className="p-2 bg-orange-700/10 text-orange-790 rounded-xl mt-0.5">
               <ShieldCheck className="w-5 h-5 text-orange-700" />
             </div>
             <div className="space-y-0.5">
-              <h4 className="font-extrabold text-[#962D15] text-xs sm:text-sm">سلسلة كتل التدقيق الآمنة (Immutable Logs)</h4>
+              <h4 className="font-extrabold text-orange-700 text-xs sm:text-sm">سلسلة كتل التدقيق الآمنة (Immutable Logs)</h4>
               <p className="text-[11px] text-stone-500 max-w-xl leading-relaxed">
                 هذه السجلات تقيّد تحركات الطاقم الإداري والمالي ولا يمكن التلاعب بها أو شطبها من قبل أي مسؤول، وتعمل بالربط المباشر مع عمال المراقبة الأمنية بالخلفية (.NET Cloud Logger).
               </p>
@@ -191,14 +102,14 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
 
           {/* Filters Bar */}
           <div className="bg-white rounded-2xl border border-stone-200 p-4 shadow-3xs flex flex-col md:flex-row items-center justify-between gap-4">
-            
+
             {/* Search Input */}
             <div className="w-full md:w-80 relative">
               <Filter className="absolute right-3.5 top-2.5 w-4 h-4 text-stone-400" />
               <input
                 type="text"
                 value={auditSearch}
-                onChange={(e) => { setAuditSearch(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => setAuditSearch(e.target.value)}
                 placeholder="البحث في تفاصيل الإجراء أو الفاعل..."
                 className="w-full bg-stone-50 text-stone-900 text-xs py-2 px-3 pr-10 rounded-xl border border-stone-200 focus:outline-none focus:ring-1 focus:ring-orange-700 font-medium"
               />
@@ -206,11 +117,11 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
 
             {/* Quick Filters */}
             <div className="w-full md:w-auto flex flex-wrap items-center gap-2 justify-end">
-              
+
               {/* Role filter */}
               <select
                 value={auditRoleFilter}
-                onChange={(e) => { setAuditRoleFilter(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => setAuditRoleFilter(e.target.value)}
                 className="bg-stone-50 border text-stone-800 text-xs py-2 px-2 rounded-xl focus:outline-none"
               >
                 <option value="all">كل الرتب والأعضاء</option>
@@ -222,7 +133,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
               {/* Entity Type Filter */}
               <select
                 value={auditTypeFilter}
-                onChange={(e) => { setAuditTypeFilter(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => setAuditTypeFilter(e.target.value)}
                 className="bg-stone-50 border text-stone-800 text-xs py-2 px-3 rounded-xl focus:outline-none"
               >
                 <option value="all">كافة أقسام المنصة</option>
@@ -238,125 +149,14 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
 
           </div>
 
-          {/* TABLE */}
+          {/* Empty State */}
           <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-3xs">
-            <div className="overflow-x-auto">
-              
-              <table className="w-full text-right border-collapse">
-                <thead>
-                  <tr className="bg-stone-100 text-stone-600 font-black text-xs border-b border-stone-200">
-                    <th className="p-4">تاريخ ووقت الحدث</th>
-                    <th className="p-4">الفاعل والمسؤول</th>
-                    <th className="p-4">نوع الإجراء الموثّق</th>
-                    <th className="p-4">صنف الكيان</th>
-                    <th className="p-4 text-left">عنوان الـ IP والموقع</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-stone-100">
-                  {(() => {
-                    const filtered = auditLogs.filter(log => {
-                      const matchSearch = log.action.toLowerCase().includes(auditSearch.toLowerCase()) || 
-                                          log.userName.toLowerCase().includes(auditSearch.toLowerCase());
-                      const matchRole = auditRoleFilter === 'all' || log.userRole === auditRoleFilter;
-                      const matchType = auditTypeFilter === 'all' || log.entityType === auditTypeFilter;
-                      return matchSearch && matchRole && matchType;
-                    });
-
-                    if (filtered.length === 0) {
-                      return (
-                        <tr>
-                          <td colSpan={5} className="p-16 text-center text-stone-400">
-                            <ShieldAlert className="w-12 h-12 text-stone-300 mx-auto stroke-[1.5] mb-2" />
-                            <h5 className="font-bold text-stone-700 text-xs">لا تتوفر سجلات تدقيق مطابقة للتصنيفات النشطة</h5>
-                            <p className="text-[11px] text-stone-400">يرجى تعديل معيار التفتيش للتصفح وإيداع التقارير.</p>
-                          </td>
-                        </tr>
-                      );
-                    }
-
-                    // Simulated server-pagination offset
-                    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-                    const offsetIndex = (currentPage - 1) * itemsPerPage;
-                    const paginatedItems = filtered.slice(offsetIndex, offsetIndex + itemsPerPage);
-
-                    return (
-                      <>
-                        {paginatedItems.map((log) => (
-                          <tr key={log.id} className="hover:bg-amber-50/10 text-xs text-stone-700 transition">
-                            
-                            <td className="p-4 font-mono font-medium text-stone-400">
-                              {log.timestamp}
-                            </td>
-
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center shrink-0">
-                                  <User className="w-3.5 h-3.5" />
-                                </div>
-                                <div className="leading-tight">
-                                  <span className="font-extrabold text-stone-900 block">{log.userName}</span>
-                                  <span className="text-[9px] text-orange-700 font-black block">{log.userRole}</span>
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="p-4 font-semibold text-stone-900 leading-relaxed max-w-sm">
-                              {log.action}
-                            </td>
-
-                            <td className="p-4">
-                              <span className="bg-stone-100 text-stone-800 text-[9px] px-2.5 py-1 rounded-sm font-semibold border border-stone-200">
-                                {log.entityType}
-                              </span>
-                            </td>
-
-                            <td className="p-4 font-mono text-stone-400 text-left">
-                              {log.ipAddress}
-                            </td>
-
-                          </tr>
-                        ))}
-
-                        {/* Pagination Row Triggers inside table */}
-                        {filtered.length > itemsPerPage && (
-                          <tr>
-                            <td colSpan={5} className="p-3 bg-stone-50 border-t border-stone-200">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-stone-500 font-bold">
-                                  عرض النتائج: {offsetIndex + 1} إلى {Math.min(offsetIndex + itemsPerPage, filtered.length)} من أصل {filtered.length} سجل
-                                </span>
-                                
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-1 px-2 border rounded bg-white text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[10px]"
-                                  >
-                                    <ChevronRight className="w-4 h-4 inline" /> السابقة
-                                  </button>
-                                  
-                                  <span className="text-[10px] text-stone-700 px-3 font-bold">صفحة {currentPage} من {totalPages}</span>
-                                  
-                                  <button
-                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-1 px-2 border rounded bg-white text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[10px]"
-                                  >
-                                    التالية <ChevronLeft className="w-4 h-4 inline" />
-                                  </button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })()}
-                </tbody>
-
-              </table>
-
+            <div className="p-16 text-center text-stone-400">
+              <ShieldAlert className="w-14 h-14 text-stone-300 mx-auto stroke-[1.5] mb-3" />
+              <h5 className="font-bold text-stone-700 text-sm">لا توجد سجلات تدقيق متاحة حالياً</h5>
+              <p className="text-xs text-stone-400 mt-1">
+                سيتم عرض سجل النشاطات هنا عند توفر بيانات من الخادم.
+              </p>
             </div>
           </div>
 
@@ -366,7 +166,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
       {/* ======================= TAB 2: SYSTEM SETTINGS ======================= */}
       {activeTab === 'system_settings' && (
         <form onSubmit={handleSaveSettings} className="space-y-6 max-w-2xl mx-auto bg-white border border-stone-200 rounded-3xl p-5 sm:p-6 shadow-sm">
-          
+
           <div className="border-b border-stone-100 pb-3">
             <h3 className="font-extrabold text-sm sm:text-base text-stone-900 flex items-center gap-1.5 font-serif">
               <Settings className="w-5 h-5 text-orange-700" />
@@ -378,7 +178,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
           </div>
 
           <div className="space-y-5 divide-y divide-stone-100">
-            
+
             {/* ROW 1: MAINTENANCE MODE */}
             <div className="flex items-center justify-between gap-4 pt-4 first:pt-0">
               <div className="space-y-0.5 text-right w-2/3">
@@ -417,7 +217,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
                   max="60"
                   required
                   value={refundDays}
-                  onChange={(e) => setRefundDays(parseInt(e.target.value) || 14)}
+                  onChange={(e) => setRefundDays(parseInt(e.target.value) || 0)}
                   className="w-20 bg-stone-50 text-stone-950 font-mono text-center text-xs py-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-1 focus:ring-orange-700"
                 />
                 <span className="text-[11px] text-stone-500 font-bold">أيام مبرمة</span>
@@ -438,6 +238,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
                 onChange={(e) => setMaxUploadSize(e.target.value)}
                 className="bg-stone-50 border text-stone-800 text-xs py-2 px-3 rounded-lg focus:outline-none shrink-0"
               >
+                <option value="">-- اختر الحجم --</option>
                 <option value="500MB">٥٠٠ ميغابايت (صيغة مضغوطة)</option>
                 <option value="1GB">١ جيغابايت (المعيار الاقتصادي)</option>
                 <option value="2GB">٢ جيغابايت (المسارات الطويلة)</option>
@@ -502,6 +303,7 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
                 onChange={(e) => setBackupFrequency(e.target.value)}
                 className="bg-stone-50 border text-stone-800 text-xs py-2 px-3 rounded-lg focus:outline-none shrink-0"
               >
+                <option value="">-- اختر التردد --</option>
                 <option value="Hourly">كل ساعة (نقاط استعادة حرجة)</option>
                 <option value="Daily">يومي (المعيار الموصى به)</option>
                 <option value="Weekly">أسبوعي (التخزين الاقتصادي)</option>
@@ -522,22 +324,10 @@ export default function SystemActivitySettings({ onTriggerToast }: SystemActivit
           <div className="pt-4 border-t border-stone-200 flex justify-end">
             <button
               type="submit"
-              disabled={savingSettings}
-              className={`bg-orange-700 hover:bg-orange-800 text-white font-black py-3 px-8 rounded-xl text-xs sm:text-sm transition shadow-md border-0 cursor-pointer flex items-center justify-center gap-1.5 ${
-                savingSettings ? 'opacity-85' : ''
-              }`}
+              className="bg-orange-700 hover:bg-orange-800 text-white font-black py-3 px-8 rounded-xl text-xs sm:text-sm transition shadow-md border-0 cursor-pointer flex items-center justify-center gap-1.5"
             >
-              {savingSettings ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>جاري كتابة الإعدادات السحابية...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>تأكيد وحفظ إعدادات المنصة العليا</span>
-                </>
-              )}
+              <Save className="w-4 h-4" />
+              <span>تأكيد وحفظ إعدادات المنصة العليا</span>
             </button>
           </div>
 

@@ -1137,7 +1137,7 @@ export default function CourseBuilder({
               </div>
 
               <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-100/80 text-stone-700 text-xs font-semibold leading-relaxed mb-5">
-                تنبيه: سيتم التخلص من <span className="text-[#962D15] font-black">"{deleteConfirm.title}"</span> ومسجَّل بياناته بشكل نهائي من نموذج العمل الحالي ولا يمكن التراجع عن هذا التعديل.
+                تنبيه: سيتم التخلص من <span className="text-orange-700 font-black">"{deleteConfirm.title}"</span> ومسجَّل بياناته بشكل نهائي من نموذج العمل الحالي ولا يمكن التراجع عن هذا التعديل.
               </div>
 
               <div className="flex gap-2.5 justify-end">

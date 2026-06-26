@@ -1,33 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService, type CreateCouponRequest } from '../services/admin.service';
+import { courseAdminService } from '../services/courseAdmin.service';
 import { queryKeys } from '@/lib/query-keys';
 
 export function useAdminCoupons() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin', 'coupons'],
+    queryKey: queryKeys.admin.coupons(),
     queryFn: () => adminService.getCoupons(),
   });
 
   const createMutation = useMutation({
     mutationFn: (data: CreateCouponRequest) => adminService.createCoupon(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
     },
   });
 
   const toggleMutation = useMutation({
     mutationFn: (id: string) => adminService.toggleCoupon(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminService.deleteCoupon(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
     },
   });
 
@@ -47,14 +48,14 @@ export function useAdminPaymentMethods() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin', 'paymentMethods'],
+    queryKey: queryKeys.admin.paymentMethods(),
     queryFn: () => adminService.getPaymentMethods(),
   });
 
   const toggleMutation = useMutation({
     mutationFn: (id: string) => adminService.togglePaymentMethod(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'paymentMethods'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.paymentMethods() });
     },
   });
 
@@ -71,14 +72,14 @@ export function useAdminRefunds() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin', 'refunds'],
+    queryKey: queryKeys.admin.refunds(),
     queryFn: () => adminService.getRefunds(),
   });
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => adminService.approveRefund(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'refunds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.refunds() });
     },
   });
 
@@ -86,7 +87,7 @@ export function useAdminRefunds() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       adminService.rejectRefund(id, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'refunds'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.refunds() });
     },
   });
 
@@ -104,14 +105,14 @@ export function useAdminInstructorRequests() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin', 'instructorRequests'],
+    queryKey: queryKeys.admin.instructorRequests(),
     queryFn: () => adminService.getInstructorRequests(),
   });
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => adminService.approveInstructorRequest(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'instructorRequests'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.instructorRequests() });
     },
   });
 
@@ -119,7 +120,7 @@ export function useAdminInstructorRequests() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       adminService.rejectInstructorRequest(id, { reason }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'instructorRequests'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.instructorRequests() });
     },
   });
 
@@ -137,22 +138,64 @@ export function useAdminUsers() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['admin', 'users'],
+    queryKey: queryKeys.admin.users(),
     queryFn: () => adminService.getUsers(),
   });
 
-  const toggleBlockMutation = useMutation({
-    mutationFn: (id: string) => adminService.toggleUserBlock(id),
+  const toggleActiveMutation = useMutation({
+    mutationFn: (id: string) => adminService.toggleUserActive(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
     },
   });
 
   return {
-    users: query.data?.data,
+    users: query.data?.data?.items,
+    totalCount: query.data?.data?.totalCount,
     isLoading: query.isLoading,
     error: query.error,
-    toggleBlock: toggleBlockMutation.mutate,
+    toggleActive: toggleActiveMutation.mutate,
     refetch: query.refetch,
+  };
+}
+
+export function useInstructorRequestDetails(id: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.instructorRequests(), 'detail', id],
+    queryFn: () => adminService.getInstructorRequestDetails(id!),
+    enabled: !!id,
+  });
+}
+
+export function useAdminPendingCourses() {
+  return useQuery({
+    queryKey: queryKeys.admin.pendingCourses(),
+    queryFn: () => Promise.resolve({ items: [], totalCount: 0 }),
+  });
+}
+
+export function useAdminCourseActions() {
+  const queryClient = useQueryClient();
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => courseAdminService.approveCourse(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.pendingCourses() });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      courseAdminService.rejectCourse(id, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.pendingCourses() });
+    },
+  });
+
+  return {
+    approve: approveMutation.mutate,
+    isApprovePending: approveMutation.isPending,
+    reject: rejectMutation.mutate,
+    isRejectPending: rejectMutation.isPending,
   };
 }

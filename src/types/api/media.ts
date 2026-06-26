@@ -32,3 +32,11 @@ export interface MediaFileUrlResponse {
   fileUrl: string;
   expiresAt: string;
 }
+
+export interface ViewUrlResponseDto {
+  fileId: string;
+  viewUrl: string;
+  expiresAt: string;
+  contentType: string;
+  sizeBytes: number;
+}

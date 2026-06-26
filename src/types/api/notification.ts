@@ -1,32 +1,43 @@
 export interface NotificationDto {
   id: string;
   title: string;
-  message: string;
+  message?: string;
   type: string;
+  linkUrl?: string;
+  icon?: string;
   isRead: boolean;
-  link?: string;
   createdAt: string;
+  readAt?: string | null;
 }
 
 export interface NotificationListDto {
   notifications: NotificationDto[];
-  unreadCount: number;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface NotificationPreferencesDto {
   emailNotifications: boolean;
   pushNotifications: boolean;
   courseUpdates: boolean;
-  announcements: boolean;
-  messages: boolean;
-  reviews: boolean;
+  marketingEmails: boolean;
+  newMessageAlerts: boolean;
+  liveSessionReminders: boolean;
+  quizReminders: boolean;
+  certificateAchievements: boolean;
+  announcementAlerts: boolean;
 }
 
 export interface UpdateNotificationPreferencesRequest {
   emailNotifications?: boolean;
   pushNotifications?: boolean;
   courseUpdates?: boolean;
-  announcements?: boolean;
-  messages?: boolean;
-  reviews?: boolean;
+  marketingEmails?: boolean;
+  newMessageAlerts?: boolean;
+  liveSessionReminders?: boolean;
+  quizReminders?: boolean;
+  certificateAchievements?: boolean;
+  announcementAlerts?: boolean;
 }

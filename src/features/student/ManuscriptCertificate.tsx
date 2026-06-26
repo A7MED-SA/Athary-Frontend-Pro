@@ -100,13 +100,13 @@ export default function ManuscriptCertificate({
 
           {/* Certificate Main Text in Traditional Arabic Prose Style */}
           <div className="text-center my-6 space-y-4 px-1 sm:px-4">
-            <h4 className="text-[#962D15] font-black text-sm md:text-base tracking-normal font-serif leading-none">
+            <h4 className="text-orange-700 font-black text-sm md:text-base tracking-normal font-serif leading-none">
               سَنَدُ التَّحْصِيلِ وَالْإِجَازَةِ الْعِلْمِيَّةِ
             </h4>
             <p className="text-[9px] text-[#A49479] font-serif italic mt-0.5">طُبِعَ لَهُ التَّوْفِيقُ بِمَنِّ الْبَارِئِ وَكَرَمِهِ</p>
             
             <p className="text-xs text-stone-700 font-serif leading-relaxed text-justify select-none max-w-lg mx-auto" style={{ textAlignLast: 'center' }}>
-              تشهد الهيئة الأكاديمية الاستشارية لمنصة <strong className="text-[#962D15] font-sans font-extrabold">آثاري</strong> للتعليم التراثي، بأن الدارس الفاضل <strong className="text-stone-950 font-black bg-[#FAF0D5] px-2.5 py-1 rounded-md decoration-[#A68840]/40 font-sans inline-block text-[13px] border border-[#EBE1BF]">{recipient}</strong> قد انتهى من قراءة واستماع ومدارسة كامل محاور الدورة التخصصية المكثفة الموسومة بـ:
+              تشهد الهيئة الأكاديمية الاستشارية لمنصة <strong className="text-orange-700 font-sans font-extrabold">آثاري</strong> للتعليم التراثي، بأن الدارس الفاضل <strong className="text-stone-950 font-black bg-[#FAF0D5] px-2.5 py-1 rounded-md decoration-[#A68840]/40 font-sans inline-block text-[13px] border border-[#EBE1BF]">{recipient}</strong> قد انتهى من قراءة واستماع ومدارسة كامل محاور الدورة التخصصية المكثفة الموسومة بـ:
             </p>
 
             <h3 className="text-[#845E1E] text-sm md:text-[15px] font-serif font-black underline decoration-double decoration-[#C5A86B]/50 underline-offset-4 tracking-tight py-1 inline-block max-w-[95%]">
@@ -148,7 +148,7 @@ export default function ManuscriptCertificate({
             <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
               <button
                 onClick={handlePdfDownload}
-                className="bg-[#962D15] hover:bg-[#80220E] text-[#FFFDF9] px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 shadow-md hover:shadow-lg active:scale-95"
+                className="bg-orange-700 hover:bg-orange-850 text-[#FFFDF9] px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 shadow-md hover:shadow-lg active:scale-95"
                 title="تحميل كوثيقة PDF رسمية ممهورة بختم الجامعة"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -179,8 +179,8 @@ export default function ManuscriptCertificate({
             >
               <div className="relative">
                 {/* Simulated spinning geometric frame */}
-                <div className="w-16 h-16 rounded-full border-4 border-[#C5A86B]/20 border-t-[#962D15] animate-spin" />
-                <Award className="w-6 h-6 text-[#962D15] absolute inset-0 m-auto" />
+                <div className="w-16 h-16 rounded-full border-4 border-[#C5A86B]/20 border-t-orange-700 animate-spin" />
+                <Award className="w-6 h-6 text-orange-700 absolute inset-0 m-auto" />
               </div>
               
               <h4 className="text-xs font-extrabold text-stone-900 mt-5">جاري تدبيج وختم السجل المعرفي الموثّق...</h4>
@@ -190,12 +190,12 @@ export default function ManuscriptCertificate({
               
               <div className="w-56 bg-stone-100 h-2 rounded-full overflow-hidden mt-5 border border-stone-200/50">
                 <motion.div 
-                  className="bg-[#962D15] h-full" 
+                  className="bg-orange-700 h-full" 
                   initial={{ width: 0 }}
                   animate={{ width: `${downloadProgress}%` }}
                 />
               </div>
-              <span className="text-xs text-[#962D15] font-black mt-2 font-mono">{downloadProgress}%</span>
+              <span className="text-xs text-orange-700 font-black mt-2 font-mono">{downloadProgress}%</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -242,7 +242,7 @@ export default function ManuscriptCertificate({
                 <div className="grid grid-cols-1 gap-2 mt-4">
                   <button
                     onClick={copyToClipboard}
-                    className="flex items-center justify-center gap-1.5 bg-orange-700 hover:bg-[#962D15] text-white py-2 px-4 rounded-xl text-xs font-bold transition w-full cursor-pointer border-0"
+                    className="flex items-center justify-center gap-1.5 bg-orange-700 hover:bg-orange-700 text-white py-2 px-4 rounded-xl text-xs font-bold transition w-full cursor-pointer border-0"
                   >
                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copied ? 'تم نسخ نص المشاركة!' : 'نسخ نص المشاركة الجاهز'}</span>

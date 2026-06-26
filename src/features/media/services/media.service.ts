@@ -5,7 +5,7 @@ import type {
   UploadUrlRequestDto,
   UploadUrlResponseDto,
   MediaConfirmUploadRequest,
-  MediaFileUrlResponse,
+  ViewUrlResponseDto,
 } from '@/types/api/media';
 
 export const mediaService = {
@@ -19,20 +19,13 @@ export const mediaService = {
       .post<ApiResponse<MediaFileDto>>('/media/confirm-upload', data)
       .then((r) => r.data),
 
-  getFileByObjectId: (id: string) =>
+  getViewUrl: (fileId: string) =>
     api
-      .get<ApiResponse<MediaFileDto>>(`/media/object-id/${id}`)
+      .get<ApiResponse<ViewUrlResponseDto>>(`/media/${fileId}/view-url`)
       .then((r) => r.data),
 
   deleteMedia: (id: string) =>
     api.delete<ApiResponse>(`/media/${id}`).then((r) => r.data),
-
-  getFileUrl: (objectKey: string, fileName?: string) =>
-    api
-      .get<ApiResponse<MediaFileUrlResponse>>(`/media/file-url/${objectKey}`, {
-        params: { fileName },
-      })
-      .then((r) => r.data),
 
   uploadFile: async (file: File, fileType: number = 0): Promise<MediaFileDto> => {
     const contentType = file.type || 'application/octet-stream';

@@ -48,7 +48,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-base sm:text-lg font-black text-[#5C230E] font-serif">
+              <h2 className="text-base sm:text-lg font-black text-orange-950 font-serif">
                 عذراً، حدث خطأ غير متوقع في اللوحة المعرفية
               </h2>
               <p className="text-xs text-stone-500 leading-relaxed max-w-sm mx-auto">
@@ -68,7 +68,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 onClick={this.handleRetry}
-                className="flex-1 bg-[#962D15] hover:bg-[#7D220F] text-amber-50 py-3 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition flex items-center justify-center gap-1.5"
+                className="flex-1 bg-orange-700 hover:bg-orange-800 text-amber-50 py-3 rounded-xl text-xs font-black border-0 cursor-pointer shadow-sm transition flex items-center justify-center gap-1.5"
                 id="error-boundary-retry-btn"
               >
                 <RotateCcw className="w-4 h-4" />

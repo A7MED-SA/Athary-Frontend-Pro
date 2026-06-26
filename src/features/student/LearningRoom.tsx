@@ -385,7 +385,7 @@ export default function LearningRoom({
                   {/* Classical Script design header */}
                   <div className="border-b border-amber-200/60 pb-4 text-center">
                     <span className="text-xs text-[#8F702D] block mb-1">من مخرجات المعهد الفرعي للحفاظ على النقوس دمشق وسنمار</span>
-                    <h3 className="text-base text-[#962D15] font-black">{activeItem.title}</h3>
+                    <h3 className="text-base text-orange-700 font-black">{activeItem.title}</h3>
                   </div>
 
                   <div className="space-y-4 max-w-2xl mx-auto">
@@ -651,7 +651,7 @@ export default function LearningRoom({
             
             <div className="p-4 bg-amber-50 border-b border-amber-100">
               <h3 className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#962D15]" />
+                <BookOpen className="w-4 h-4 text-orange-700" />
                 <span>فهرست المحاضرات والمعاينات</span>
               </h3>
             </div>

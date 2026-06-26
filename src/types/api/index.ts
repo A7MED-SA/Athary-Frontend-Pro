@@ -22,3 +22,4 @@ export * from './contact';
 export * from './instructorRequest';
 export * from './refund';
 export * from './coupon';
+export * from './admin';

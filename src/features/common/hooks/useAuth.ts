@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/auth/services/auth.service';
 import { queryKeys } from '@/lib/query-keys';
 import { tokenStorage } from '@/lib/token-storage';
-import type { LoginRequest, RegisterRequest, OAuthLoginRequest, ChangePasswordRequest } from '@/types/api/auth';
+import type { LoginRequest, RegisterRequest, ChangePasswordRequest } from '@/types/api/auth';
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -32,8 +32,15 @@ export function useAuth() {
     },
   });
 
-  const loginWithOAuthMutation = useMutation({
-    mutationFn: (data: OAuthLoginRequest) => authService.loginWithOAuth(data),
+  const loginWithGoogleMutation = useMutation({
+    mutationFn: (idToken: string) => authService.loginWithGoogle(idToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
+    },
+  });
+
+  const loginWithMicrosoftMutation = useMutation({
+    mutationFn: (idToken: string) => authService.loginWithMicrosoft(idToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
     },
@@ -69,9 +76,11 @@ export function useAuth() {
     registerError: registerMutation.error,
     logout: logoutMutation.mutate,
     isLogoutPending: logoutMutation.isPending,
-    loginWithOAuth: loginWithOAuthMutation.mutate,
-    loginWithOAuthAsync: loginWithOAuthMutation.mutateAsync,
-    isOAuthPending: loginWithOAuthMutation.isPending,
+    loginWithGoogle: loginWithGoogleMutation.mutate,
+    loginWithGoogleAsync: loginWithGoogleMutation.mutateAsync,
+    loginWithMicrosoft: loginWithMicrosoftMutation.mutate,
+    loginWithMicrosoftAsync: loginWithMicrosoftMutation.mutateAsync,
+    isOAuthPending: loginWithGoogleMutation.isPending || loginWithMicrosoftMutation.isPending,
     revokeSession: revokeSessionMutation.mutate,
     revokeAllSessions: revokeAllSessionsMutation.mutate,
     changePassword: changePasswordMutation.mutate,
